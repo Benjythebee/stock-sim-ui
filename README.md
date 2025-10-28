@@ -3,8 +3,9 @@
 A real-time stock trading simulation application built with React, TypeScript, and WebSocket connectivity. This project provides an interactive trading environment where users can participate in simulated stock market trading with live price charts, order books, and portfolio management.
 
 TODO:
-- [] Order history
-- [] Better portfolio calculation
+- [ ] Order history
+- [ ] Better portfolio calculation
+<img width="1894" height="841" alt="image" src="https://github.com/user-attachments/assets/6984b541-3516-4d1b-b3e9-ad8cbd878552" />
 
 ## 🚀 Features
 
