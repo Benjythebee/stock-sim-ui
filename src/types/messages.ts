@@ -15,7 +15,9 @@ export enum MessageType {
     STOCK_ACTION = 10,
     STOCK_MOVEMENT = 11,
     PORTFOLIO_UPDATE = 12,
-    ADMIN_SETTINGS = 30
+    SHOCK = 13,
+    ADMIN_SETTINGS = 30,
+    DEBUG_PRICES=99
 }
 
 export const MessageTypeNames: { [key in MessageType]: string } = {
@@ -32,7 +34,10 @@ export const MessageTypeNames: { [key in MessageType]: string } = {
     [MessageType.STOCK_ACTION]: "STOCK_ACTION",
     [MessageType.STOCK_MOVEMENT]: "STOCK_MOVEMENT",
     [MessageType.PORTFOLIO_UPDATE]: "PORTFOLIO_UPDATE",
-    [MessageType.ADMIN_SETTINGS]: "ADMIN_SETTINGS"
+    [MessageType.SHOCK]: "SHOCK",
+    [MessageType.ADMIN_SETTINGS]: "ADMIN_SETTINGS",
+
+    [MessageType.DEBUG_PRICES]: "DEBUG_PRICES"
 };
 
 
@@ -52,13 +57,20 @@ type IsAdminMessage = {
     type: MessageType.IS_ADMIN;
 }
 
+type IsShockMessage = {
+    type: MessageType.SHOCK;
+    target:'intrinsic'|'market'
+}
 type RoomStateMessage = {
     type: MessageType.ROOM_STATE;
     paused: boolean;
+    started: boolean;
+    ended: boolean;
     settings: GameSettings;
     roomId: string;
     clock: number;
     clients: number;
+    price: number;
 }
 
 type TogglePauseMessage = {
@@ -115,8 +127,13 @@ type StockMovementMessage = {
     price: number;
     depth: [[number, number][], [number, number][]]
 }
+type DebugPricesMessage = {
+    type: MessageType.DEBUG_PRICES;
+    intrinsicValue: number;
+    guidePrice: number;
+}
 
-export type Message = JoinMessage | LeaveMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | IsAdminMessage | AdminSettingMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage;
+export type Message = JoinMessage | LeaveMessage | IsShockMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | IsAdminMessage | AdminSettingMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage;
 
 export type {
     JoinMessage,
@@ -132,5 +149,7 @@ export type {
     StockMessage,
     PortfolioUpdateMessage,
     AdminSettingMessage,
-    StockMovementMessage
+    StockMovementMessage,
+    IsShockMessage,
+    DebugPricesMessage
 }

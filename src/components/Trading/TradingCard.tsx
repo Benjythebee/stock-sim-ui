@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useWebsocketContext } from "../../context/ws.context";
 import { MessageType } from "../../types/messages";
-
+import { usePriceStore } from "../../context/stock.store";
 
 
 export const TradingCard: React.FC = () => {
@@ -23,6 +23,15 @@ export const TradingCard: React.FC = () => {
 
     }
 
+    const sendShock = (target: 'intrinsic' | 'market')=>{
+      sendMessage({type: MessageType.SHOCK, target })
+    }
+
+    useEffect(() => {
+        if (orderType === 'limit') {
+            setLimitPrice(usePriceStore.getState().price.toString());
+        }
+    }, [orderType]);
 
     return( <div className="card bg-base-200">
             <div className="card-body">
@@ -58,6 +67,7 @@ export const TradingCard: React.FC = () => {
                   <input
                     type="number"
                     placeholder="0.00"
+                    step={0.05}
                     className="input input-bordered"
                     value={limitPrice}
                     onChange={(e) => setLimitPrice(e.target.value)}
@@ -92,6 +102,20 @@ export const TradingCard: React.FC = () => {
                   onClick={() => handleOrder('sell')}
                 >
                   Sell
+                </button>
+              </div>
+                            <div className="grid grid-cols-2 gap-2 mt-4">
+                <button
+                  className="btn btn-accent btn-sm"
+                  onClick={() => sendShock('intrinsic')}
+                >
+                  Send Value shock
+                </button>
+                <button
+                  className="btn btn-accent btn-sm"
+                  onClick={() => sendShock('market')}
+                >
+                  Send shock
                 </button>
               </div>
             </div>

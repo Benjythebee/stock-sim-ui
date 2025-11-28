@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { DateTime } from 'luxon';
+import { useGameStore } from "./game.context";
 
 export type PriceStore = {
     prices: {
@@ -47,7 +48,6 @@ export const usePriceStore = create<PriceStore>((set,get) => ({
 
             }
         }else{
-            if(!labelLength) return;
             // No timestamp yet, create first entry
             prices.push({
                 x: labels[labels.length - 1].valueOf(),
@@ -58,7 +58,7 @@ export const usePriceStore = create<PriceStore>((set,get) => ({
             });
         }
 
-
+        console.log('Updated prices:', prices,labels);
        return set({ price, prices: [...prices], timeLabels: [...labels] });
     },
     prices: [],
@@ -70,6 +70,71 @@ export const usePriceStore = create<PriceStore>((set,get) => ({
     setClock: (clock) =>{
         const luxonTime = DateTime.fromMillis(clock);
         const timeLabels = get().timeLabels;
+
+        // // Handle the case we didnt get a price update when candle ends
+        const prices = get().prices;
+        const lastPrice = get().price;
+        const labelLength = timeLabels.length;
+        const started = useGameStore.getState().started;
+        // handle length mismatch
+
+        console.log('prices.length:', prices.length, 'labelLength:', labelLength, 'started:', started);
+
+        if(!started){
+            const index = 0
+            // First candle
+            prices[index] = {
+                x: luxonTime.valueOf(),
+                o: lastPrice,
+                h: lastPrice,
+                l: lastPrice,
+                c: lastPrice
+            }
+            console.log('Created first candle:', prices);
+            set({ prices: [...prices],clock: clock, timeLabels: [luxonTime] });
+            return
+        }
+
+        if(prices.length < labelLength+1){
+            // First candle
+            console.log('Created missing candle:', prices);
+            set({ prices: [...prices,{
+                x: luxonTime.valueOf(),
+                o: lastPrice,
+                h: lastPrice,
+                l: lastPrice,
+                c: lastPrice
+            }] });
+        }
+
+
+     
+        // if(labelLength > 0){
+            // const currentCandle = prices[labelLength -1];
+            // const lastPrice = get().price;
+            // if(!currentCandle){
+            //     prices[labelLength -1] = {
+            //         x: timeLabels[labelLength -1].valueOf(),
+            //         o: lastPrice,
+            //         h: lastPrice,
+            //         l: lastPrice,
+            //         c: lastPrice
+            //     }
+            //     set({ prices: [...prices] });
+            // }
+        // }else{
+        //     // No timestamp yet, create first entry
+        //     const lastPrice = get().price;
+        //     prices.push({
+        //         x: timeLabels[timeLabels.length - 1].valueOf(),
+        //         o: lastPrice,
+        //         h: lastPrice,
+        //         l: lastPrice,
+        //         c: lastPrice
+        //     });
+        //     set({ prices: [...prices] });
+        // }
+
         set({ clock: clock, timeLabels: [...timeLabels, luxonTime] });
     },
 }));

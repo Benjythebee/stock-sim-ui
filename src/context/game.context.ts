@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { MessageType, MessageTypeNames, type Message } from '../types/messages';
 import { usePriceStore } from './stock.store';
+import { useDebugStore } from './debug.store';
 
 export type GameSettings = {
     startingCash: number;
@@ -18,6 +19,8 @@ type GameStore = {
   username: string;
   gameSettings: GameSettings;
   paused: boolean;
+  started: boolean;
+  ended: boolean;
   cash: number;
   PnL: number;
   shares: number;
@@ -36,6 +39,8 @@ type GameStore = {
 const initialGameStore: Partial<GameStore> = {
   username: "",
   paused: true,
+  started: false,
+  ended: false,
   gameSettings: { 
     startingCash: 5000, 
     openingPrice: 1,
@@ -78,7 +83,7 @@ export const handleGameMessage = (message: Message) => {
     console.log(MessageTypeNames[type]);
     switch (type) {
       case MessageType.TOGGLE_PAUSE:
-        useGameStore.setState((s) => ({ paused: !s.paused }));
+        useGameStore.setState((s) => ({ paused: !s.paused, started: s.started ===false? true : s.started }));
         break;
         case MessageType.CLOCK:
           usePriceStore.getState().setClock(message.value);
@@ -90,23 +95,30 @@ export const handleGameMessage = (message: Message) => {
          * Hook onto the join message for room setup
          */
         case MessageType.PORTFOLIO_UPDATE:
-          console.log("Portfolio update received:", message);
           useGameStore.setState({ cash: message.value.cash || 0, shares: message.value.shares || 0 });
           break;
             
         case MessageType.ROOM_STATE:
-            usePriceStore.setState({ clock: message.clock || 0 });
-            useGameStore.setState({ 
+              useGameStore.setState({ 
               gameSettings: message.settings || {},
               cash: message.settings?.startingCash || 0,
-               paused: message.paused || false, 
-               onlineUsers: message.clients || 0
+              paused: message.paused || false,
+              started: message.started || false,
+              ended: message.ended || false,
+              onlineUsers: message.clients || 0
                });
+              usePriceStore.setState({price: message.price || 0});
+              usePriceStore.getState().setClock(message.clock || 0);
+
             break;
         case MessageType.STOCK_MOVEMENT:
           usePriceStore.getState().setPrice(message.price || 0);
           usePriceStore.getState().setAsks(message.depth[0] || []);
           usePriceStore.getState().setBids(message.depth[1] || []);
+          break;
+        case MessageType.DEBUG_PRICES:
+          useDebugStore.getState().setIntrinsicValue(message.intrinsicValue || 0);
+          useDebugStore.getState().setGuidePrice(message.guidePrice || 0);
           break;
         case MessageType.IS_ADMIN:
             useGameStore.setState({ isAdmin: true });

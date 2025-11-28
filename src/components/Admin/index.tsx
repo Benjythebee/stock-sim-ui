@@ -26,13 +26,13 @@ export const AdminModal = () => {
         })
     }
     // console.log('AdminModal render', {isAdmin, pricesLength: prices.length, paused});
-    const visibleSettings = useMemo(() => isAdmin && prices.length == 0 && paused, [isAdmin, prices.length, paused]);
+    const visibleSettings = useMemo(() => isAdmin && prices.length >= 1 && paused, [isAdmin, prices.length, paused]);
 
     if(visibleSettings){
         return (
             <>
             <div className="card absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 bg-base-100 shadow-xl z-50">
-                <div className="card-body items-center bg-white">
+                <div className="card-body items-center ">
                     <h1 className="text-4xl font-bold text-center bg-clip-text text-primary">
                         Admin Settings
                     </h1>
