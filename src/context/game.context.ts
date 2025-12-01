@@ -1,7 +1,8 @@
 import { create } from 'zustand';
-import { MessageType, MessageTypeNames, type Message } from '../types/messages';
+import { MessageType, MessageTypeNames, type ConclusionMessage, type Message } from '../types/messages';
 import { usePriceStore } from './stock.store';
 import { useDebugStore } from './debug.store';
+import { useToast } from '../components/Toast/useToast';
 
 export type GameSettings = {
     startingCash: number;
@@ -25,13 +26,13 @@ type GameStore = {
   PnL: number;
   shares: number;
   onlineUsers: number;
+  conclusion: ConclusionMessage|null;
   
   // Actions
   setPaused: (paused: boolean) => void;
   saveGameSettings: (settings: Partial<GameSettings>) => void;
   setUsername: (username: string) => void;
   setCash: (cash: number) => void;
-  setPnL: (PnL: number) => void;
   setShares: (shares: number) => void;
   setOnlineUsers: (onlineUsers: number) => void;
 };
@@ -55,6 +56,7 @@ const initialGameStore: Partial<GameStore> = {
   PnL: 0,
   shares: 0,
   onlineUsers: 0,
+  conclusion: null,
 }
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -69,7 +71,6 @@ export const useGameStore = create<GameStore>((set) => ({
     })),
   setUsername: (username) => set({ username }),
   setCash: (cash) => set({ cash }),
-  setPnL: (PnL) => set({ PnL }),
   setShares: (shares) => set({ shares }),
 }));
 
@@ -90,12 +91,13 @@ export const handleGameMessage = (message: Message) => {
           break;
         case MessageType.JOIN:
           useGameStore.setState((s)=>({ onlineUsers: s.onlineUsers + 1 || 0 }));
+          useToast.getState().addToast({type:'success', description:`${message.username} joined the game.`});
           break;
             /**
          * Hook onto the join message for room setup
          */
         case MessageType.PORTFOLIO_UPDATE:
-          useGameStore.setState({ cash: message.value.cash || 0, shares: message.value.shares || 0 });
+          useGameStore.setState({ cash: message.value.cash || 0, shares: message.value.shares || 0,PnL: message.value.pnl || 0 });
           break;
             
         case MessageType.ROOM_STATE:
@@ -119,6 +121,9 @@ export const handleGameMessage = (message: Message) => {
         case MessageType.DEBUG_PRICES:
           useDebugStore.getState().setIntrinsicValue(message.intrinsicValue || 0);
           useDebugStore.getState().setGuidePrice(message.guidePrice || 0);
+          break;
+        case MessageType.GAME_CONCLUSION:
+          useGameStore.setState({ ended: true, conclusion:message });
           break;
         case MessageType.IS_ADMIN:
             useGameStore.setState({ isAdmin: true });

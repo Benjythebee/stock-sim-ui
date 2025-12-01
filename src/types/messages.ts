@@ -17,6 +17,7 @@ export enum MessageType {
     PORTFOLIO_UPDATE = 12,
     SHOCK = 13,
     ADMIN_SETTINGS = 30,
+    GAME_CONCLUSION = 60,
     DEBUG_PRICES=99
 }
 
@@ -37,6 +38,8 @@ export const MessageTypeNames: { [key in MessageType]: string } = {
     [MessageType.SHOCK]: "SHOCK",
     [MessageType.ADMIN_SETTINGS]: "ADMIN_SETTINGS",
 
+    [MessageType.GAME_CONCLUSION]: "GAME_CONCLUSION",
+
     [MessageType.DEBUG_PRICES]: "DEBUG_PRICES"
 };
 
@@ -44,6 +47,7 @@ export const MessageTypeNames: { [key in MessageType]: string } = {
 type JoinMessage = {
     type: MessageType.JOIN;
     roomId: string;
+    username: string;
     id: string;
 }
 
@@ -118,6 +122,7 @@ type PortfolioUpdateMessage = {
     id: string;
     value: {
         cash: number;
+        pnl: number;
         shares: number;
     };
 }
@@ -127,13 +132,22 @@ type StockMovementMessage = {
     price: number;
     depth: [[number, number][], [number, number][]]
 }
+
+type ConclusionMessage = {
+    type: MessageType.GAME_CONCLUSION;
+    players: ({ name: string } & PortfolioUpdateMessage['value'])[];
+    volumeTraded: number;
+    highestPrice: number;
+    lowestPrice: number;
+}
+
 type DebugPricesMessage = {
     type: MessageType.DEBUG_PRICES;
     intrinsicValue: number;
     guidePrice: number;
 }
 
-export type Message = JoinMessage | LeaveMessage | IsShockMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | IsAdminMessage | AdminSettingMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage;
+export type Message = JoinMessage | LeaveMessage | IsShockMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | IsAdminMessage | AdminSettingMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage | ConclusionMessage;
 
 export type {
     JoinMessage,
@@ -151,5 +165,6 @@ export type {
     AdminSettingMessage,
     StockMovementMessage,
     IsShockMessage,
-    DebugPricesMessage
+    DebugPricesMessage,
+    ConclusionMessage
 }
