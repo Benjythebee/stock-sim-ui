@@ -6,6 +6,7 @@ import { AdminModal } from '../components/Admin';
 import { useGameStore } from '../context/game.context';
 import { useShallow } from 'zustand/shallow';
 import { ConclusionModal } from '../components/Conclusion';
+import { News } from '../components/Trading/News';
 
 
 
@@ -22,8 +23,12 @@ export default function RoomPage() {
         <div className="flex-1 flex flex-col gap-4">
           <TradingChart />
 
-          {/* Order History Table */}
-          <OrderHistory />
+          {/* Split section in 3: News,Order history */}
+          <div className='flex gap-2 w-full'>
+            <News className="w-1/2" />
+            <OrderHistory className="w-1/2" />
+          </div>
+
         </div>
 
         {/* Right Sidebar */}

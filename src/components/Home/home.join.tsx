@@ -33,9 +33,7 @@ export const Join = () => {
 
   return <div className="card absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 bg-base-100 shadow-xl">
         <div className="card-body items-center">
-          <h1 className="text-4xl font-bold text-center mb-2 bg-clip-text text-primary">
-            Stock Sim Game
-          </h1>
+          <img src="/stonk-lord_alpha.webp" alt="Stonk Lords Logo" className="w-38 h-38"/>
           <p className="text-center text-base-content/70 mb-6">
             Enter your details to start playing
           </p>

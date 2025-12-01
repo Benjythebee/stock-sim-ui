@@ -91,7 +91,7 @@ export const AdminModal = () => {
                                 type="number"
                                 placeholder="Enter market volatility (%)"
                                 className="input input-bordered input-primary w-full"
-                                value={gameSettings.marketVolatility || ''}
+                                value={(gameSettings.marketVolatility*100) || ''}
                                 min={0}
                                 onChange={(e) => setGameSettings({marketVolatility: parseInt(e.target.value)})}
                             />

@@ -88,6 +88,7 @@ export const handleGameMessage = (message: Message) => {
         break;
         case MessageType.CLOCK:
           usePriceStore.getState().setClock(message.value);
+          usePriceStore.setState({ timeLeft: message.timeLeft });
           break;
         case MessageType.JOIN:
           useGameStore.setState((s)=>({ onlineUsers: s.onlineUsers + 1 || 0 }));

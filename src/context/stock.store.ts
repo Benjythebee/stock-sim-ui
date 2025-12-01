@@ -18,6 +18,7 @@ export type PriceStore = {
     bids: [number, number][],
     setBids: (bids: [number, number][]) => void,
     clock: number,
+    timeLeft: number,
     setClock: (clock: number) => void,
 }
 
@@ -137,5 +138,6 @@ export const usePriceStore = create<PriceStore>((set,get) => ({
 
         set({ clock: clock, timeLabels: [...timeLabels, luxonTime] });
     },
+    timeLeft: 0,
 }));
 

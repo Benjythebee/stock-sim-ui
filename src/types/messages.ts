@@ -103,6 +103,7 @@ type ErrorMessage = {
 type ClockMessage = {
     type: MessageType.CLOCK;
     value: number;
+    timeLeft: number;
 }
 type AdminSettingMessage = {
     type: MessageType.ADMIN_SETTINGS;
@@ -136,6 +137,7 @@ type StockMovementMessage = {
 type ConclusionMessage = {
     type: MessageType.GAME_CONCLUSION;
     players: ({ name: string } & PortfolioUpdateMessage['value'])[];
+    bots: ({ name: string, type: string } & PortfolioUpdateMessage['value'])[];
     volumeTraded: number;
     highestPrice: number;
     lowestPrice: number;

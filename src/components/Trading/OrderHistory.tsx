@@ -14,7 +14,7 @@ interface Order {
   status: string;
 }
 
-export const OrderHistory: React.FC = () => {
+export const OrderHistory: React.FC<{className?: string}> = ({className}) => {
   // Mock order history
   const [orders] = useState<Order[]>([
     {
@@ -37,7 +37,7 @@ export const OrderHistory: React.FC = () => {
     },
   ]);
   
-    return ( <div className="card bg-base-200">
+    return ( <div className={`card bg-base-200 ${className}`}>
             <div className="card-body">
               <h2 className="card-title">Order History</h2>
               <div className="overflow-x-auto">

@@ -27,11 +27,12 @@ export const Navigation = () => {
 
     return <div className="navbar bg-base-100 shadow-sm">
         <div className="navbar-start">
-            <a className="btn btn-ghost text-xl">Stock Sim</a>
+            <a className="btn btn-ghost text-xl" href="/"><img src="/stonk-lord_alpha.webp" alt="Stonk Lords Logo" className="w-12 h-12"/>
+           </a>
             <ThemeController />
         </div>
         <div className="navbar-center">
-            {isPaused && <div className="font-semibold">Room {room} PAUSED</div>}
+            {isPaused && <div className="font-semibold mr-2">Room {room} PAUSED -</div>}
             {status === 'CONNECTED' && onlineUsers > 0 && <div className="font-semibold"> Market online with {onlineUsers + gameSettings.bots} participants</div>}
         </div>
         <div className="navbar-end">

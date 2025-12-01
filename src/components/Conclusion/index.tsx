@@ -54,6 +54,39 @@ export const ConclusionModal = () => {
                         </table>
                     </div>
                 </div>
+
+                
+                <div tabIndex={0} className="collapse collapse-arrow bg-base-100 border-base-300 border">
+                    <div className="collapse-title font-semibold">View Bot Performance</div>
+                    <div className="collapse-content text-sm">
+                        <div className="max-h-60 overflow-y-auto">
+                            <table className="table w-full">
+                                <thead>
+                                    <tr>
+                                        <th className="w-2/4">Name</th>
+                                        <th className="w-1/4">Type of bot</th>
+                                        <th className="w-1/4">Profit/Loss</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {conclusion.bots
+                                        .sort((a, b) => (b.pnl || 0) - (a.pnl || 0))
+                                        .map((user, index) => (
+                                            <tr key={user.name || index}>
+                                                <td className="font-medium">{user.name}</td>
+                                                <td className="font-light">{user.type}</td>
+                                                <td className={`${(user.pnl || 0) >= 0 ? 'text-success' : 'text-error'}`}>
+                                                    ${(user.pnl || 0).toFixed(2)}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 
 
             </div>
