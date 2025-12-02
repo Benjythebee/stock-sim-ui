@@ -28,8 +28,8 @@ export const TradingChart = () => {
   const memoizedScale = useMemo(() => {
     const scale = {min: 0, max: 0};
       const prices_ = prices.length? prices.map(c => [c.l, c.h]).flat() : [];
-      const minP = Math.min(...prices_,intrinsicValues[intrinsicValues.length -1] || 0)
-      const maxP = Math.max(...prices_,intrinsicValues[intrinsicValues.length -1] || 0)
+      const minP = Math.min(...prices_,intrinsicValues[intrinsicValues.length -1] || prices_[intrinsicValues.length -1])
+      const maxP = Math.max(...prices_,intrinsicValues[intrinsicValues.length -1] || prices_[intrinsicValues.length -1])
 
       const minPrice = isFinite(minP) ? minP : 0;
       const maxPrice = isFinite(maxP) ? maxP : 1;

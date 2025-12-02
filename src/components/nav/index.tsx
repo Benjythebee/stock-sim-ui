@@ -10,7 +10,7 @@ import { decimal } from "../../utils/math";
 
 export const Navigation = () => {
     const {room,status,sendMessage,disconnect} = useWebsocketContext();
-    const {username,cash,paused,isAdmin,onlineUsers,gameSettings,shares} = useGameStore(useShallow((state) => ({ username: state.username, cash: state.cash, pnl: state.PnL, paused: state.paused, isAdmin: state.isAdmin, onlineUsers: state.onlineUsers, gameSettings: state.gameSettings, shares: state.shares })));
+    const {username,cash,paused,isAdmin,onlineUsers,gameSettings,shares} = useGameStore(useShallow((state) => ({ username: state.username, cash: state.cash, paused: state.paused, isAdmin: state.isAdmin, onlineUsers: state.onlineUsers, gameSettings: state.gameSettings, shares: state.shares })));
 
     const togglePause = useCallback(() => {
         const newPausedState = !paused;

@@ -59,7 +59,7 @@ export const usePriceStore = create<PriceStore>((set,get) => ({
             });
         }
 
-        console.log('Updated prices:', prices,labels);
+        // console.log('Updated prices:', prices,labels);
        return set({ price, prices: [...prices], timeLabels: [...labels] });
     },
     prices: [],
@@ -79,8 +79,7 @@ export const usePriceStore = create<PriceStore>((set,get) => ({
         const started = useGameStore.getState().started;
         // handle length mismatch
 
-        console.log('prices.length:', prices.length, 'labelLength:', labelLength, 'started:', started);
-
+        // console.log('prices.length:', prices.length, 'labelLength:', labelLength, 'started:', started);
         if(!started){
             const index = 0
             // First candle
@@ -91,7 +90,7 @@ export const usePriceStore = create<PriceStore>((set,get) => ({
                 l: lastPrice,
                 c: lastPrice
             }
-            console.log('Created first candle:', prices);
+            // console.log('Created first candle:', prices);
             set({ prices: [...prices],clock: clock, timeLabels: [luxonTime] });
             return
         }

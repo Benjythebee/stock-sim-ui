@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { MessageType, MessageTypeNames, type ConclusionMessage, type Message } from '../types/messages';
+import { MessageType, MessageTypeNames, type ConclusionMessage, type Message, type NewsMessage } from '../types/messages';
 import { usePriceStore } from './stock.store';
 import { useDebugStore } from './debug.store';
 import { useToast } from '../components/Toast/useToast';
@@ -8,6 +8,7 @@ export type GameSettings = {
     startingCash: number;
     openingPrice: number;
     seed: number;
+    enableRandomNews: boolean;
     marketVolatility: number; // percentage from 1 to 100
     gameDuration: number; // in minutes
     bots: number;
@@ -23,10 +24,10 @@ type GameStore = {
   started: boolean;
   ended: boolean;
   cash: number;
-  PnL: number;
   shares: number;
   onlineUsers: number;
   conclusion: ConclusionMessage|null;
+  news: NewsMessage[]
   
   // Actions
   setPaused: (paused: boolean) => void;
@@ -45,15 +46,16 @@ const initialGameStore: Partial<GameStore> = {
   gameSettings: { 
     startingCash: 5000, 
     openingPrice: 1,
+    enableRandomNews: true,
     seed: Math.floor(Math.random() * 100000),
     marketVolatility: 5, 
     gameDuration: 5, 
-    bots: 0, 
+    bots: 1, 
     ticketName: 'AAPL' 
   },
+  news: [],
   isAdmin: false,
   cash: 0,
-  PnL: 0,
   shares: 0,
   onlineUsers: 0,
   conclusion: null,
@@ -98,18 +100,27 @@ export const handleGameMessage = (message: Message) => {
          * Hook onto the join message for room setup
          */
         case MessageType.PORTFOLIO_UPDATE:
-          useGameStore.setState({ cash: message.value.cash || 0, shares: message.value.shares || 0,PnL: message.value.pnl || 0 });
+          useGameStore.setState({ cash: message.value.cash || 0, shares: message.value.shares || 0 });
+          break;
+        case MessageType.NEWS:
+          useGameStore.setState((s) => ({ news: [...s.news, message ] }));
+          useToast.getState().addToast({type:'info', title: message.title, description: message.description});
           break;
             
         case MessageType.ROOM_STATE:
               useGameStore.setState({ 
-              gameSettings: message.settings || {},
-              cash: message.settings?.startingCash || 0,
-              paused: message.paused || false,
-              started: message.started || false,
-              ended: message.ended || false,
-              onlineUsers: message.clients || 0
-               });
+                  gameSettings: message.settings || {},
+                  cash: message.settings?.startingCash || 0,
+                  paused: message.paused || false,
+                  started: message.started || false,
+                  ended: message.ended || false,
+                  onlineUsers: message.clients || 0
+                });
+              // Set the debug and price store initial values BEFORE any stock movements
+              useDebugStore.setState({ 
+                intrinsicValue: message.price || 0,
+                guidePrice: message.price || 0,
+              intrinsicValues: [message.price || 0], guidePrices: [message.price || 0] });
               usePriceStore.setState({price: message.price || 0});
               usePriceStore.getState().setClock(message.clock || 0);
 
@@ -120,6 +131,7 @@ export const handleGameMessage = (message: Message) => {
           usePriceStore.getState().setBids(message.depth[1] || []);
           break;
         case MessageType.DEBUG_PRICES:
+          console.log('Debug Prices:', message.intrinsicValue, message.guidePrice);
           useDebugStore.getState().setIntrinsicValue(message.intrinsicValue || 0);
           useDebugStore.getState().setGuidePrice(message.guidePrice || 0);
           break;

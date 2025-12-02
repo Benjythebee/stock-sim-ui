@@ -1,13 +1,16 @@
+import { useGameStore } from "../../context/game.context";
 
 
 
 export const News = ({className}: {className?: string}) => {
 
-    const news = [
-        { id: 1, timestamp: new Date(), type: 'Earnings Report', description:'Company XYZ reported better-than-expected earnings for Q1.' },
-        { id: 2, timestamp: new Date(), type: 'Market Shock', description:'Unexpected geopolitical event causes market volatility.' },
-        { id: 3, timestamp: new Date(), type: 'Product Launch', description:'Tech giant ABC launches a revolutionary new product.' },
-    ];
+  const news = useGameStore((state) => state.news);
+
+    // const news = [
+    //     { id: 1, timestamp: new Date(), type: 'Earnings Report', description:'Company XYZ reported better-than-expected earnings for Q1.' },
+    //     { id: 2, timestamp: new Date(), type: 'Market Shock', description:'Unexpected geopolitical event causes market volatility.' },
+    //     { id: 3, timestamp: new Date(), type: 'Product Launch', description:'Tech giant ABC launches a revolutionary new product.' },
+    // ];
 
     return ( <div className={`card bg-base-200 ${className}`}>
             <div className="card-body">
@@ -23,8 +26,8 @@ export const News = ({className}: {className?: string}) => {
                   {news.length === 0 && <tbody><tr><td colSpan={2} className="text-center">No news available</td></tr></tbody>}
                   <tbody>
                     {news.map((order) => (
-                      <tr key={order.id}>
-                        <td>{order.timestamp.toLocaleTimeString()}</td>
+                      <tr key={order.title}>
+                        <td>{new Date(order.timestamp).toLocaleTimeString()}</td>
                         <td>{order.description}</td>
                       </tr>
                     ))}

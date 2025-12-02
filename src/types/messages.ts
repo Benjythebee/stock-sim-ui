@@ -16,8 +16,12 @@ export enum MessageType {
     STOCK_MOVEMENT = 11,
     PORTFOLIO_UPDATE = 12,
     SHOCK = 13,
+    NEWS = 14,
+
     ADMIN_SETTINGS = 30,
+
     GAME_CONCLUSION = 60,
+
     DEBUG_PRICES=99
 }
 
@@ -36,6 +40,8 @@ export const MessageTypeNames: { [key in MessageType]: string } = {
     [MessageType.STOCK_MOVEMENT]: "STOCK_MOVEMENT",
     [MessageType.PORTFOLIO_UPDATE]: "PORTFOLIO_UPDATE",
     [MessageType.SHOCK]: "SHOCK",
+    [MessageType.NEWS]: "NEWS",
+    // Admin Messages - 30
     [MessageType.ADMIN_SETTINGS]: "ADMIN_SETTINGS",
 
     [MessageType.GAME_CONCLUSION]: "GAME_CONCLUSION",
@@ -100,6 +106,14 @@ type ErrorMessage = {
     message: string;
 }
 
+type NewsMessage = {
+    type: MessageType.NEWS;
+    title: string;
+    timestamp: number;
+    description: string;
+    durationTicks: number;
+}
+
 type ClockMessage = {
     type: MessageType.CLOCK;
     value: number;
@@ -149,7 +163,7 @@ type DebugPricesMessage = {
     guidePrice: number;
 }
 
-export type Message = JoinMessage | LeaveMessage | IsShockMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | IsAdminMessage | AdminSettingMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage | ConclusionMessage;
+export type Message = JoinMessage | LeaveMessage | IsShockMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | NewsMessage | IsAdminMessage | AdminSettingMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage | ConclusionMessage;
 
 export type {
     JoinMessage,
@@ -161,6 +175,7 @@ export type {
     PongMessage,
     ClockMessage,
     ChatMessage,
+    NewsMessage,
     ErrorMessage,
     StockMessage,
     PortfolioUpdateMessage,

@@ -49,6 +49,8 @@ export const AdminModal = () => {
                             className="input input-bordered input-primary w-full"
                             aria-placeholder="AAPL"
                             maxLength={4}
+                            minLength={1}
+                            required
                             value={gameSettings.ticketName || ''}
                             onChange={(e) => setGameSettings({ticketName: e.target.value})}
                         />
@@ -61,9 +63,12 @@ export const AdminModal = () => {
                             </label>
                             <input
                                 type="number"
+                                required
                                 placeholder="Enter starting cash amount"
                                 className="input input-bordered input-primary w-full"
                                 value={gameSettings.startingCash || ''}
+                                max={999_999_999}
+                                min={1}
                                 onChange={(e) => setGameSettings({startingCash: parseInt(e.target.value)})}
                             />
                         </div>
@@ -73,8 +78,11 @@ export const AdminModal = () => {
                             </label>
                             <input
                                 type="number"
+                                required
                                 placeholder="Enter opening price"
                                 className="input input-bordered input-primary w-full"
+                                max={10_000}
+                                min={0.01}
                                 value={gameSettings.openingPrice || ''}
                                 onChange={(e) => setGameSettings({openingPrice: parseInt(e.target.value)})}
                             />
@@ -85,14 +93,15 @@ export const AdminModal = () => {
                     <div className="form-control w-full mb-2 grid grid-cols-2 gap-2">
                         <div>
                             <label className="label">
-                                <span className="label-text font-semibold">Market Volatility</span>
+                                <span className="label-text font-semibold">Market Volatility (%)</span>
                             </label>
                             <input
                                 type="number"
                                 placeholder="Enter market volatility (%)"
                                 className="input input-bordered input-primary w-full"
                                 value={(gameSettings.marketVolatility*100) || ''}
-                                min={0}
+                                min={0.001}
+                                max={100}
                                 onChange={(e) => setGameSettings({marketVolatility: parseInt(e.target.value)})}
                             />
                         </div>
@@ -102,6 +111,9 @@ export const AdminModal = () => {
                             </label>
                             <input
                                 type="number"
+                                required
+                                min={1}
+                                max={60}
                                 placeholder="Enter game duration in minutes"
                                 className="input input-bordered input-primary w-full"
                                 value={gameSettings.gameDuration || ''}
@@ -118,13 +130,19 @@ export const AdminModal = () => {
                             type="number"
                             placeholder="Enter bot count"
                             className="input input-bordered input-primary w-full"
-                            value={gameSettings.bots || ''}
+                            value={gameSettings.bots ?? 0}
                             min={0}
                             max={50}
                             onChange={(e) => setGameSettings({bots: parseInt(e.target.value)})}
                         />
                     </div>
 
+                    <div>
+                        <label className="label">
+                            <input type="checkbox" checked={!!gameSettings.enableRandomNews} className={`toggle ${gameSettings.enableRandomNews ? 'toggle-primary' : ''}`} onChange={(e) => setGameSettings({enableRandomNews: e.target.checked})} />
+                            <span className="label-text font-semibold ml-2">Enable News Events</span>
+                        </label>
+                    </div>
                     <p className="text-center text-base-content/70 mb-6">
                         There are currently {onlineUsers} clients connected.
                     </p>
