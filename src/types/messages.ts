@@ -1,4 +1,5 @@
 import type { GameSettings } from "../context/game.context";
+import type { PowerDescription } from "./types";
 
 
 export enum MessageType {
@@ -21,6 +22,8 @@ export enum MessageType {
     ADMIN_SETTINGS = 30,
 
     GAME_CONCLUSION = 60,
+
+    POWER_OFFERS=80,
 
     DEBUG_PRICES=99
 }
@@ -45,6 +48,9 @@ export const MessageTypeNames: { [key in MessageType]: string } = {
     [MessageType.ADMIN_SETTINGS]: "ADMIN_SETTINGS",
 
     [MessageType.GAME_CONCLUSION]: "GAME_CONCLUSION",
+
+
+    [MessageType.POWER_OFFERS]: "POWER_OFFERS",
 
     [MessageType.DEBUG_PRICES]: "DEBUG_PRICES"
 };
@@ -163,7 +169,14 @@ type DebugPricesMessage = {
     guidePrice: number;
 }
 
-export type Message = JoinMessage | LeaveMessage | IsShockMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | NewsMessage | IsAdminMessage | AdminSettingMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage | ConclusionMessage;
+type PowerOffersMessage = {
+    type: MessageType.POWER_OFFERS;
+    offers: PowerDescription[]
+}
+
+
+export type Message = JoinMessage | LeaveMessage | IsShockMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | NewsMessage | IsAdminMessage | AdminSettingMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage | ConclusionMessage|
+PowerOffersMessage;
 
 export type {
     JoinMessage,
@@ -182,6 +195,7 @@ export type {
     AdminSettingMessage,
     StockMovementMessage,
     IsShockMessage,
+    PowerOffersMessage,
     DebugPricesMessage,
     ConclusionMessage
 }

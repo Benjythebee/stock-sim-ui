@@ -1,4 +1,4 @@
-import { useGameStore } from "../../context/game.context";
+import { useGameStore, usePowerStore } from "../../context/game.context";
 import { usePriceStore } from "../../context/stock.store";
 import { Chart } from "react-chartjs-2";
 import {CategoryScale} from 'chart.js';
@@ -8,6 +8,7 @@ import { useMemo } from "react";
 import { useShallow } from "zustand/shallow";
 import 'chartjs-adapter-luxon'
 import { useDebugStore } from "../../context/debug.store";
+import { cn } from "../../utils/cn";
 
 ChartJS.register(CategoryScale, LinearScale,TimeSeriesScale,CandlestickController,OhlcController, CandlestickElement, PointElement,LineController,LineElement);
 
@@ -15,6 +16,7 @@ export const TradingChart = () => {
   const { settings } = useGameStore(useShallow((state) => ({
     settings: state.gameSettings,
   })));
+  const {currentOffers} = usePowerStore()
   const { prices ,price} = usePriceStore(useShallow((state) => ({
     price: state.price,
     prices: state.prices,
@@ -38,10 +40,21 @@ export const TradingChart = () => {
       return scale
   }, [prices,intrinsicValues]);
 
+    const onToggle = () => {
+      if(!currentOffers || currentOffers.length === 0) return;
+        (document.getElementById('hand-cards-modal')! as HTMLDialogElement).showModal()
+    }
+
   return (
     <div className="card bg-base-200 flex-1 min-h-[500px]">
-      <div className="card-body">
+      <div className="card-body relative">
         <h2 className="card-title">Trading {settings.ticketName}, ${price}</h2>
+        <div className="absolute top-5 right-5 flex">
+          <button className="btn btn-sm btn-amber" data-active={currentOffers.length > 0} disabled={currentOffers.length === 0} onClick={onToggle}>
+            <img src="/briefcase_opened.webp" className={cn('w-8 h-8',currentOffers.length?`animate-wiggle`:'')} alt="Open Hand of Cards"/>
+            Open
+          </button>
+        </div>
         <div
           id={"chart-container"}
           className="flex-1 flex items-center justify-center border-2 border-dashed border-base-300 rounded-lg"
@@ -59,13 +72,13 @@ export const TradingChart = () => {
                 },
                 {
                   label: "Intrinsic Value",
-                  data: intrinsicValues.map((value, index) => ({ x: prices[index].x, y: value })),
+                  data: intrinsicValues.map((value, index) => ({ x: prices[index].x, y: value })) as unknown[],
                   type: 'line',
                   borderColor: 'rgb(54, 162, 235)', // blue
                 },
                 {
                   label: "Guide Price",
-                  data: guidePrices.map((value, index) => ({ x: prices[index].x, y: value })),
+                  data: guidePrices.map((value, index) => ({ x: prices[index].x, y: value })) as unknown[],
                   type: 'line',
                   borderColor: 'rgb(255, 99, 132)',
                   

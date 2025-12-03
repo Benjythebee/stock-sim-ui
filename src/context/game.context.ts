@@ -3,6 +3,7 @@ import { MessageType, MessageTypeNames, type ConclusionMessage, type Message, ty
 import { usePriceStore } from './stock.store';
 import { useDebugStore } from './debug.store';
 import { useToast } from '../components/Toast/useToast';
+import type { PowerDescription } from '../types/types';
 
 export type GameSettings = {
     startingCash: number;
@@ -28,6 +29,10 @@ type GameStore = {
   onlineUsers: number;
   conclusion: ConclusionMessage|null;
   news: NewsMessage[]
+  powers:{
+    data:PowerDescription[],
+    currentOffers:PowerDescription[]
+  },
   
   // Actions
   setPaused: (paused: boolean) => void;
@@ -58,6 +63,10 @@ const initialGameStore: Partial<GameStore> = {
   cash: 0,
   shares: 0,
   onlineUsers: 0,
+  powers:{
+    data:[],
+    currentOffers:[]
+  },
   conclusion: null,
 }
 
@@ -138,6 +147,14 @@ export const handleGameMessage = (message: Message) => {
         case MessageType.GAME_CONCLUSION:
           useGameStore.setState({ ended: true, conclusion:message });
           break;
+        case MessageType.POWER_OFFERS:
+          useGameStore.setState((s)=>({
+            powers:{
+              ...s.powers,
+              currentOffers:message.offers
+            }
+          }))
+          break;
         case MessageType.IS_ADMIN:
             useGameStore.setState({ isAdmin: true });
             break;
@@ -145,4 +162,32 @@ export const handleGameMessage = (message: Message) => {
             break;
         // Handle other message types as needed
     }
+}
+
+export const usePowerStore = ()=>{
+  const powers = useGameStore((state)=>state.powers);
+
+  const setPowers = (powersData: PowerDescription[])=>{
+    useGameStore.setState((s)=>({
+      powers:{
+        ...s.powers,
+        data:powersData
+      }
+    }))
+  }
+
+  const clearOffers = ()=>{
+    useGameStore.setState((s)=>({
+      powers:{
+        ...s.powers,
+        currentOffers:[]
+      }
+    }))
+  }
+
+  return {
+    ...powers,
+    setPowers,
+    clearOffers
+  }
 }
