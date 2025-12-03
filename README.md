@@ -2,6 +2,9 @@
 
 A real-time stock trading simulation application built with React, TypeScript, and WebSocket connectivity. This project provides an interactive trading environment where users can participate in simulated stock market trading with live price charts, order books, and portfolio management.
 
+Read [Getting started](https://github.com/Benjythebee/stock-sim-ui/tree/master?tab=readme-ov-file#-getting-started) for dev. 
+
+
 TODO:
 - [ ] Order history
 - [ ] Better portfolio calculation
@@ -70,6 +73,8 @@ cd stock-sim-ui
 ```bash
 pnpm install
 ```
+Install pnpm using corepack if you don't have it.
+
 
 3. Start the development server:
 ```bash
