@@ -3,12 +3,19 @@ import { useWebsocketContext } from "../../context/ws.context";
 import { MessageType } from "../../types/messages";
 import { usePriceStore } from "../../context/stock.store";
 import { MarketStateIndicator } from "./MarketClose";
+import { useGameStore } from "../../context/game.context";
 
 export const TradingCard: React.FC = () => {
   const { sendMessage } = useWebsocketContext();
+  const tradingDisabled = useGameStore((state) => state.tradingDisabled);
+  const shares = useGameStore((state) => state.shares);
+  const cash = useGameStore((state) => state.cash);
   const [orderType, setOrderType] = useState<"limit" | "market">("limit");
   const [limitPrice, setLimitPrice] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
+
+  const disabledSell = tradingDisabled || shares <= 0 || !amount || Number(amount) <= 0 || Number(amount) > shares;
+  const disabledBuy = tradingDisabled || !amount || Number(amount) <= 0 || Number(amount) * (orderType === "limit" ? Number(limitPrice) : usePriceStore.getState().price) > cash;
 
   const handleOrder = (side: "buy" | "sell") => {
     // console.log(`Placing ${side} order:`, {
@@ -21,6 +28,8 @@ export const TradingCard: React.FC = () => {
     if (!amount || Number(amount) <= 0) {
       return;
     }
+
+    if(tradingDisabled) return
 
     sendMessage({
       type: MessageType.STOCK_ACTION,
@@ -107,12 +116,14 @@ export const TradingCard: React.FC = () => {
         <div className="grid grid-cols-2 gap-2 mt-4">
           <button
             className="btn btn-success"
-            disabled={!amount || Number(amount) <= 0}
+            disabled={disabledBuy}
             onClick={() => handleOrder("buy")}
           >
             Buy
           </button>
-          <button className="btn btn-error" onClick={() => handleOrder("sell")}>
+          <button className="btn btn-error" 
+          disabled={disabledSell}
+          onClick={() => handleOrder("sell")}>
             Sell
           </button>
         </div>

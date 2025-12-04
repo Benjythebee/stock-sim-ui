@@ -7,7 +7,6 @@ import { useGameStore } from '../context/game.context';
 import { useShallow } from 'zustand/shallow';
 import { ConclusionModal } from '../components/Conclusion';
 import { News } from '../components/Trading/News';
-import { HandOfCards } from '../components/cards/handOfCards';
 
 
 
@@ -15,11 +14,11 @@ export default function RoomPage() {
   const {paused,ended} = useGameStore(useShallow((state) => ({paused: state.paused, ended: state.ended})));
 
   return (
-    <div className="relative min-h-screen bg-base-100 p-4">
+    <div id='room-page' className="relative min-h-screen bg-base-100 p-4">
       {(paused || ended) && <div className="modal-backdrop fixed inset-0 bg-black opacity-20 z-40"></div>}
       <AdminModal  />
       <ConclusionModal  />
-      <HandOfCards />
+      
       <div className="flex flex-col lg:flex-row gap-4 h-full">
         {/* Main Chart Container */}
         <div className="flex-1 flex flex-col gap-4">

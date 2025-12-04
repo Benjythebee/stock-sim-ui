@@ -1,21 +1,19 @@
 import type React from "react";
 import type { PowerDescription } from "../../types/types";
+import { cn } from "../../utils/cn";
+import { powerCardIcons } from "./card.icons";
 
-const powerCardIcons= {
-    "talk":{
-        attribution:'https://game-icons.net/1x1/skoll/talk.html',
-        author:'Skoll'
-    },
-    "default":{
-        attribution:'https://game-icons.net/1x1/seregacthtuf/pouch-with-beads.html',
-        author:'Seregacthtuf'
-    }
-}
-
-export const PowerCard = (props: React.ComponentProps<'div'>&{power: Pick<PowerDescription,'description'|'title'|'iconSlug'>}) => {
+export const PowerCard = (props: React.ComponentProps<'div'>&{mini?:boolean, power: Pick<PowerDescription,'id'|'type'|'isInstant'|'description'|'title'|'iconSlug'>}) => {
     const {power, ...rest} = props;
+
     const imageURL = powerCardIcons[power.iconSlug as keyof typeof powerCardIcons] ? `/powers/${power.iconSlug}.svg` : `/powers/${power.iconSlug}.svg`;
-    return (<div className="power-card" {...rest}>
+
+    const color = power.type === 'all' ? 'all' : power.type === 'client' ? 'client' : 'market';
+
+    return (<div className={cn("power-card",{
+        "mini": props.mini,
+        [color]: true
+    })} {...rest}>
             <div className="pattern">
                 <div className="dot"></div>
                 <div className="dot"></div>
@@ -27,6 +25,7 @@ export const PowerCard = (props: React.ComponentProps<'div'>&{power: Pick<PowerD
                 <div className="star"></div>
             </div>
             <div className="power-card-content">
+                {power.isInstant ? <div className="instant-banner">Instant</div> : null}
                 <h2 className="power-card-title">{power.title}</h2>
                 <div className="power-card-icon">
                     <img src={imageURL} alt={power.title} />

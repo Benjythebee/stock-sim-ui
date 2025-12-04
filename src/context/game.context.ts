@@ -24,6 +24,7 @@ type GameStore = {
   paused: boolean;
   started: boolean;
   ended: boolean;
+  tradingDisabled: boolean;
   cash: number;
   shares: number;
   onlineUsers: number;
@@ -31,7 +32,8 @@ type GameStore = {
   news: NewsMessage[]
   powers:{
     data:PowerDescription[],
-    currentOffers:PowerDescription[]
+    currentOffers:PowerDescription[],
+    inventory:PowerDescription[]
   },
   
   // Actions
@@ -48,6 +50,7 @@ const initialGameStore: Partial<GameStore> = {
   paused: true,
   started: false,
   ended: false,
+  tradingDisabled: false,
   gameSettings: { 
     startingCash: 5000, 
     openingPrice: 1,
@@ -65,7 +68,8 @@ const initialGameStore: Partial<GameStore> = {
   onlineUsers: 0,
   powers:{
     data:[],
-    currentOffers:[]
+    currentOffers:[],
+    inventory:[]
   },
   conclusion: null,
 }
@@ -97,25 +101,32 @@ export const handleGameMessage = (message: Message) => {
       case MessageType.TOGGLE_PAUSE:
         useGameStore.setState((s) => ({ paused: !s.paused, started: s.started ===false? true : s.started }));
         break;
-        case MessageType.CLOCK:
-          usePriceStore.getState().setClock(message.value);
-          usePriceStore.setState({ timeLeft: message.timeLeft });
-          break;
-        case MessageType.JOIN:
-          useGameStore.setState((s)=>({ onlineUsers: s.onlineUsers + 1 || 0 }));
-          useToast.getState().addToast({type:'success', description:`${message.username} joined the game.`});
-          break;
+        
+      case MessageType.CLOCK:
+        usePriceStore.getState().setClock(message.value);
+        usePriceStore.setState({ timeLeft: message.timeLeft });
+        break;
+      case MessageType.CLIENT_STATE:
+        useGameStore.setState({ tradingDisabled: message.tradingDisabled });
+        break;
+      case MessageType.NOTIFICATION:
+        useToast.getState().addToast({type:message.level, description:message.description, title:message.title,timeout:5000});
+        break;
+      case MessageType.JOIN:
+        useGameStore.setState((s)=>({ onlineUsers: s.onlineUsers + 1 || 0 }));
+        useToast.getState().addToast({type:'success', description:`${message.username} joined the game.`});
+        break;
             /**
          * Hook onto the join message for room setup
          */
-        case MessageType.PORTFOLIO_UPDATE:
-          useGameStore.setState({ cash: message.value.cash || 0, shares: message.value.shares || 0 });
-          break;
-        case MessageType.NEWS:
-          useGameStore.setState((s) => ({ news: [...s.news, message ] }));
-          useToast.getState().addToast({type:'info', title: message.title, description: message.description});
-          break;
-            
+      case MessageType.PORTFOLIO_UPDATE:
+        useGameStore.setState({ cash: message.value.cash || 0, shares: message.value.shares || 0 });
+        break;
+      case MessageType.NEWS:
+        useGameStore.setState((s) => ({ news: [...s.news, message ] }));
+        useToast.getState().addToast({type:'info', title: message.title, description: message.description});
+        break;
+          
         case MessageType.ROOM_STATE:
               useGameStore.setState({ 
                   gameSettings: message.settings || {},
@@ -140,7 +151,7 @@ export const handleGameMessage = (message: Message) => {
           usePriceStore.getState().setBids(message.depth[1] || []);
           break;
         case MessageType.DEBUG_PRICES:
-          console.log('Debug Prices:', message.intrinsicValue, message.guidePrice);
+          // console.log('Debug Prices:', message.intrinsicValue, message.guidePrice);
           useDebugStore.getState().setIntrinsicValue(message.intrinsicValue || 0);
           useDebugStore.getState().setGuidePrice(message.guidePrice || 0);
           break;
@@ -154,6 +165,25 @@ export const handleGameMessage = (message: Message) => {
               currentOffers:message.offers
             }
           }))
+          break;
+        case MessageType.POWER_INVENTORY:{
+          const inventory = useGameStore.getState().powers.data.filter(p=>message.inventory.includes(p.id));
+          useGameStore.setState((s)=>({
+            powers:{
+              ...s.powers,
+              inventory
+            }
+          }))
+          break;}
+        case MessageType.POWER_CONSUME:
+          useGameStore.setState((s)=>({
+            powers:{
+              ...s.powers,
+              inventory:s.powers.inventory.filter(p=>p.id !== message.id)
+            }
+          }))
+          // Anything else that needs to be done on power consume can go here
+
           break;
         case MessageType.IS_ADMIN:
             useGameStore.setState({ isAdmin: true });

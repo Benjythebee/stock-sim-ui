@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useToast, type Toast } from './useToast';
+import { cn } from '../../utils/cn';
 
 
 const ToastItem: React.FC<{ toast: Toast }> = ({ toast }) => {
@@ -14,10 +15,14 @@ const ToastItem: React.FC<{ toast: Toast }> = ({ toast }) => {
         return () => clearTimeout(timer);
     }, [toast.id, toast.timeout, removeToast]);
 
-    const alertClass = `alert alert-${toast.type}`;
 
     return (
-        <div className={alertClass}>
+        <div className={cn(`alert`,{
+            'alert-info': toast.type === 'info',
+            'alert-success': toast.type === 'success',
+            'alert-warning': toast.type === 'warning',
+            'alert-error': toast.type === 'error',
+        })}>
             <div>
                 {toast.title && <div className="font-bold">{toast.title}</div>}
                 <span>{toast.description}</span>
@@ -35,10 +40,10 @@ const ToastItem: React.FC<{ toast: Toast }> = ({ toast }) => {
 export const Toaster: React.FC = () => {
     const { toasts } = useToast();
 
-    if (toasts.length === 0) return null;
+    // if (toasts.length === 0) return null;
 
     return (
-        <div className="toast toast-top toast-end">
+        <div className="toast toast-bottom toast-end">
             {toasts.map((toast) => (
                 <ToastItem key={toast.id} toast={toast} />
             ))}

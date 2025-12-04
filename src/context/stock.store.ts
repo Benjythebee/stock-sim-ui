@@ -97,7 +97,7 @@ export const usePriceStore = create<PriceStore>((set,get) => ({
 
         if(prices.length < labelLength+1){
             // First candle
-            console.log('Created missing candle:', prices);
+            // console.log('Created missing candle:', prices);
             set({ prices: [...prices,{
                 x: luxonTime.valueOf(),
                 o: lastPrice,

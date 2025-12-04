@@ -6,7 +6,7 @@ import { create } from 'zustand';
 export interface Toast {
     id: string;
     title?: string;
-    description: string;
+    description?: string;
     type: 'info' | 'success' | 'warning' | 'error';
     timeout?: number;
 }

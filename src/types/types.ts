@@ -1,19 +1,25 @@
 
 
 export type PowerDescription = {
+    id: string
     /**
      * Rarity of the power for briefcase generation (lower is more rare)
      * 0 = never used for briefcases
      */
     rarity: number
     /**
-     * Unused for now, but could be used to target specific users or all users or the market
+     * Type of power - 'all' = affects all players, 'market' = affects market only, 'client' = affects only the client who used it
+     * Default: 'market'
      */
-    targetUserId?: string | 'all' | 'market';
+    type?: 'client' | 'all' | 'market';
     /**
      * Optional icon slug for the power (for UI display purposes only)
      */
     iconSlug?: string;
+    /**
+     * Is the power instant - Instant means it's consumed on selection, otherwise it is kept in "inventory" until consumed
+     */
+    isInstant?: boolean;
     /**
      * Title of the power
      */

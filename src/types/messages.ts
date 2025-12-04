@@ -18,12 +18,17 @@ export enum MessageType {
     PORTFOLIO_UPDATE = 12,
     SHOCK = 13,
     NEWS = 14,
+    NOTIFICATION = 15,
+    CLIENT_STATE = 16,
 
     ADMIN_SETTINGS = 30,
 
     GAME_CONCLUSION = 60,
 
     POWER_OFFERS=80,
+    POWER_SELECT=81,
+    POWER_CONSUME=82,
+    POWER_INVENTORY=83,
 
     DEBUG_PRICES=99
 }
@@ -44,6 +49,8 @@ export const MessageTypeNames: { [key in MessageType]: string } = {
     [MessageType.PORTFOLIO_UPDATE]: "PORTFOLIO_UPDATE",
     [MessageType.SHOCK]: "SHOCK",
     [MessageType.NEWS]: "NEWS",
+    [MessageType.NOTIFICATION]: "NOTIFICATION",
+    [MessageType.CLIENT_STATE]: "CLIENT_STATE",
     // Admin Messages - 30
     [MessageType.ADMIN_SETTINGS]: "ADMIN_SETTINGS",
 
@@ -51,6 +58,9 @@ export const MessageTypeNames: { [key in MessageType]: string } = {
 
 
     [MessageType.POWER_OFFERS]: "POWER_OFFERS",
+    [MessageType.POWER_SELECT]: "POWER_SELECT",
+    [MessageType.POWER_CONSUME]: "POWER_CONSUME",
+    [MessageType.POWER_INVENTORY]: "POWER_INVENTORY",
 
     [MessageType.DEBUG_PRICES]: "DEBUG_PRICES"
 };
@@ -130,6 +140,18 @@ type AdminSettingMessage = {
     settings: Partial<GameSettings>;
 }
 
+type NotificationMessage = {
+    type: MessageType.NOTIFICATION;
+    level: 'info' | 'warning' | 'error' | 'success';
+    title: string;
+    description?: string;
+}
+
+type ClientStateMessage = {
+    type: MessageType.CLIENT_STATE;
+    tradingDisabled: boolean;
+}
+
 type StockMessage = {
     type: MessageType.STOCK_ACTION;
     action: 'BUY' | 'SELL';
@@ -174,9 +196,22 @@ type PowerOffersMessage = {
     offers: PowerDescription[]
 }
 
+type PowerSelectMessage = {
+    type: MessageType.POWER_SELECT;
+    index: number;
+}
 
-export type Message = JoinMessage | LeaveMessage | IsShockMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | NewsMessage | IsAdminMessage | AdminSettingMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage | ConclusionMessage|
-PowerOffersMessage;
+type PowerConsumeMessage = {
+    type: MessageType.POWER_CONSUME;
+    id: string;
+}
+type PowerInventoryMessage = {
+    type: MessageType.POWER_INVENTORY;
+    inventory: string[]
+}
+
+export type Message = JoinMessage | LeaveMessage | IsShockMessage | ClientStateMessage| NotificationMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | NewsMessage | IsAdminMessage | AdminSettingMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage | ConclusionMessage|
+PowerOffersMessage | PowerSelectMessage | PowerConsumeMessage | PowerInventoryMessage;
 
 export type {
     JoinMessage,
@@ -192,10 +227,14 @@ export type {
     ErrorMessage,
     StockMessage,
     PortfolioUpdateMessage,
+    ClientStateMessage,
     AdminSettingMessage,
     StockMovementMessage,
     IsShockMessage,
     PowerOffersMessage,
+    PowerSelectMessage,
+    PowerConsumeMessage,
+    PowerInventoryMessage,
     DebugPricesMessage,
     ConclusionMessage
 }

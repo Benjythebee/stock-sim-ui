@@ -9,6 +9,7 @@ import { useShallow } from "zustand/shallow";
 import 'chartjs-adapter-luxon'
 import { useDebugStore } from "../../context/debug.store";
 import { PowerButton } from "./PowerButton";
+import { SelectedCards } from "../cards/selected.cards";
 
 ChartJS.register(CategoryScale, LinearScale,TimeSeriesScale,CandlestickController,OhlcController, CandlestickElement, PointElement,LineController,LineElement);
 
@@ -47,6 +48,7 @@ export const TradingChart = () => {
       <div className="card-body relative">
         <h2 className="card-title">Trading {settings.ticketName}, ${price}</h2>
         <div className="absolute top-5 right-5 flex">
+          <SelectedCards />
           <PowerButton />
         </div>
         <div
