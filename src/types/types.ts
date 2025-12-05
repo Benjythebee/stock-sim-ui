@@ -11,7 +11,7 @@ export type PowerDescription = {
      * Type of power - 'all' = affects all players, 'market' = affects market only, 'client' = affects only the client who used it
      * Default: 'market'
      */
-    type?: 'client' | 'all' | 'market';
+    type?: 'client' | 'all' | 'market' | 'others';
     /**
      * Optional icon slug for the power (for UI display purposes only)
      */

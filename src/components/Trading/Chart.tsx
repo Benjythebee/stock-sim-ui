@@ -9,7 +9,7 @@ import { useShallow } from "zustand/shallow";
 import 'chartjs-adapter-luxon'
 import { useDebugStore } from "../../context/debug.store";
 import { PowerButton } from "./PowerButton";
-import { SelectedCards } from "../cards/selected.cards";
+import { SelectedCards } from "../PowerCards/selected.cards";
 
 ChartJS.register(CategoryScale, LinearScale,TimeSeriesScale,CandlestickController,OhlcController, CandlestickElement, PointElement,LineController,LineElement);
 
@@ -31,17 +31,15 @@ export const TradingChart = () => {
   const memoizedScale = useMemo(() => {
     const scale = {min: 0, max: 0};
       const prices_ = prices.length? prices.map(c => [c.l, c.h]).flat() : [];
-      const minP = Math.min(...prices_,intrinsicValues[intrinsicValues.length -1] || prices_[intrinsicValues.length -1])
-      const maxP = Math.max(...prices_,intrinsicValues[intrinsicValues.length -1] || prices_[intrinsicValues.length -1])
+      const minP = Math.min(...prices_,guidePrices[guidePrices.length -1] || prices_[guidePrices.length -1])
+      const maxP = Math.max(...prices_,guidePrices[guidePrices.length -1] || prices_[guidePrices.length -1])
 
       const minPrice = isFinite(minP) ? minP : 0;
       const maxPrice = isFinite(maxP) ? maxP : 1;
       scale.min = minPrice * 0.95;
       scale.max = maxPrice * 1.05;
       return scale
-  }, [prices,intrinsicValues]);
-
-
+  }, [prices,guidePrices]);
 
   return (
     <div className="card bg-base-200 flex-1 min-h-[500px]">
@@ -66,19 +64,19 @@ export const TradingChart = () => {
                   // backgroundColor: 'rgba(75, 192, 192, 0.2)',
                   // tension: 0.1
                 },
-                {
-                  label: "Intrinsic Value",
-                  data: intrinsicValues.map((value, index) => ({ x: prices[index].x, y: value })) as unknown[],
-                  type: 'line',
-                  borderColor: 'rgb(54, 162, 235)', // blue
-                },
-                {
-                  label: "Guide Price",
-                  data: guidePrices.map((value, index) => ({ x: prices[index].x, y: value })) as unknown[],
-                  type: 'line',
-                  borderColor: 'rgb(255, 99, 132)',
+                // {
+                //   label: "Intrinsic Value",
+                //   data: intrinsicValues.map((value, index) => ({ x: prices[index].x, y: value })) as unknown[],
+                //   type: 'line',
+                //   borderColor: 'rgb(54, 162, 235)', // blue
+                // },
+                // {
+                //   label: "Guide Price",
+                //   data: guidePrices.map((value, index) => ({ x: prices[index].x, y: value })) as unknown[],
+                //   type: 'line',
+                //   borderColor: 'rgb(255, 99, 132)',
                   
-                }
+                // }
               ],
             }}
             options={{

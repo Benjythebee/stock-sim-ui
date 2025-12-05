@@ -3,6 +3,7 @@ import type { PowerDescription } from "./types";
 
 
 export enum MessageType {
+    ID =-1,
     JOIN = 0,
     LEAVE = 1,
     IS_ADMIN=2,
@@ -34,6 +35,7 @@ export enum MessageType {
 }
 
 export const MessageTypeNames: { [key in MessageType]: string } = {
+    [MessageType.ID]: "ID",
     [MessageType.JOIN]: "JOIN",
     [MessageType.LEAVE]: "LEAVE",
     [MessageType.IS_ADMIN]: "IS_ADMIN",
@@ -65,6 +67,10 @@ export const MessageTypeNames: { [key in MessageType]: string } = {
     [MessageType.DEBUG_PRICES]: "DEBUG_PRICES"
 };
 
+type IDMessage = {
+    type: MessageType.ID;
+    id: string;
+}
 
 type JoinMessage = {
     type: MessageType.JOIN;
@@ -210,10 +216,11 @@ type PowerInventoryMessage = {
     inventory: string[]
 }
 
-export type Message = JoinMessage | LeaveMessage | IsShockMessage | ClientStateMessage| NotificationMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | NewsMessage | IsAdminMessage | AdminSettingMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage | ConclusionMessage|
+export type Message = IDMessage|JoinMessage | LeaveMessage | IsShockMessage | ClientStateMessage| NotificationMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | NewsMessage | IsAdminMessage | AdminSettingMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage | ConclusionMessage|
 PowerOffersMessage | PowerSelectMessage | PowerConsumeMessage | PowerInventoryMessage;
 
 export type {
+    IDMessage,
     JoinMessage,
     LeaveMessage,
     PingMessage,

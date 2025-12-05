@@ -16,11 +16,13 @@
     "chartjs-adapter-luxon": "1.3.1",
     "chartjs-chart-financial": "^0.2.1",
     "classnames": "^2.5.1",
+    "css-variants": "^2.1.0",
     "lucide-react": "^0.546.0",
     "luxon": "3.4.4",
     "react": "^19.1.1",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.1.1",
+    "react-router": "^7.10.1",
     "tailwindcss": "^4.1.16",
     "theme-change": "^2.5.0",
     "zustand": "^5.0.8"

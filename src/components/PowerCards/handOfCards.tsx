@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import { PowerCard } from "./card"
 import { usePowerStore } from "../../context/game.context";
 import type { PowerDescription } from "../../types/types";
+import { cn } from "../../utils/cn";
 
 type HandOfCardsProps = {
     cards: PowerDescription[];
@@ -9,9 +10,10 @@ type HandOfCardsProps = {
     onClose?: () => void;
     title?: string; // will override the skip button
     onSkip?: () => void; // Optional callback for when selection is skipped
+    className?: string;
 }
 
-export const HandOfCards = ({cards, title, onSelectCard, onSkip, onClose}: HandOfCardsProps) => {
+export const HandOfCards = ({cards, title, onSelectCard, onSkip, onClose, className}: HandOfCardsProps) => {
     const {data, setPowers} = usePowerStore();
     
     useEffect(() => {
@@ -24,24 +26,10 @@ export const HandOfCards = ({cards, title, onSelectCard, onSkip, onClose}: HandO
        })
     }, [data]);
 
-
-    // const onClose = () => {
-    //     clearOffers();
-    //     (document.getElementById('hand-cards-modal')! as HTMLDialogElement).close()
-    // }
-
-    // const onSelectCard = (index: number) => {
-    //     console.log("Selected power:", cards[index]);
-    //     sendMessage({
-    //         type:MessageType.POWER_SELECT,
-    //         index
-    //     })
-    //     onClose();
-    // }
     
     console.log("Rendering HandOfCards with cards:", cards);
     return (
-        <dialog className="modal" id="hand-cards-modal">
+        <dialog className={cn('modal',className)} id="hand-cards-modal">
             <div className="absolute top-20 left-1/2 -translate-x-1/2 ">
             {title ? <h2 className="text-primary font-bold text-4xl">{title}</h2> : (onSkip && <div className="btn btn-error btn-lg pointer-events-auto" onClick={onClose}>
                 Skip Selection

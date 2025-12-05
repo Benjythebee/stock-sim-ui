@@ -4,7 +4,7 @@ import { cn } from "../../utils/cn";
 import { powerCardIcons } from "./card.icons";
 
 export const PowerCard = (props: React.ComponentProps<'div'>&{mini?:boolean, power: Pick<PowerDescription,'id'|'type'|'isInstant'|'description'|'title'|'iconSlug'>}) => {
-    const {power, ...rest} = props;
+    const {power,className, ...rest} = props;
 
     const imageURL = powerCardIcons[power.iconSlug as keyof typeof powerCardIcons] ? `/powers/${power.iconSlug}.svg` : `/powers/${power.iconSlug}.svg`;
 
@@ -13,7 +13,7 @@ export const PowerCard = (props: React.ComponentProps<'div'>&{mini?:boolean, pow
     return (<div className={cn("power-card",{
         "mini": props.mini,
         [color]: true
-    })} {...rest}>
+    }, className)} {...rest}>
             <div className="pattern">
                 <div className="dot"></div>
                 <div className="dot"></div>

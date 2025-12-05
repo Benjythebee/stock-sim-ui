@@ -2,18 +2,18 @@ import { useEffect, useState } from "react";
 import {useShallow} from "zustand/shallow";
 import { useWebsocketContext } from "../../context/ws.context";
 import { useGameStore } from "../../context/game.context";
-import { useViewContext, View } from "../../context/view.context";
+import { useNavigate } from "react-router";
 
 
 export const Join = () => {
   const {connect,status,error} = useWebsocketContext();
-  const {setView} = useViewContext();
+  const navigate = useNavigate();
   const {username,setUsername} = useGameStore(useShallow((state) => ({username: state.username, setUsername: state.setUsername})));
   const [roomCode, setRoomCode] = useState<string>("");
 
   const handleJoin = () => {
     if (username.trim()) {
-      console.log("Joining game:", { username, roomCode });
+      localStorage.setItem('username', username);
       // Add your join logic here
       connect(username, roomCode);
     }
@@ -27,16 +27,13 @@ export const Join = () => {
 
   useEffect(() => {
     if (roomCode && status === 'CONNECTED') {
-      setView(View.Room);
+      navigate(`/${roomCode}`);
     }
   }, [status, roomCode]);
 
   return <div className="card absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 bg-base-100 shadow-xl">
         <div className="card-body items-center">
           <img src="/stonk-lord_alpha.webp" alt="Stonk Lords Logo" className="w-38 h-38"/>
-          <p className="text-center text-base-content/70 mb-6">
-            Enter your details to start playing
-          </p>
           {status === 'PENDING' && error && <div className="text-red-500 mb-4">{error}</div>}
           {status === 'PENDING'&& !error && <div>
             <span className="loading loading-dots loading-lg"></span>

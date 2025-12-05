@@ -3,12 +3,12 @@ import { cn } from "../../utils/cn";
 import { Portal } from "../portal";
 import { useWebsocketContext } from "../../context/ws.context";
 import { MessageType } from "../../types/messages";
-import { HandOfCards } from "../cards/handOfCards";
+import { HandOfCards } from "../PowerCards/handOfCards";
 
 
 export const PowerButton = () => {
   const {currentOffers,clearOffers} = usePowerStore()
-  const {sendMessage} = useWebsocketContext();
+  const {sendMessage,isSpectate} = useWebsocketContext();
 
     const modal = ()=>{
         return (document.getElementById('hand-cards-modal')! as HTMLDialogElement)
@@ -30,6 +30,8 @@ export const PowerButton = () => {
         })
         onClose();
     }
+
+    if(isSpectate) return null;
 
   return   <>
     <button className="btn btn-sm btn-amber" data-active={currentOffers.length > 0} disabled={currentOffers.length === 0} onClick={onToggle}>

@@ -12,9 +12,9 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
   const pingTimeRef = useRef<number | null>(null);
   const [room, setRoom] = useState<string>('');
   const [ping, setPing] = useState<number>(0);
+  const [isSpectate, setIsSpectate] = useState<boolean>(false);
 
     const onConnected = useEffectEvent(() => {
-        console.log('Connected to WebSocket server');
         setStatus('CONNECTED');
         setInterval(() => {
             pingTimeRef.current = Date.now();
@@ -24,11 +24,16 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
     const onMessage = useEffectEvent((event: MessageEvent<string>) => {
 
         const message = JSON.parse(event.data) as Message;
+        console.log('Received message:', message);
         if(!event.data){
             console.error('Received invalid message:', event.data);
             return;
         }
 
+        if(message.type === MessageType.ID ){
+            localStorage.setItem('session_', message.id);
+            return
+        }
 
         if(message.type === MessageType.PONG){
             const now = Date.now();
@@ -67,12 +72,31 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
 //     return () => websocket.close();
 //   }, []);
 
-  const connect = useCallback((username: string, roomCode: string) => {
+  const connect = useCallback((username: string, roomCode: string, spectate: boolean=false) => {
     if (ws) {
       ws.close();
     }
     setStatus('PENDING');
-    const websocket = new WebSocket(`ws://localhost:3000/ws/${roomCode}?username=${username}`);
+    setIsSpectate(spectate);
+
+    const pastSession = localStorage.getItem(`session_`);
+    if(!pastSession?.startsWith(roomCode)){
+      // we're connecting to a new room;
+      localStorage.removeItem('session_');
+    }
+
+    const wsUrl = new URL(`ws://localhost:3000/ws/${roomCode}`);
+    wsUrl.searchParams.append('username', username);
+    if(pastSession){
+      // reconnecting to an existing session
+      wsUrl.searchParams.append('prevSessionData', pastSession || '');
+    }
+
+    if(spectate){
+      wsUrl.searchParams.append('spectator', 'true');
+    }
+
+    const websocket = new WebSocket(wsUrl.toString());
     setRoom(roomCode);
     setListeners(websocket);
     setWs(websocket);
@@ -96,7 +120,7 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
   }
 
     return (
-        <WebsocketContext.Provider value={{ connect, disconnect, sendMessage, error, ping, room, status }}>
+        <WebsocketContext.Provider value={{ connect, disconnect, sendMessage, error, ping, room, status, isSpectate}}>
             {children}
         </WebsocketContext.Provider>
     );

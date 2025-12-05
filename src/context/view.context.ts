@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 enum View {
   Home = 'home',
   Room = 'room',
+  WhatIsThis = 'what-is-this',
 }
 
 export const ViewContext = createContext<{
