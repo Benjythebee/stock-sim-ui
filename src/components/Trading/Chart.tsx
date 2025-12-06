@@ -64,19 +64,19 @@ export const TradingChart = () => {
                   // backgroundColor: 'rgba(75, 192, 192, 0.2)',
                   // tension: 0.1
                 },
-                // {
-                //   label: "Intrinsic Value",
-                //   data: intrinsicValues.map((value, index) => ({ x: prices[index].x, y: value })) as unknown[],
-                //   type: 'line',
-                //   borderColor: 'rgb(54, 162, 235)', // blue
-                // },
-                // {
-                //   label: "Guide Price",
-                //   data: guidePrices.map((value, index) => ({ x: prices[index].x, y: value })) as unknown[],
-                //   type: 'line',
-                //   borderColor: 'rgb(255, 99, 132)',
+                {
+                  label: "Intrinsic Value",
+                  data: intrinsicValues.map((value, index) => ({ x: prices[index].x, y: value })) as unknown[],
+                  type: 'line',
+                  borderColor: 'rgb(54, 162, 235)', // blue
+                },
+                {
+                  label: "Guide Price",
+                  data: guidePrices.map((value, index) => ({ x: prices[index].x, y: value })) as unknown[],
+                  type: 'line',
+                  borderColor: 'rgb(255, 99, 132)',
                   
-                // }
+                }
               ],
             }}
             options={{
