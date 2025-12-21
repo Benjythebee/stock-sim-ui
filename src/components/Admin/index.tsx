@@ -1,9 +1,13 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useGameStore, type GameSettings } from "../../context/game.context";
 import { useWebsocketContext } from "../../context/ws.context";
 import { MessageType } from "../../types/messages";
 import { usePriceStore } from "../../context/stock.store";
 import { useShallow } from "zustand/shallow";
+import { SettingTabs, type AdminSettingsTab } from "./tabs";
+import { BotsSettings } from "./bots-settings";
+import { GeneralSettings } from "./general-settings";
+import { PowerSettings } from "./power-settings";
 
 
 
@@ -11,13 +15,13 @@ export const AdminModal = () => {
     const {prices} = usePriceStore(useShallow((state) => ({prices: state.prices})));
     const {paused,isAdmin, onlineUsers} = useGameStore(useShallow((state) => ({paused: state.paused, isAdmin: state.isAdmin, onlineUsers: state.onlineUsers})));
     const {sendMessage} = useWebsocketContext();
-    const {gameSettings, saveGameSettings} = useGameStore(useShallow((state) => ({saveGameSettings: state.saveGameSettings, gameSettings: state.gameSettings})));
+    const {saveGameSettings} = useGameStore(useShallow((state) => ({saveGameSettings: state.saveGameSettings, gameSettings: state.gameSettings})));
+
     const setGameSettings = useCallback((settings: Partial<GameSettings>) => {
         sendMessage({type: MessageType.ADMIN_SETTINGS, settings});
         saveGameSettings(settings);
     }, [sendMessage, saveGameSettings]);
-
-    
+    const [tab, setTab] = useState<AdminSettingsTab>('general');
 
     const onStartGame = () => {
         sendMessage({type: MessageType.TOGGLE_PAUSE});
@@ -39,110 +43,12 @@ export const AdminModal = () => {
                     <p className="text-center text-base-content/70 mb-2">
                         Modify game settings below
                     </p>
-                    <div className="form-control w-full mb-2">
-                        <label className="label">
-                            <span className="label-text font-semibold">Stock Ticker</span>
-                        </label>
-                        <input
-                            type="text"
-                            placeholder="Enter stock ticker"
-                            className="input input-bordered input-primary w-full"
-                            aria-placeholder="AAPL"
-                            maxLength={4}
-                            minLength={1}
-                            required
-                            value={gameSettings.ticketName || ''}
-                            onChange={(e) => setGameSettings({ticketName: e.target.value})}
-                        />
-                    </div>
+                    <SettingTabs tab={tab} setTab={setTab} />
 
-                    <div className="form-control w-full mb-2 grid grid-cols-2 gap-2">
-                        <div>
-                            <label className="label">
-                                <span className="label-text font-semibold">Starting Cash</span>
-                            </label>
-                            <input
-                                type="number"
-                                required
-                                placeholder="Enter starting cash amount"
-                                className="input input-bordered input-primary w-full"
-                                value={gameSettings.startingCash || ''}
-                                max={999_999_999}
-                                min={1}
-                                onChange={(e) => setGameSettings({startingCash: parseInt(e.target.value)})}
-                            />
-                        </div>
-                        <div>
-                            <label className="label">
-                                <span className="label-text font-semibold">Opening Price</span>
-                            </label>
-                            <input
-                                type="number"
-                                required
-                                placeholder="Enter opening price"
-                                className="input input-bordered input-primary w-full"
-                                max={10_000}
-                                min={0.01}
-                                value={gameSettings.openingPrice || ''}
-                                onChange={(e) => setGameSettings({openingPrice: parseInt(e.target.value)})}
-                            />
-                        </div>
+                    {tab === 'general' && (<GeneralSettings setGameSettings={setGameSettings} />)}
+                    {tab === 'bots' && (<BotsSettings setGameSettings={setGameSettings} />)}
+                    {tab === 'powers' && (<PowerSettings setGameSettings={setGameSettings} />)}         
 
-                    </div>
-
-                    <div className="form-control w-full mb-2 grid grid-cols-2 gap-2">
-                        <div>
-                            <label className="label">
-                                <span className="label-text font-semibold">Market Volatility (%)</span>
-                            </label>
-                            <input
-                                type="number"
-                                placeholder="Enter market volatility (%)"
-                                className="input input-bordered input-primary w-full"
-                                value={(gameSettings.marketVolatility*100) || ''}
-                                min={0.001}
-                                max={100}
-                                onChange={(e) => setGameSettings({marketVolatility: parseInt(e.target.value)})}
-                            />
-                        </div>
-                        <div>
-                            <label className="label">
-                                <span className="label-text font-semibold">Game Duration (mins)</span>
-                            </label>
-                            <input
-                                type="number"
-                                required
-                                min={1}
-                                max={60}
-                                placeholder="Enter game duration in minutes"
-                                className="input input-bordered input-primary w-full"
-                                value={gameSettings.gameDuration || ''}
-                                onChange={(e) => setGameSettings({gameDuration: parseInt(e.target.value)})}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="form-control w-full mb-2">
-                        <label className="label">
-                            <span className="label-text font-semibold">Bot Count</span>
-                        </label>
-                        <input
-                            type="number"
-                            placeholder="Enter bot count"
-                            className="input input-bordered input-primary w-full"
-                            value={gameSettings.bots ?? 0}
-                            min={0}
-                            max={50}
-                            onChange={(e) => setGameSettings({bots: parseInt(e.target.value)})}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="label">
-                            <input type="checkbox" checked={!!gameSettings.enableRandomNews} className={`toggle ${gameSettings.enableRandomNews ? 'toggle-primary' : ''}`} onChange={(e) => setGameSettings({enableRandomNews: e.target.checked})} />
-                            <span className="label-text font-semibold ml-2">Enable News Events</span>
-                        </label>
-                    </div>
                     <p className="text-center text-base-content/70 mb-6">
                         There are currently {onlineUsers} clients connected.
                     </p>

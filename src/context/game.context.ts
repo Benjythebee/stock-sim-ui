@@ -14,6 +14,7 @@ export type GameSettings = {
     gameDuration: number; // in minutes
     bots: number;
     ticketName: string;
+    botSelection?: string[]; // array of bot Types
 }
 
 type GameStore = {

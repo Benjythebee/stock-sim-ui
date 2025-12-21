@@ -3,13 +3,17 @@ import { HomeNavigation } from "./components/nav"
 import { InGameNavigation } from "./components/nav/in-game.nav"
 import { Toaster } from "./components/Toast/Toaster"
 import { Discord } from "@ridemountainpig/svgl-react"
+import { useState } from "react"
+import { QueryClient ,QueryClientProvider} from "@tanstack/react-query"
 
 
 export const Layout = ({children}: {children: React.ReactNode}) => {
 
     const room = useParams<{roomId: string}>()
+    const [queryClient,] = useState(() => new QueryClient())
 
-    return <div className="relative min-h-screen w-full bg-base-200">
+    return  <QueryClientProvider client={queryClient}>
+    <div className="relative min-h-screen w-full bg-base-200">
             <HomeNavigation />
             <InGameNavigation />
             {children}
@@ -21,4 +25,5 @@ export const Layout = ({children}: {children: React.ReactNode}) => {
                 </button>
             </div>}
         </div>
+    </QueryClientProvider>
 }

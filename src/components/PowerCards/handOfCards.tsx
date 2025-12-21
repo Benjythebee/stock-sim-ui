@@ -27,7 +27,6 @@ export const HandOfCards = ({cards, title, onSelectCard, onSkip, onClose, classN
     }, [data]);
 
     
-    console.log("Rendering HandOfCards with cards:", cards);
     return (
         <dialog className={cn('modal',className)} id="hand-cards-modal">
             <div className="absolute top-20 left-1/2 -translate-x-1/2 ">
