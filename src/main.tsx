@@ -5,6 +5,7 @@ import { Home } from "./pages/Home";
 import RoomPage from "./pages/Room";
 import { WhatIsThisPage } from "./pages/Whatisthis";
 import RoomSpectatePage from "./pages/RoomSpectate";
+import CastPage from "./cast";
 
 const Main = () => {
   return (
@@ -12,7 +13,7 @@ const Main = () => {
       <BrowserRouter>
         <Layout>
           <Routes>
-            
+            <Route path="/cast" element={<CastPage />} />
             <Route path="/about" element={<WhatIsThisPage />} />
 
             <Route index path="/" element={<Home />} />

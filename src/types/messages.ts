@@ -21,6 +21,7 @@ export enum MessageType {
     NEWS = 14,
     NOTIFICATION = 15,
     CLIENT_STATE = 16,
+    ORDER_BOOK_UPDATE= 17,
 
     ADMIN_SETTINGS = 30,
 
@@ -53,6 +54,7 @@ export const MessageTypeNames: { [key in MessageType]: string } = {
     [MessageType.NEWS]: "NEWS",
     [MessageType.NOTIFICATION]: "NOTIFICATION",
     [MessageType.CLIENT_STATE]: "CLIENT_STATE",
+    [MessageType.ORDER_BOOK_UPDATE]: "ORDER_BOOK_UPDATE",
     // Admin Messages - 30
     [MessageType.ADMIN_SETTINGS]: "ADMIN_SETTINGS",
 
@@ -179,6 +181,10 @@ type PortfolioUpdateMessage = {
 type StockMovementMessage = {
     type: MessageType.STOCK_MOVEMENT;
     price: number;
+}
+
+type OrderBookUpdateMessage = {
+    type: MessageType.ORDER_BOOK_UPDATE;
     depth: [[number, number][], [number, number][]]
 }
 
@@ -216,7 +222,7 @@ type PowerInventoryMessage = {
     inventory: string[]
 }
 
-export type Message = IDMessage|JoinMessage | LeaveMessage | IsShockMessage | ClientStateMessage| NotificationMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | NewsMessage | IsAdminMessage | AdminSettingMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage | ConclusionMessage|
+export type Message = IDMessage|JoinMessage | LeaveMessage | IsShockMessage | ClientStateMessage|OrderBookUpdateMessage | NotificationMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | NewsMessage | IsAdminMessage | AdminSettingMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage | ConclusionMessage|
 PowerOffersMessage | PowerSelectMessage | PowerConsumeMessage | PowerInventoryMessage;
 
 export type {
@@ -241,6 +247,7 @@ export type {
     PowerOffersMessage,
     PowerSelectMessage,
     PowerConsumeMessage,
+    OrderBookUpdateMessage,
     PowerInventoryMessage,
     DebugPricesMessage,
     ConclusionMessage

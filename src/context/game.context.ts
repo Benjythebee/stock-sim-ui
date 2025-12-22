@@ -148,6 +148,8 @@ export const handleGameMessage = (message: Message) => {
             break;
         case MessageType.STOCK_MOVEMENT:
           usePriceStore.getState().setPrice(message.price || 0);
+          break;
+        case MessageType.ORDER_BOOK_UPDATE:
           usePriceStore.getState().setAsks(message.depth[0] || []);
           usePriceStore.getState().setBids(message.depth[1] || []);
           break;

@@ -6,11 +6,12 @@ import { useShallow } from "zustand/shallow";
 import { ThemeController } from "../ThemeController";
 import { usePriceStore } from "../../context/stock.store";
 import { decimal } from "../../utils/math";
-
+import { CastButton } from "../cast/button";
 
 export const InGameNavigation = () => {
     const {room,status,sendMessage,disconnect,isSpectate} = useWebsocketContext();
     const {username,cash,paused,isAdmin,onlineUsers,gameSettings,shares} = useGameStore(useShallow((state) => ({ username: state.username, cash: state.cash, paused: state.paused, isAdmin: state.isAdmin, onlineUsers: state.onlineUsers, gameSettings: state.gameSettings, shares: state.shares })));
+
 
     const togglePause = useCallback(() => {
         const newPausedState = !paused;
@@ -29,7 +30,8 @@ export const InGameNavigation = () => {
 
     const isPaused = room && status === 'CONNECTED' ? paused : true;
 
-    return <div className="navbar bg-base-100 shadow-sm">
+    return <>
+    <div className="navbar bg-base-100 shadow-sm">
         <div className="navbar-start">
             <a className="btn btn-ghost text-xl" href="/"><img src="/stonk-lord_alpha.webp" alt="Stonk Lords Logo" className="w-12 h-12"/>
            </a>
@@ -40,6 +42,7 @@ export const InGameNavigation = () => {
             {status === 'CONNECTED' && onlineUsers > 0 && <div className="font-semibold"> Market online with {onlineUsers + gameSettings.bots} participants</div>}
         </div>
         <div className="navbar-end">
+            <CastButton room={room!} />
             {!isSpectate && room && status === 'CONNECTED' && (
                 <ul className="flex w-fit flex-row gap-4 items-center">
                     <li>
@@ -60,6 +63,7 @@ export const InGameNavigation = () => {
 
         </div>
     </div>
+    </>;
 }
 
 

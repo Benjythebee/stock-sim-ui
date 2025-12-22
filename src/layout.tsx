@@ -14,8 +14,8 @@ export const Layout = ({children}: {children: React.ReactNode}) => {
 
     return  <QueryClientProvider client={queryClient}>
     <div className="relative min-h-screen w-full bg-base-200">
-            <HomeNavigation />
-            <InGameNavigation />
+            {room && room.roomId!==''?<InGameNavigation />:<HomeNavigation />}
+            
             {children}
             <Toaster />
             {room?.roomId && <div className="fixed bottom-2 right-2 opacity-80 hover:opacity-100 transition-opacity duration-300">
