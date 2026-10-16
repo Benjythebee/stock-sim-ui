@@ -22,6 +22,7 @@ export enum MessageType {
     NOTIFICATION = 15,
     CLIENT_STATE = 16,
     ORDER_BOOK_UPDATE= 17,
+    CONTENT_MANIFEST = 18,
 
     ADMIN_SETTINGS = 30,
 
@@ -55,6 +56,7 @@ export const MessageTypeNames: { [key in MessageType]: string } = {
     [MessageType.NOTIFICATION]: "NOTIFICATION",
     [MessageType.CLIENT_STATE]: "CLIENT_STATE",
     [MessageType.ORDER_BOOK_UPDATE]: "ORDER_BOOK_UPDATE",
+    [MessageType.CONTENT_MANIFEST]: "CONTENT_MANIFEST",
     // Admin Messages - 30
     [MessageType.ADMIN_SETTINGS]: "ADMIN_SETTINGS",
 
@@ -222,13 +224,21 @@ type PowerConsumeMessage = {
     type: MessageType.POWER_CONSUME;
     id: string;
 }
+/** Sent on connect: every installed power (incl. mods) and server-hosted assets to preload. */
+type ContentManifestMessage = {
+    type: MessageType.CONTENT_MANIFEST;
+    powers: PowerDescription[];
+    /** Server-relative URLs (prefix with the server origin). */
+    assets: string[];
+}
+
 type PowerInventoryMessage = {
     type: MessageType.POWER_INVENTORY;
     inventory: string[]
 }
 
 export type Message = IDMessage|JoinMessage | LeaveMessage | IsShockMessage | ClientStateMessage|OrderBookUpdateMessage | NotificationMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | NewsMessage | IsAdminMessage | AdminSettingMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage | ConclusionMessage|
-PowerOffersMessage | PowerSelectMessage | PowerConsumeMessage | PowerInventoryMessage;
+PowerOffersMessage | PowerSelectMessage | PowerConsumeMessage | PowerInventoryMessage | ContentManifestMessage;
 
 export type {
     IDMessage,
@@ -254,6 +264,7 @@ export type {
     PowerConsumeMessage,
     OrderBookUpdateMessage,
     PowerInventoryMessage,
+    ContentManifestMessage,
     DebugPricesMessage,
     ConclusionMessage
 }

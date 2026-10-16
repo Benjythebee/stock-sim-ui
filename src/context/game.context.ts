@@ -5,6 +5,7 @@ import { useDebugStore } from './debug.store';
 import { useToast } from '../components/Toast/useToast';
 import type { PowerDescription } from '../types/types';
 import { debugLog } from '../utils/debug';
+import { powerIconSrc, preloadImages, serverAsset } from '../utils/powerIcon';
 
 export type GameSettings = {
     startingCash: number;
@@ -180,8 +181,15 @@ export const handleGameMessage = (message: Message) => {
             }
           }))
           break;
+        case MessageType.CONTENT_MANIFEST:
+          // Everything installed on this server (built-ins + mods). Preload icons so cards render instantly.
+          useGameStore.setState((s)=>({ powers:{ ...s.powers, data: message.powers } }));
+          preloadImages([...message.assets.map(serverAsset), ...message.powers.map(powerIconSrc)]);
+          break;
         case MessageType.POWER_INVENTORY:{
-          const inventory = useGameStore.getState().powers.data.filter(p=>message.inventory.includes(p.id));
+          // Map ids in order (not filter) so holding the same power twice shows two cards.
+          const data = useGameStore.getState().powers.data;
+          const inventory = message.inventory.flatMap(id => data.find(p => p.id === id) ?? []);
           useGameStore.setState((s)=>({
             powers:{
               ...s.powers,

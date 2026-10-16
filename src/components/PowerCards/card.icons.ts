@@ -17,6 +17,10 @@ export const powerCardIcons= {
         attribution:'https://game-icons.net/1x1/delapouite/present.html',
         author:'Delapouite'
     },
+    "missing":{
+        attribution:'Drawn for stock-sim-ui (fallback when a power icon fails to load)',
+        author:'stock-sim'
+    },
     "stop":{
         attribution:'https://game-icons.net/1x1/delapouite/stop.html',
         author:'Delapouite'

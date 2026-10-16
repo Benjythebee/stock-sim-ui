@@ -1,12 +1,11 @@
 import type React from "react";
 import type { PowerDescription } from "../../types/types";
 import { cn } from "../../utils/cn";
-import { powerCardIcons } from "./card.icons";
+import { PowerIcon } from "./power-icon";
 
-export const PowerCard = (props: React.ComponentProps<'div'>&{mini?:boolean, power: Pick<PowerDescription,'id'|'type'|'isInstant'|'description'|'title'|'iconSlug'>}) => {
+export const PowerCard = (props: React.ComponentProps<'div'>&{mini?:boolean, power: Pick<PowerDescription,'id'|'type'|'isInstant'|'description'|'title'|'iconSlug'|'iconUrl'|'iconCredit'>}) => {
     const {power,className, ...rest} = props;
 
-    const imageURL = powerCardIcons[power.iconSlug as keyof typeof powerCardIcons] ? `/powers/${power.iconSlug}.svg` : `/powers/${power.iconSlug}.svg`;
 
     const color = power.type === 'all' ? 'all' : power.type === 'client' ? 'client' : 'market';
 
@@ -28,7 +27,7 @@ export const PowerCard = (props: React.ComponentProps<'div'>&{mini?:boolean, pow
                 {power.isInstant ? <div className="instant-banner">Instant</div> : null}
                 <h2 className="power-card-title">{power.title}</h2>
                 <div className="power-card-icon">
-                    <img src={imageURL} alt={power.title} />
+                    <PowerIcon power={power} />
                 </div>
                 <div className="power-card-footer">{power.description}</div>
             </div>

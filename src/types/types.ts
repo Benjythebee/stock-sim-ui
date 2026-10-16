@@ -17,6 +17,13 @@ export type PowerDescription = {
      */
     iconSlug?: string;
     /**
+     * Server-relative URL of an icon shipped by a mod (e.g. "/assets/powers/siphon/robber-hand.svg").
+     * Takes precedence over iconSlug.
+     */
+    iconUrl?: string;
+    /** Who made the icon (shown as a tooltip; required by CC-BY icon packs). */
+    iconCredit?: { author: string; url?: string; license?: string };
+    /**
      * Is the power instant - Instant means it's consumed on selection, otherwise it is kept in "inventory" until consumed
      */
     isInstant?: boolean;
