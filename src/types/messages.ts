@@ -23,6 +23,8 @@ export enum MessageType {
     CLIENT_STATE = 16,
     ORDER_BOOK_UPDATE= 17,
     CONTENT_MANIFEST = 18,
+    ORDER_UPDATE = 19,
+    ORDER_CANCEL = 20,
 
     ADMIN_SETTINGS = 30,
 
@@ -57,6 +59,8 @@ export const MessageTypeNames: { [key in MessageType]: string } = {
     [MessageType.CLIENT_STATE]: "CLIENT_STATE",
     [MessageType.ORDER_BOOK_UPDATE]: "ORDER_BOOK_UPDATE",
     [MessageType.CONTENT_MANIFEST]: "CONTENT_MANIFEST",
+    [MessageType.ORDER_UPDATE]: "ORDER_UPDATE",
+    [MessageType.ORDER_CANCEL]: "ORDER_CANCEL",
     // Admin Messages - 30
     [MessageType.ADMIN_SETTINGS]: "ADMIN_SETTINGS",
 
@@ -235,13 +239,48 @@ type ContentManifestMessage = {
     assets: string[];
 }
 
+/** "partial": a market order that couldn't fill completely (the rest was dropped). */
+type OrderStatus = 'open' | 'filled' | 'partial' | 'cancelled';
+
+/** One of our own orders. "open" ones are the current orders, the rest are history. */
+type OrderInfo = {
+    /** Unique per player and game. */
+    id: number;
+    action: 'BUY' | 'SELL';
+    orderType: 'LIMIT' | 'MARKET';
+    /** Limit price in dollars; null for market orders. */
+    price: number | null;
+    quantity: number;
+    filled: number;
+    /** Average execution price; null until something fills. */
+    avgPrice: number | null;
+    status: OrderStatus;
+    /** Game clock (epoch ms) when placed, and when it last changed. */
+    time: number;
+    updated: number;
+}
+
+/** Private. Orders that changed, to upsert by id; `reset` carries the full list (open + recent history). */
+type OrderUpdateMessage = {
+    type: MessageType.ORDER_UPDATE;
+    orders: OrderInfo[];
+    reset: boolean;
+}
+
+/** Cancel one of our open orders by OrderInfo.id, or all of them with ORDER_CANCEL_ALL. */
+type OrderCancelMessage = {
+    type: MessageType.ORDER_CANCEL;
+    id: number;
+}
+export const ORDER_CANCEL_ALL = -1;
+
 type PowerInventoryMessage = {
     type: MessageType.POWER_INVENTORY;
     inventory: string[]
 }
 
 export type Message = IDMessage|JoinMessage | LeaveMessage | IsShockMessage | ClientStateMessage|OrderBookUpdateMessage | NotificationMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | NewsMessage | IsAdminMessage | AdminSettingMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage | ConclusionMessage|
-PowerOffersMessage | PowerSelectMessage | PowerConsumeMessage | PowerInventoryMessage | ContentManifestMessage;
+PowerOffersMessage | PowerSelectMessage | PowerConsumeMessage | PowerInventoryMessage | ContentManifestMessage | OrderUpdateMessage | OrderCancelMessage;
 
 export type {
     IDMessage,
@@ -268,6 +307,10 @@ export type {
     OrderBookUpdateMessage,
     PowerInventoryMessage,
     ContentManifestMessage,
+    OrderStatus,
+    OrderInfo,
+    OrderUpdateMessage,
+    OrderCancelMessage,
     DebugPricesMessage,
     ConclusionMessage
 }

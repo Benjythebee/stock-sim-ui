@@ -1,5 +1,6 @@
 import { TradingChart } from '../components/Trading/Chart';
 import { OrderHistory } from '../components/Trading/OrderHistory';
+import { CurrentOrders } from '../components/Trading/CurrentOrders';
 import { TradingCard } from '../components/Trading/TradingCard';
 import { TradingDepth } from '../components/Trading/TradingDepth';
 import { AdminModal } from '../components/Admin';
@@ -35,10 +36,11 @@ export default function RoomPage() {
         <div className="flex-1 flex flex-col gap-4">
           <TradingChart />
 
-          {/* Split section in 3: News,Order history */}
-          <div className='flex gap-2 w-full'>
-            <News className="w-1/2" />
-            <OrderHistory className="w-1/2" />
+          {/* News, our open orders, and our finished orders */}
+          <div className='grid grid-cols-1 2xl:grid-cols-3 md:grid-cols-2 gap-2 w-full'>
+            <News className="min-w-0" />
+            <CurrentOrders className="min-w-0" />
+            <OrderHistory className="min-w-0 md:col-span-2 2xl:col-span-1" />
           </div>
 
         </div>
