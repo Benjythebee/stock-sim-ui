@@ -1,6 +1,7 @@
 import { TradingChart } from '../components/Trading/Chart';
 import { TradingDepth } from '../components/Trading/TradingDepth';
 import { AdminModal } from '../components/Admin';
+import { ConclusionModal } from '../components/Conclusion';
 import { useGameStore } from '../context/game.context';
 import { useShallow } from 'zustand/shallow';
 import { News } from '../components/Trading/News';
@@ -21,6 +22,7 @@ export default function RoomSpectatePage() {
     <div id='room-page' className="relative min-h-screen bg-base-100 p-4">
       {(paused || ended) && <div className="modal-backdrop fixed inset-0 bg-black opacity-20 z-40"></div>}
       <AdminModal  />
+      <ConclusionModal  />
       
       <div className="flex flex-col lg:flex-row gap-4 h-full">
         {/* Main Chart Container */}

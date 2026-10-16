@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { usePowerStore } from "../../context/game.context"
 import type { PowerDescription } from "../../types/types"
 import { Portal } from "../portal"
@@ -21,15 +21,10 @@ export const SelectedCards = () => {
         setSelected(power);
     }
 
-    const modal = ()=>{
-        return (document.getElementById('hand-cards-modal')! as HTMLDialogElement)
-    }
-
     const closeModal = () => {
         setSelected(null);
-        modal()?.close()
     }
-    
+
     const onSubmitCard = () => {
         if(!selected) return;
         sendMessage({
@@ -39,27 +34,20 @@ export const SelectedCards = () => {
         closeModal();
     }
 
-    useEffect(() => {
-        if(!selected) {
-            modal()?.close()
-            return;
-        }
-        modal()?.showModal()
-    }, [selected]);
-
-
     return <div className="flex gap-4 mx-2 items-center">
-            {/** Selected cards max 5 */}
-            {inventory.slice(0,5).map((power)=>(
-                <PowerMiniCard key={power.id} power={power} onClick={()=>onSelectCard(power)} />
+            {/** Selected cards max 5. Index keys: the same power can be held twice. */}
+            {inventory.slice(0,5).map((power, index)=>(
+                <PowerMiniCard key={`${power.id}-${index}`} power={power} onClick={()=>onSelectCard(power)} />
             ))}
               {/* <PowerMiniCard power={fakepower} onClick={()=>onSelectCard(fakepower)} /> */}
-          
+
            {selected &&  <Portal>
-                <HandOfCards 
-                cards={selected ? [selected] : []} 
+                <HandOfCards
+                cards={[selected]}
+                open
+                onDismiss={closeModal} // Esc: clear `selected` so the same card can be reopened
                 onClose={closeModal} // close the modal
-                onSelectCard={onSubmitCard} // on card click do nothing here
+                onSelectCard={onSubmitCard} // on card click consume it
                 title="Click to consume"/>
             </Portal>}
           </div>

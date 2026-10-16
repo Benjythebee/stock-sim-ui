@@ -24,9 +24,9 @@ There are no tests in this repo. To see a change working, run the server too (`b
 2. **Lobby** (phase `lobby`, shown as "paused"): the host sees the Admin modal (General / Bots / Powers tabs) while `!started`. Text and number fields keep a local draft and send `ADMIN_SETTINGS` on blur or Enter (`Admin/setting-input.tsx`; Escape or an invalid value reverts); toggles and bot checkboxes send immediately. Every `ADMIN_SETTINGS` makes the server **rebuild the game** (fresh accounts for everyone) and echo `ROOM_STATE`. Settings: ticker, starting cash, opening price, volatility %, duration (min), random news, "reveal hidden prices" (practice mode), bot count, and bot strategy selection (from `/api/bots.json`; an empty `botSelection` means every strategy, which is what the "Random Bots" toggle shows). Non-hosts see "Waiting to start".
 3. **Running**: "Save & Start" sends `TOGGLE_PAUSE`. The server ticks 5 market steps per **game second**. Each game second sends `CLOCK`, so **one candle = one game second**. Orders (limit or market, buy or sell, whole shares) are only accepted while running.
 4. **Pause/resume**: only the host (nav dropdown or the Paused modal, which shows "Resume" once the game has started; settings are locked then). Game time stops, so power durations, news and briefcases freeze too.
-5. **Briefcases**: 8 drops spread over the game. Each player gets `POWER_OFFERS` (3 weighted-random powers). Instant powers fire on pick; others go to the inventory (shown as mini cards next to the briefcase) and are used later with `POWER_CONSUME`. Skipping discards the offer client-side.
+5. **Briefcases**: 8 drops spread over the game. Each player gets `POWER_OFFERS` (3 weighted-random powers). Instant powers fire on pick; others go to the inventory (shown as mini cards next to the briefcase) and are used later with `POWER_CONSUME`. Skipping sends `POWER_SELECT` with `index: -1` (`POWER_SKIP_INDEX`) so the server drops the offers too; otherwise they'd come back on reconnect. Esc only hides the hand, and the briefcase reopens it.
 6. **News**: random headlines every 30–45 game seconds (if enabled). Some silently move the hidden fair value.
-7. **End**: `GAME_CONCLUSION` → leaderboard modal (players and bots ranked by P&L, total volume).
+7. **End**: `GAME_CONCLUSION` → leaderboard modal (players and bots ranked by P&L, total volume), also on the spectate page. The server re-sends it to anyone who (re)joins or spectates an ended game. An ended room reports `paused: true`, so `AdminModal` hides itself when `ended`.
 
 ### The hidden price model (why players can win)
 
@@ -98,6 +98,7 @@ public/powers/<icon>.svg bundled power icons (game-icons.net, CC BY 3.0; credits
   - `marketVolatility`: the server stores and sends a **fraction** (0.05). `ADMIN_SETTINGS` expects a **percentage** (5). The store holds the fraction too; the admin input shows it `×100` (rounded) and sends the typed percentage, and `AdminModal`'s optimistic save divides it back.
   - `CLOCK.value` is the game clock in epoch ms (+1000 per game second, frozen while paused). `timeLeft` is ms.
   - `CLIENT_STATE.tradingDisabled` (e.g. while DDoSed) disables the Buy/Sell buttons.
+  - `POWER_SELECT.index` is an offer index, or `-1` (`POWER_SKIP_INDEX`) to decline the briefcase.
   - Errors and order rejections arrive as `NOTIFICATION` toasts (`ERROR` is only used for "Room does not exist"). The server sends no per-order ack or fill events.
   - Host-only messages (`TOGGLE_PAUSE`, `ADMIN_SETTINGS`, `SHOCK`) from non-hosts get a "Host only" toast.
 - HTTP: `/api/powers.json` (`PowerDescription[]`), `/api/bots.json` (`{ data: [{id, name, description}] }`), via `apiUrl()`.
@@ -109,7 +110,7 @@ public/powers/<icon>.svg bundled power icons (game-icons.net, CC BY 3.0; credits
 - Style: 2-space indent, single quotes in most files (not enforced; match the file you're in). PascalCase component folders with `index.tsx`, or `name.role.tsx` files (`home.join.tsx`, `in-game.nav.tsx`, `card.mini.tsx`).
 - **Layout**: the room page puts a big candlestick chart on the left with News and Order History under it, and a fixed 320px right sidebar holding the order form above the order book. It stacks on mobile (`lg:` breakpoint).
 - Overlays (admin settings, paused, game over) are centered DaisyUI `card`s at `z-50` over a dimmed backdrop. They are not `<dialog>`s, and they block trading while paused or ended.
-- **Powers are presented as collectible cards.** The card color comes from the power's `type` (`client` = self, `all`, `market`; `others` currently falls back to the market style). Instant powers get a banner. Offers fan out as a hand in a full-screen `<dialog id="hand-cards-modal">` rendered through `Portal`. The briefcase button is `.btn-amber`: it shimmers (`data-active`) and the open-briefcase image wiggles when an offer is waiting. Up to 5 inventory mini cards sit next to it, and clicking one asks for confirmation before consuming it.
+- **Powers are presented as collectible cards.** The card color comes from the power's `type` (`client` = self, `all`, `market`; `others` currently falls back to the market style). Instant powers get a banner. Offers fan out as a hand in a full-screen `<dialog>` rendered through `Portal`. Each `HandOfCards` owns its dialog (a ref driven by its `open` prop, no global id: the offers hand and the consume hand can both be mounted) and calls `onDismiss` on the dialog's `cancel`/`close` events (Esc), so the owner's state stays in sync. The briefcase button is `.btn-amber`: it shimmers (`data-active`) and the open-briefcase image wiggles when an offer is waiting. Up to 5 inventory mini cards sit next to it, and clicking one asks for confirmation before consuming it.
 - Feedback is toast-driven: server notifications, joins and news all appear bottom-right for about 5s.
 - Theme switching uses `theme-change` (DaisyUI light/dark).
 - Branding: "Stonk Lords" (`/stonk-lord_alpha.webp` logo), Discord and X links. Chromecast receiver app id `6030BF63`, namespace `urn:x-cast:com.stonklords.room`.
@@ -127,6 +128,6 @@ public/powers/<icon>.svg bundled power icons (game-icons.net, CC BY 3.0; credits
 - The "Send Value shock" / "Send shock" buttons in `TradingCard` are host-only debug tools, shown to every host (not just in dev).
 - An empty room code on the Join card makes up a 5-character code (room ids must match `^[A-Za-z0-9_-]{1,64}$`; the server 404s `/ws/`).
 - `Layout` sits outside `<Routes>`, so `useParams()` is empty there: it decides home vs room from `useLocation().pathname` (`STATIC_PAGES`). Add new top-level pages to that set, or they'll be treated as room codes.
-- `TradingDepth` sorts the store's arrays in place. Market orders send a dummy `price: 100`, which the server ignores.
+- Market orders send a dummy `price: 100`, which the server ignores. Store arrays are shared state: copy before sorting (`[...asks].sort(...)`).
 - The local `GameSettings` defaults (cash 5000, 1 bot) differ from the server's (10,000 / 5). They're overwritten by `ROOM_STATE` on join.
 - Rooms live in server memory only, so a server restart drops games. The UI auto-reconnects into a fresh empty room.
