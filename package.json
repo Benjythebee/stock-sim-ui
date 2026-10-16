@@ -31,6 +31,8 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "2.0.0-beta.v.0",
+    "@csstools/postcss-cascade-layers": "^6.0.2",
+    "@csstools/postcss-oklab-function": "^5.0.15",
     "@eslint/js": "^9.36.0",
     "@types/luxon": "^3.7.1",
     "@types/node": "^24.6.0",
@@ -43,6 +45,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.22",
     "globals": "^16.4.0",
+    "postcss": "^8.5.30",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.45.0",
     "vite": "^7.1.7"

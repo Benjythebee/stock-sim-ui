@@ -133,4 +133,5 @@ public/powers/<icon>.svg bundled power icons (game-icons.net, CC BY 3.0; credits
 - `Layout` sits outside `<Routes>`, so `useParams()` is empty there: it decides home vs room from `useLocation().pathname` (`STATIC_PAGES`). Add new top-level pages to that set, or they'll be treated as room codes.
 - Market orders send a dummy `price: 100`, which the server ignores. Store arrays are shared state: copy before sorting (`[...asks].sort(...)`).
 - The local `GameSettings` defaults (cash 5000, 1 bot) differ from the server's (10,000 / 5). They're overwritten by `ROOM_STATE` on join.
+- **Old Chromium on Cast devices** (a TV reported Chrome 92). Tailwind 4 and DaisyUI 5 target Chrome 111+, so `postcss.config.js` flattens `@layer`, adds `rgb()` fallbacks for `oklch()`, and copies `translate` into `transform`, in **builds only** (it mangles the nested CSS that dev serves). Check the TV look with a build, not `pnpm dev`. `:has()` and DaisyUI's `color-mix()` with variables still don't work there. The `/cast` receiver uses inline styles for the same reason.
 - Rooms live in server memory only, so a server restart drops games. The UI auto-reconnects into a fresh empty room.
