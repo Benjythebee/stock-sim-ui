@@ -17,6 +17,8 @@ import { OverlayCard, OverlayShell } from "../ui/overlay-card";
 import { useGameActions } from "../../hooks/useGameActions";
 import { cn } from "../../utils/cn";
 import { PowerLibraryButton } from "../PowerLibrary/library.button";
+import { TvWaiting } from "./tv-waiting";
+import { IS_CAST_DEVICE } from "../../utils/screen";
 
 const SECTIONS: Record<AdminSettingsTab, () => ReactNode> = {
     general: GeneralSettings,
@@ -33,13 +35,13 @@ export const AdminModal = () => {
 
     // Settings can only change in the lobby: the server rejects ADMIN_SETTINGS once the game has started.
     if(ended) return null;
-    if(!started) return isAdmin ? <LobbySettings onStart={togglePause} /> : <LobbyWaiting />;
+    if(!started) return isAdmin ? <LobbySettings onStart={togglePause} /> : IS_CAST_DEVICE ? <TvWaiting /> : <LobbyWaiting />;
     if (paused){
         return (
             <OverlayCard
                 title="Game Paused"
                 actions={<>
-                    <PowerLibraryButton className="btn btn-ghost" label="Powers" />
+                    {!IS_CAST_DEVICE && <PowerLibraryButton className="btn btn-ghost" label="Powers" />}
                     {isAdmin && <button className="btn btn-primary" onClick={togglePause}>Resume</button>}
                 </>}
             >
@@ -133,7 +135,7 @@ const LobbySettings = ({onStart}: {onStart: () => void}) => {
     );
 }
 
-/** What everyone but the host sees in the lobby (spectators and the TV too): the settings as the host edits them, and the invite. */
+/** What everyone but the host sees in the lobby (spectators too; a cast TV gets TvWaiting): the settings as the host edits them, and the invite. */
 const LobbyWaiting = () => {
     // Until ROOM_STATE, the store holds local defaults: showing them would flash every value on arrival.
     const hasRoomState = useGameStore((state) => state.hasRoomState);

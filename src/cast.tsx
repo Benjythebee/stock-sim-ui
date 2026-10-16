@@ -106,7 +106,8 @@ export default function CastPage() {
 
     return (
         <>
-            <iframe id="frame" src={`/${room}/spectate`} title="Tendies Brawl spectator view" style={FRAME} />
+            {/* ?tv tells the spectator view it's on a TV (IS_CAST_DEVICE): no buttons, compact lobby. */}
+            <iframe id="frame" src={`/${room}/spectate?tv`} title="Tendies Brawl spectator view" style={FRAME} />
             {showBrowser && <div style={BROWSER_BADGE}>{BROWSER}</div>}
         </>
     );
