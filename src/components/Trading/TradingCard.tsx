@@ -4,6 +4,7 @@ import { MessageType } from "../../types/messages";
 import { usePriceStore } from "../../context/stock.store";
 import { MarketStateIndicator } from "./MarketClose";
 import { useGameStore } from "../../context/game.context";
+import { cn } from "../../utils/cn";
 
 export const TradingCard: React.FC = () => {
   const { sendMessage } = useWebsocketContext();
@@ -56,10 +57,21 @@ export const TradingCard: React.FC = () => {
   }, [orderType, hasPrice]);
 
   return (
-    <div className="card bg-base-200">
+    // tradingDisabled only comes from a DDoS (the server's only trading lock), so the form looks hacked.
+    <div className={cn("card bg-base-200", { hacked: tradingDisabled })}>
+      {tradingDisabled && (
+        <div
+          role="status"
+          className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none rounded-box border border-green-500/60 bg-black/85 p-3 font-mono text-xs text-green-400 shadow-lg"
+        >
+          <div className="font-bold">&gt; SYSTEM COMPROMISED</div>
+          <div>DDoS attack in progress.</div>
+          <div>Trading offline<span className="hacked-cursor">_</span></div>
+        </div>
+      )}
       <div className="card-body">
         <MarketStateIndicator />
-        <h2 className="card-title">Place Order</h2>
+        <h2 className="card-title">{tradingDisabled ? "Pl4c3 0rd3r" : "Place Order"}</h2>
 
         {/* Order Type Selector */}
         <div className="form-control">

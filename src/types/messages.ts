@@ -27,6 +27,7 @@ export enum MessageType {
     ORDER_CANCEL = 20,
 
     ADMIN_SETTINGS = 30,
+    RESET_GAME = 31,
 
     GAME_CONCLUSION = 60,
 
@@ -63,6 +64,7 @@ export const MessageTypeNames: { [key in MessageType]: string } = {
     [MessageType.ORDER_CANCEL]: "ORDER_CANCEL",
     // Admin Messages - 30
     [MessageType.ADMIN_SETTINGS]: "ADMIN_SETTINGS",
+    [MessageType.RESET_GAME]: "RESET_GAME",
 
     [MessageType.GAME_CONCLUSION]: "GAME_CONCLUSION",
 
@@ -154,6 +156,10 @@ type ClockMessage = {
 type AdminSettingMessage = {
     type: MessageType.ADMIN_SETTINGS;
     settings: Partial<GameSettings>;
+}
+/** Host only, after the game ended: back to the lobby with the same settings. The server answers with ROOM_STATE started=false. */
+type ResetGameMessage = {
+    type: MessageType.RESET_GAME;
 }
 
 type NotificationMessage = {
@@ -279,7 +285,7 @@ type PowerInventoryMessage = {
     inventory: string[]
 }
 
-export type Message = IDMessage|JoinMessage | LeaveMessage | IsShockMessage | ClientStateMessage|OrderBookUpdateMessage | NotificationMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | NewsMessage | IsAdminMessage | AdminSettingMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage | ConclusionMessage|
+export type Message = IDMessage|JoinMessage | LeaveMessage | IsShockMessage | ClientStateMessage|OrderBookUpdateMessage | NotificationMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | NewsMessage | IsAdminMessage | AdminSettingMessage | ResetGameMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage | ConclusionMessage|
 PowerOffersMessage | PowerSelectMessage | PowerConsumeMessage | PowerInventoryMessage | ContentManifestMessage | OrderUpdateMessage | OrderCancelMessage;
 
 export type {
@@ -299,6 +305,7 @@ export type {
     PortfolioUpdateMessage,
     ClientStateMessage,
     AdminSettingMessage,
+    ResetGameMessage,
     StockMovementMessage,
     IsShockMessage,
     PowerOffersMessage,

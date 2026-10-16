@@ -1,20 +1,24 @@
 
 import { useGameStore } from "../../context/game.context";
 import { useShallow } from "zustand/shallow";
+import { useWebsocketContext } from "../../context/ws.context";
+import { MessageType } from "../../types/messages";
 
 
 
 export const ConclusionModal = () => {
-    const {conclusion} = useGameStore(useShallow((state) => ({
+    const {conclusion, isAdmin} = useGameStore(useShallow((state) => ({
         conclusion: state.conclusion,
+        isAdmin: state.isAdmin,
     })));
+    const { sendMessage } = useWebsocketContext();
 
 
     if(!conclusion){
         return null;
     }
 
-  return <div className="card absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 bg-base-100 shadow-xl z-50">
+  return <div className="card fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] overflow-y-auto bg-base-100 shadow-xl z-50">
             <div className="card-body items-center ">
                 <h1 className="text-4xl font-bold text-center bg-clip-text text-primary">
                     Game Over
@@ -87,8 +91,14 @@ export const ConclusionModal = () => {
                     </div>
                 </div>
 
-                
-
+                {/* The server answers with ROOM_STATE started=false, which clears the conclusion and brings back the lobby. */}
+                {isAdmin ? (
+                    <button className="btn btn-primary w-full mt-2" onClick={() => sendMessage({ type: MessageType.RESET_GAME })}>
+                        Go back to setup
+                    </button>
+                ) : (
+                    <p className="text-center text-sm text-base-content/60 mt-2">Waiting for the host to set up a new game</p>
+                )}
             </div>
         </div>;
 

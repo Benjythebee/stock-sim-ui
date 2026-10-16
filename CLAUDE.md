@@ -29,7 +29,7 @@ There are no tests in this repo. To see a change working, run the server too (`b
 4. **Pause/resume**: only the host (nav dropdown or the Paused modal, which shows "Resume" once the game has started; settings are locked then). Game time stops, so power durations, news and briefcases freeze too.
 5. **Briefcases**: 8 drops spread over the game. Each player gets `POWER_OFFERS` (3 weighted-random powers). Instant powers fire on pick; others go to the inventory (shown as mini cards next to the briefcase) and are used later with `POWER_CONSUME`. Skipping sends `POWER_SELECT` with `index: -1` (`POWER_SKIP_INDEX`) so the server drops the offers too; otherwise they'd come back on reconnect. Esc only hides the hand, and the briefcase reopens it.
 6. **News**: random headlines every 30–45 game seconds (if enabled). Some silently move the hidden fair value.
-7. **End**: `GAME_CONCLUSION` → leaderboard modal (players and bots ranked by P&L, total volume), also on the spectate page. The server re-sends it to anyone who (re)joins or spectates an ended game. An ended room reports `paused: true`, so `AdminModal` hides itself when `ended`.
+7. **End**: `GAME_CONCLUSION` → leaderboard modal (players and bots ranked by P&L, total volume), also on the spectate page. The server re-sends it to anyone who (re)joins or spectates an ended game. An ended room reports `paused: true`, so `AdminModal` hides itself when `ended`. The host's "Go back to setup" button sends `RESET_GAME`: the server returns the room to the lobby with the same settings (new seed) and the usual `ROOM_STATE started: false` resets the UI.
 
 ### The hidden price model (why players can win)
 

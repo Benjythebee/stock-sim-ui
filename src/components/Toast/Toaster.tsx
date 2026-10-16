@@ -43,7 +43,8 @@ export const Toaster: React.FC = () => {
     // if (toasts.length === 0) return null;
 
     return (
-        <div className="toast toast-bottom toast-end">
+        // z-index: DaisyUI's toast sets none, so sticky table headers (table-pin-rows) and the z-50 overlays covered it.
+        <div className="toast toast-bottom toast-end z-[60]">
             {toasts.map((toast) => (
                 <ToastItem key={toast.id} toast={toast} />
             ))}

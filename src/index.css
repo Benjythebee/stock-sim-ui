@@ -24,3 +24,57 @@ button.btn-amber {
     @apply disabled:bg-gray-400 disabled:border-gray-400 disabled:cursor-not-allowed;
     @apply data-[active=true]:bg-linear-to-r data-[active=true]:from-amber-400 data-[active=true]:via-yellow-200 data-[active=true]:to-amber-400 data-[active=true]:bg-size-[200%_100%] data-[active=true]:animate-[gradient_2s_ease-in-out_infinite];
 }
+
+/* DDoS: the order form looks hacked while CLIENT_STATE.tradingDisabled (TradingCard). */
+.hacked {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+.hacked > .card-body {
+    filter: grayscale(0.7) contrast(1.1);
+    animation: hacked-glitch 3.5s steps(1) infinite;
+}
+/* scanlines */
+.hacked::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: repeating-linear-gradient(to bottom, rgb(34 197 94 / 0.12) 0 1px, transparent 1px 3px);
+    animation: hacked-scan 6s linear infinite;
+}
+/* a slow bright band rolling down the screen */
+.hacked::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    height: 30%;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(to bottom, transparent, rgb(34 197 94 / 0.18), transparent);
+    animation: hacked-sweep 2.8s linear infinite;
+}
+.hacked-cursor {
+    animation: hacked-blink 1s steps(1) infinite;
+}
+@keyframes hacked-scan {
+    to { background-position: 0 60px; }
+}
+@keyframes hacked-sweep {
+    from { top: -30%; }
+    to { top: 100%; }
+}
+@keyframes hacked-glitch {
+    0%, 86%, 100% { transform: none; clip-path: none; }
+    88% { transform: translate(-3px, 1px); clip-path: inset(12% 0 55% 0); }
+    90% { transform: translate(3px, -1px); clip-path: inset(48% 0 18% 0); }
+    92% { transform: translate(-1px, 0); clip-path: none; }
+}
+@keyframes hacked-blink {
+    50% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .hacked > .card-body, .hacked::before, .hacked::after, .hacked-cursor { animation: none; }
+}
