@@ -1,9 +1,8 @@
-import { useGameStore, type GameSettings } from "../../context/game.context";
-import { useShallow } from "zustand/shallow";
 import { SettingToggle } from "./setting-toggle";
+import { useGameSettings } from "../../hooks/useGameSettings";
 
-export const GameplaySettings = ({setGameSettings}:{ setGameSettings: (settings: Partial<GameSettings>) => void}) => {
-    const {gameSettings} = useGameStore(useShallow((state) => ({gameSettings: state.gameSettings})));
+export const GameplaySettings = () => {
+    const [gameSettings, setGameSettings] = useGameSettings();
 
     return (
         <div className="w-full mb-2 flex flex-col gap-3">

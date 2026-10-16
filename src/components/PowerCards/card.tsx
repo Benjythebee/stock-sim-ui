@@ -1,18 +1,12 @@
 import type React from "react";
-import type { PowerDescription } from "../../types/types";
 import { cn } from "../../utils/cn";
+import { powerColor, type PowerCardData } from "../../utils/powerIcon";
 import { PowerIcon } from "./power-icon";
 
-export const PowerCard = (props: React.ComponentProps<'div'>&{mini?:boolean, power: Pick<PowerDescription,'id'|'type'|'isInstant'|'description'|'title'|'iconSlug'|'iconUrl'|'iconCredit'>}) => {
-    const {power,className, ...rest} = props;
+export const PowerCard = (props: React.ComponentProps<'div'>&{mini?:boolean, power: PowerCardData}) => {
+    const {power, mini, className, ...rest} = props;
 
-
-    const color = power.type === 'all' ? 'all' : power.type === 'client' ? 'client' : 'market';
-
-    return (<div className={cn("power-card",{
-        "mini": props.mini,
-        [color]: true
-    }, className)} {...rest}>
+    return (<div className={cn("power-card", powerColor(power.type), {mini}, className)} {...rest}>
             <div className="pattern">
                 <div className="dot"></div>
                 <div className="dot"></div>

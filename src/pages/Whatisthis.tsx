@@ -1,6 +1,8 @@
 import { Discord, XLight } from "@ridemountainpig/svgl-react";
 import CandlestickChart from "../components/Candles/candles";
-import { Card } from "../components/Card";
+import { Card } from "../components/ui/card";
+import { Collapse } from "../components/ui/collapse";
+import { ExternalLink } from "../components/ui/external-link";
 import { PowerCard } from "../components/PowerCards/card";
 import type { PowerDescription } from "../types/types";
 import { Credits } from "../components/Credits";
@@ -172,10 +174,7 @@ export const WhatIsThisPage: React.FC = () => {
           <h2 id="faq" className="text-3xl font-bold mb-4">FAQ</h2>
           <div className="flex flex-col gap-2">
             {FAQ.map(({ q, a }) => (
-              <details key={q} className="collapse collapse-arrow bg-base-200">
-                <summary className="collapse-title font-semibold">{q}</summary>
-                <div className="collapse-content"><p>{a}</p></div>
-              </details>
+              <Collapse key={q} title={q} className="bg-base-200"><p>{a}</p></Collapse>
             ))}
           </div>
         </section>
@@ -188,22 +187,14 @@ export const WhatIsThisPage: React.FC = () => {
             <div className="flex justify-end">
               <ul className="menu menu-vertical lg:menu-horizontal">
                 <li>
-                  <a
-                    href={DISCORD_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <ExternalLink href={DISCORD_URL}>
                     Discord <Discord width={"4rem"} />
-                  </a>
+                  </ExternalLink>
                 </li>
                 <li>
-                  <a
-                    href={X_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <ExternalLink href={X_URL}>
                     Twitter / X <XLight width={"3.2rem"} />
-                  </a>
+                  </ExternalLink>
                 </li>
               </ul>
             </div>

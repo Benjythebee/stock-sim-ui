@@ -3,7 +3,7 @@ import { PowerCard } from "./card"
 import { usePowerStore } from "../../context/game.context";
 import type { PowerDescription } from "../../types/types";
 import { cn } from "../../utils/cn";
-import { apiUrl } from "../../utils/server";
+import { fetchJson } from "../../utils/fetch";
 
 type HandOfCardsProps = {
     cards: PowerDescription[];
@@ -22,13 +22,11 @@ export const HandOfCards = ({cards, open, onDismiss, title, onSelectCard, onSkip
     const {data, setPowers} = usePowerStore();
     const dialogRef = useRef<HTMLDialogElement>(null);
 
+    // Fallback: the catalog normally arrives with CONTENT_MANIFEST on connect.
     useEffect(() => {
         if(data.length) return
-       fetch(apiUrl('/api/powers.json')).then((r)=>{
-        return r.json()
-       }).then((data: PowerDescription[])=>{
-        setPowers(data);
-       })
+        fetchJson<PowerDescription[]>('/api/powers.json').then(setPowers).catch(() => {});
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- setPowers is recreated every render
     }, [data]);
 
     useEffect(() => {

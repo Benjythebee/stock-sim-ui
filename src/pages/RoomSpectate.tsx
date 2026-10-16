@@ -1,28 +1,22 @@
 import { TradingChart } from '../components/Trading/Chart';
 import { TradingDepth } from '../components/Trading/TradingDepth';
-import { AdminModal } from '../components/Admin';
-import { ConclusionModal } from '../components/Conclusion';
-import { useGameStore } from '../context/game.context';
-import { useShallow } from 'zustand/shallow';
 import { News } from '../components/Trading/News';
 import { useWebsocketContext } from '../context/ws.context';
 import { useAutoConnect } from '../context/useAutoConnect';
 import { useParams } from 'react-router';
+import { RoomOverlays } from '../components/Room/room.overlays';
 
 
 
 export default function RoomSpectatePage() {
   const { roomId: roomCode } = useParams();
   const {connect} = useWebsocketContext()
-  const {paused,ended} = useGameStore(useShallow((state) => ({paused: state.paused, ended: state.ended})));
 
   useAutoConnect(roomCode, () => connect('', roomCode!, true));
 
   return (
     <div id='room-page' className="relative min-h-screen bg-base-100 p-2 sm:p-4">
-      {(paused || ended) && <div className="modal-backdrop fixed inset-0 bg-black opacity-20 z-40"></div>}
-      <AdminModal  />
-      <ConclusionModal  />
+      <RoomOverlays />
       
       <div className="flex flex-col lg:flex-row gap-4 h-full">
         {/* Main Chart Container */}

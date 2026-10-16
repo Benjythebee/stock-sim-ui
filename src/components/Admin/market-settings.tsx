@@ -1,49 +1,34 @@
-import { useGameStore, type GameSettings } from "../../context/game.context";
-import { useShallow } from "zustand/shallow";
-import { SettingInput } from "./setting-input";
 import { SettingToggle } from "./setting-toggle";
-import { parseNumber, round } from "../../utils/math";
+import { NumberSetting } from "./number-setting";
+import { round } from "../../utils/math";
+import { useGameSettings } from "../../hooks/useGameSettings";
 
-export const MarketSettings = ({setGameSettings}:{ setGameSettings: (settings: Partial<GameSettings>) => void}) => {
-    const {gameSettings} = useGameStore(useShallow((state) => ({gameSettings: state.gameSettings})));
+export const MarketSettings = () => {
+    const [gameSettings, setGameSettings] = useGameSettings();
 
     return (
         <>
-        <div className="form-control w-full mb-2 grid grid-cols-2 gap-2">
-            <div>
-                <label className="label">
-                    <span className="label-text font-semibold">Opening Price</span>
-                </label>
-                <SettingInput
-                    type="number"
-                    required
-                    placeholder="Enter opening price"
-                    className="input input-bordered input-primary w-full"
-                    max={10_000}
-                    min={0.01}
-                    step={0.01}
-                    value={gameSettings.openingPrice ?? ''}
-                    parse={parseNumber}
-                    onCommit={(openingPrice) => setGameSettings({openingPrice})}
-                />
-            </div>
-            <div>
-                <label className="label">
-                    <span className="label-text font-semibold">Volatility (%)</span>
-                </label>
-                {/* The store holds a fraction (0.05); ADMIN_SETTINGS takes a percentage (5). */}
-                <SettingInput
-                    type="number"
-                    placeholder="Enter market volatility (%)"
-                    className="input input-bordered input-primary w-full"
-                    value={gameSettings.marketVolatility === undefined ? '' : round(gameSettings.marketVolatility * 100, 4)}
-                    min={0.01}
-                    max={50}
-                    step={0.1}
-                    parse={parseNumber}
-                    onCommit={(marketVolatility) => setGameSettings({marketVolatility})}
-                />
-            </div>
+        <div className="w-full mb-2 grid grid-cols-2 gap-2">
+            <NumberSetting
+                label="Opening Price"
+                required
+                placeholder="Enter opening price"
+                max={10_000}
+                min={0.01}
+                step={0.01}
+                value={gameSettings.openingPrice ?? ''}
+                onCommit={(openingPrice) => setGameSettings({openingPrice})}
+            />
+            {/* The store holds a fraction (0.05); ADMIN_SETTINGS takes a percentage (5). */}
+            <NumberSetting
+                label="Volatility (%)"
+                placeholder="Enter market volatility (%)"
+                value={gameSettings.marketVolatility === undefined ? '' : round(gameSettings.marketVolatility * 100, 4)}
+                min={0.01}
+                max={50}
+                step={0.1}
+                onCommit={(marketVolatility) => setGameSettings({marketVolatility})}
+            />
         </div>
 
         <div className="w-full mb-2">

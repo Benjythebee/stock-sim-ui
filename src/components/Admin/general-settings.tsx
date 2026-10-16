@@ -1,22 +1,17 @@
-import { useGameStore, type GameSettings } from "../../context/game.context";
-import { useShallow } from "zustand/shallow";
 import { SettingInput } from "./setting-input";
-import { parseNumber } from "../../utils/math";
+import { SettingToggle } from "./setting-toggle";
+import { NumberSetting } from "./number-setting";
+import { Field } from "../ui/field";
+import { useGameSettings } from "../../hooks/useGameSettings";
 
 const parseTicker = (text: string) => text.trim() || undefined;
 
-
-
-
-export const GeneralSettings = ({setGameSettings}:{ setGameSettings: (settings: Partial<GameSettings>) => void}) => {
-    const {gameSettings} = useGameStore(useShallow((state) => ({gameSettings: state.gameSettings})));
+export const GeneralSettings = () => {
+    const [gameSettings, setGameSettings] = useGameSettings();
 
     return (
         <>
-         <div className="form-control w-full mb-2">
-            <label className="label">
-                <span className="label-text font-semibold">Stock Ticker</span>
-            </label>
+        <Field label="Stock Ticker" className="mb-2">
             <SettingInput
                 type="text"
                 placeholder="Enter stock ticker"
@@ -29,50 +24,41 @@ export const GeneralSettings = ({setGameSettings}:{ setGameSettings: (settings: 
                 parse={parseTicker}
                 onCommit={(ticketName) => setGameSettings({ticketName})}
             />
+        </Field>
+
+        <div className="w-full mb-2 grid grid-cols-2 gap-2">
+            <NumberSetting
+                label="Starting Cash"
+                required
+                placeholder="Enter starting cash amount"
+                value={gameSettings.startingCash ?? ''}
+                max={999_999_999}
+                min={1}
+                step={1}
+                onCommit={(startingCash) => setGameSettings({startingCash})}
+            />
+            <NumberSetting
+                label="Game Duration (mins)"
+                required
+                min={1}
+                max={60}
+                placeholder="Enter game duration in minutes"
+                value={gameSettings.gameDuration ?? ''}
+                onCommit={(gameDuration) => setGameSettings({gameDuration})}
+            />
         </div>
 
-        <div className="form-control w-full mb-2 grid grid-cols-2 gap-2">
-            <div>
-                <label className="label">
-                    <span className="label-text font-semibold">Starting Cash</span>
-                </label>
-                <SettingInput
-                    type="number"
-                    required
-                    placeholder="Enter starting cash amount"
-                    className="input input-bordered input-primary w-full"
-                    value={gameSettings.startingCash ?? ''}
-                    max={999_999_999}
-                    min={1}
-                    step={1}
-                    parse={parseNumber}
-                    onCommit={(startingCash) => setGameSettings({startingCash})}
-                />
-            </div>
-            <div>
-                <label className="label">
-                    <span className="label-text font-semibold">Game Duration (mins)</span>
-                </label>
-                <SettingInput
-                    type="number"
-                    required
-                    min={1}
-                    max={60}
-                    placeholder="Enter game duration in minutes"
-                    className="input input-bordered input-primary w-full"
-                    value={gameSettings.gameDuration ?? ''}
-                    parse={parseNumber}
-                    onCommit={(gameDuration) => setGameSettings({gameDuration})}
-                />
-            </div>
+        <div className="w-full mb-2">
+            <SettingToggle
+                label="Reveal hidden prices (practice mode)"
+                color="toggle-warning"
+                tooltipPosition="right"
+                checked={!!gameSettings.revealPrices}
+                onChange={(revealPrices) => setGameSettings({revealPrices})}
+            >
+                Plots the stock's hidden fair value and guide price for every player. Great for learning, but it gives the game away.
+            </SettingToggle>
         </div>
-
-        <div>
-            <label className="label" title="Plots the stock's hidden fair value and guide price for every player. Great for learning, but it gives the game away.">
-                <input type="checkbox" checked={!!gameSettings.revealPrices} className={`toggle ${gameSettings.revealPrices ? 'toggle-warning' : ''}`} onChange={(e) => setGameSettings({revealPrices: e.target.checked})} />
-                <span className="label-text font-semibold ml-2">Reveal hidden prices (practice mode)</span>
-            </label>
-        </div>
-            </>
+        </>
     )
 }

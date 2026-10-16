@@ -1,28 +1,16 @@
-import { useState } from "react";
-import { Check, Copy, ExternalLink, Tv } from "lucide-react";
+import { Check, Copy, ExternalLink as ExternalLinkIcon, Tv } from "lucide-react";
 import { useWebsocketContext } from "../../context/ws.context";
 import { CastButton } from "../cast/button";
-import { useToast } from "../Toast/useToast";
+import { ExternalLink } from "../ui/external-link";
+import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 
 /** How to put the game on a big screen: Chromecast, or the spectator page in any browser. Not a setting. */
 export const CastSettings = () => {
     const {room} = useWebsocketContext();
-    const {addToast} = useToast();
-    const [copied, setCopied] = useState(false);
+    const {copied, copy} = useCopyToClipboard();
 
     if (!room) return null;
     const spectateUrl = `${window.location.origin}/${room}/spectate`;
-
-    const copy = async () => {
-        try {
-            // Only exists in a secure context (https or localhost), so not when friends join over LAN http.
-            await navigator.clipboard.writeText(spectateUrl);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        } catch {
-            addToast({type: 'warning', title: 'Copy failed', description: 'Select the link and copy it by hand.'});
-        }
-    };
 
     return (
         <div className="w-full mb-2 flex flex-col gap-3 text-sm">
@@ -51,12 +39,12 @@ export const CastSettings = () => {
                         aria-label="Spectator link"
                         onFocus={(e) => e.target.select()}
                     />
-                    <button className="btn btn-sm join-item" onClick={copy} aria-label="Copy spectator link" title="Copy">
+                    <button className="btn btn-sm join-item" onClick={() => copy(spectateUrl)} aria-label="Copy spectator link" title="Copy">
                         {copied ? <Check size={16} /> : <Copy size={16} />}
                     </button>
-                    <a className="btn btn-sm join-item" href={spectateUrl} target="_blank" rel="noopener noreferrer" aria-label="Open spectator view" title="Open">
-                        <ExternalLink size={16} />
-                    </a>
+                    <ExternalLink className="btn btn-sm join-item" href={spectateUrl} aria-label="Open spectator view" title="Open">
+                        <ExternalLinkIcon size={16} />
+                    </ExternalLink>
                 </div>
             </div>
         </div>

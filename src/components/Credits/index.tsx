@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
 import type { PowerDescription } from "../../types/types";
-import { apiUrl } from "../../utils/server";
+import { ExternalLink } from "../ui/external-link";
+import { usePowersCatalog } from "../../hooks/useCatalogs";
 import { MISSING_ICON, serverAsset } from "../../utils/powerIcon";
 import { GAME_ICONS_LICENSE, powerCardIcons, type IconCredit } from "../PowerCards/card.icons";
 
@@ -38,16 +38,7 @@ function buildRows(powers: PowerDescription[]): IconRow[] {
 }
 
 export const Credits = () => {
-  const { data: powers = [], isError } = useQuery({
-    queryKey: ["powers-catalog"],
-    queryFn: async () => {
-      const response = await fetch(apiUrl("/api/powers.json"));
-      if (!response.ok) throw new Error("Failed to load powers");
-      return (await response.json()) as PowerDescription[];
-    },
-    retry: false,
-    refetchOnWindowFocus: false,
-  });
+  const { data: powers = [], isError } = usePowersCatalog();
 
   const rows = buildRows(powers);
 
@@ -55,8 +46,8 @@ export const Credits = () => {
     <div className="flex flex-col gap-4">
       <p className="opacity-80">
         Power icons are by the artists of{" "}
-        <a className="link" href="https://game-icons.net" target="_blank" rel="noopener noreferrer">game-icons.net</a>, licensed under{" "}
-        <a className="link" href={GAME_ICONS_LICENSE.url} target="_blank" rel="noopener noreferrer">{GAME_ICONS_LICENSE.name}</a>. Thank you!
+        <ExternalLink className="link" href="https://game-icons.net">game-icons.net</ExternalLink>, licensed under{" "}
+        <ExternalLink className="link" href={GAME_ICONS_LICENSE.url}>{GAME_ICONS_LICENSE.name}</ExternalLink>. Thank you!
       </p>
       {isError && <p className="text-sm opacity-60">Icons from mods installed on the game server will show here when it's reachable.</p>}
 
@@ -80,7 +71,7 @@ export const Credits = () => {
                   <>
                     by{" "}
                     {row.credit.url ? (
-                      <a className="link" href={row.credit.url} target="_blank" rel="noopener noreferrer">{row.credit.author}</a>
+                      <ExternalLink className="link" href={row.credit.url}>{row.credit.author}</ExternalLink>
                     ) : (
                       row.credit.author
                     )}

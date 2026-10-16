@@ -1,40 +1,33 @@
 import { useGameStore } from "../../context/game.context";
-
-
+import { formatTime } from "../../utils/time";
+import { Panel } from "../ui/panel";
+import { TableEmptyRow } from "../ui/table";
 
 export const News = ({className}: {className?: string}) => {
-
   const news = useGameStore((state) => state.news);
 
-    // const news = [
-    //     { id: 1, timestamp: new Date(), type: 'Earnings Report', description:'Company XYZ reported better-than-expected earnings for Q1.' },
-    //     { id: 2, timestamp: new Date(), type: 'Market Shock', description:'Unexpected geopolitical event causes market volatility.' },
-    //     { id: 3, timestamp: new Date(), type: 'Product Launch', description:'Tech giant ABC launches a revolutionary new product.' },
-    // ];
-
-    return ( <div className={`card bg-base-200 ${className}`}>
-            <div className="card-body">
-              <h2 className="card-title">News</h2>
-              <div className="overflow-x-auto">
-                <table className="table table-sm">
-                  <thead>
-                    <tr>
-                      <th>Time</th>
-                      <th>Description</th>
-                    </tr>
-                  </thead>
-                  {news.length === 0 && <tbody><tr><td colSpan={2} className="text-center">No news available</td></tr></tbody>}
-                  <tbody>
-                    {/* Headlines repeat (e.g. Rumor Mill), so key by position in the append-only list. */}
-                    {news.map((order, index) => (
-                      <tr key={`${order.timestamp}-${index}`}>
-                        <td>{new Date(order.timestamp).toLocaleTimeString()}</td>
-                        <td>{order.description}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>)
+  return (
+    <Panel className={className} title="News">
+      <div className="overflow-x-auto">
+        <table className="table table-sm">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {news.length === 0 && <TableEmptyRow colSpan={2}>No news available</TableEmptyRow>}
+            {/* Headlines repeat (e.g. Rumor Mill), so key by position in the append-only list. */}
+            {news.map((item, index) => (
+              <tr key={`${item.timestamp}-${index}`}>
+                <td>{formatTime(item.timestamp)}</td>
+                <td>{item.description}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Panel>
+  );
 }

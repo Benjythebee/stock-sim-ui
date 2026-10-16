@@ -13,6 +13,13 @@ export function powerIconSrc(power: Pick<PowerDescription, "iconUrl" | "iconSlug
     return `/powers/${power.iconSlug || "default"}.svg`;
 }
 
+/** What a power card needs to draw itself. */
+export type PowerCardData = Pick<PowerDescription, "id" | "type" | "isInstant" | "description" | "title" | "iconSlug" | "iconUrl" | "iconCredit">;
+
+/** The card color class (cards.css) for a power's type. `others` has no style of its own yet, so it uses the market one. */
+export const powerColor = (type: PowerDescription["type"]): "all" | "client" | "market" =>
+    type === "all" ? "all" : type === "client" ? "client" : "market";
+
 export function iconCreditText(power: Pick<PowerDescription, "iconCredit">): string | undefined {
     const credit = power.iconCredit;
     if (!credit) return undefined;

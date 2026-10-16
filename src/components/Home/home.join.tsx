@@ -3,6 +3,7 @@ import {useShallow} from "zustand/shallow";
 import { useWebsocketContext } from "../../context/ws.context";
 import { useGameStore } from "../../context/game.context";
 import { Link, useNavigate } from "react-router";
+import { Field } from "../ui/field";
 
 // No 0/O or 1/I so codes are easy to read out to friends. Must match the server's ^[A-Za-z0-9_-]{1,64}$.
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -60,10 +61,7 @@ export const Join = () => {
             </div>}
           {!joining && <>
           {error && <div role="alert" className="alert alert-error alert-soft w-full mb-2">{error}</div>}
-          <div className="form-control w-full mb-2">
-            <label className="label">
-              <span className="label-text font-semibold">Username</span>
-            </label>
+          <Field label="Username" className="mb-2">
             <input
               type="text"
               placeholder="Enter your username"
@@ -72,13 +70,9 @@ export const Join = () => {
               onChange={(e) => setUsername(e.target.value)}
               onKeyUp={handleKeyPress}
             />
-          </div>
+          </Field>
 
-          <div className="form-control w-full mb-1">
-            <label className="label flex-wrap">
-              <span className="label-text font-semibold">Room Code</span>
-              <span className="label-text text-sm">Leave empty for a new room</span>
-            </label>
+          <Field label="Room Code" hint="Leave empty for a new room" className="mb-1">
             <input
               type="text"
               placeholder="Enter room code"
@@ -88,7 +82,7 @@ export const Join = () => {
               onChange={(e) => setRoomCode(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ''))}
               onKeyUp={handleKeyPress}
             />
-          </div>
+          </Field>
 
           <div className="card-actions w-full mt-4">
             <button

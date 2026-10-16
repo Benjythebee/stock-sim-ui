@@ -4,17 +4,17 @@ import { Chart } from "react-chartjs-2";
 import {CategoryScale, Legend, TimeScale, Tooltip} from 'chart.js';
 import {Chart as ChartJS, LinearScale,TimeSeriesScale, PointElement,LineController,LineElement} from 'chart.js';
 import {CandlestickController,CandlestickElement,OhlcController} from "chartjs-chart-financial";
-import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useShallow } from "zustand/shallow";
 import 'chartjs-adapter-luxon'
-import { ChevronsRight, ZoomIn, ZoomOut } from "lucide-react";
 import { useDebugStore } from "../../context/debug.store";
-import { useWebsocketContext } from "../../context/ws.context";
-import { MessageType } from "../../types/messages";
 import { PowerButton } from "./PowerButton";
 import { SelectedCards } from "../PowerCards/selected.cards";
 import { createChartOverlay, type ChartOverlayData } from "./chart.overlay";
 import { cn } from "../../utils/cn";
+import { ZoomControls } from "./chart.controls";
+import { useChartGestures } from "./useChartGestures";
+import { useGameActions } from "../../hooks/useGameActions";
 
 ChartJS.register(CategoryScale, LinearScale,TimeScale,TimeSeriesScale,CandlestickController,OhlcController, CandlestickElement, PointElement,LineController,LineElement,Tooltip,Legend);
 
@@ -37,11 +37,8 @@ const clampPan = (end: number | null, firstX: number, lastX: number, windowSize:
   return clamped >= lastX ? null : clamped;
 };
 
-const zoomLabel = (seconds: number) =>
-  seconds === Infinity ? 'All' : seconds < 60 ? `${seconds}s` : `${seconds / 60}m`;
-
 export const TradingChart = ({className}: {className?: string}) => {
-  const { sendMessage } = useWebsocketContext();
+  const { cancelOrder } = useGameActions();
   const { settings, openOrders, news } = useGameStore(useShallow((state) => ({
     settings: state.gameSettings,
     openOrders: state.openOrders,
@@ -72,13 +69,13 @@ export const TradingChart = ({className}: {className?: string}) => {
   const chartRef = useRef<ChartJS<'candlestick'>>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const panBy = useEffectEvent((ms: number) => {
+  const panBy = (ms: number) => {
     const { prices } = usePriceStore.getState();
     if (!prices.length || !ms) return;
     const firstX = Number(prices[0].x);
     const lastX = Number(prices[prices.length - 1].x);
     setPanEnd((end) => clampPan((end ?? lastX) + ms, firstX, lastX, windowSize));
-  });
+  };
   /** Chart time per CSS pixel, to turn drags and horizontal scrolls into a pan. */
   const msPerPx = () => {
     const chart = chartRef.current;
@@ -89,7 +86,7 @@ export const TradingChart = ({className}: {className?: string}) => {
   // Vertical scroll zooms (up = closer), one step per gesture-ish so a trackpad doesn't fly through every
   // level. Horizontal scroll (or shift + scroll) pans.
   const lastZoomAt = useRef(0);
-  const onWheel = useEffectEvent((e: WheelEvent) => {
+  const onWheel = (e: WheelEvent) => {
     const horizontal = Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey;
     if (horizontal) {
       e.preventDefault();
@@ -102,59 +99,12 @@ export const TradingChart = ({className}: {className?: string}) => {
     if (now - lastZoomAt.current < 150) return;
     lastZoomAt.current = now;
     zoomBy(e.deltaY > 0 ? 1 : -1);
+  };
+  // The gesture hook always calls the latest handlers, so these can close over this render's state.
+  useChartGestures(containerRef, {
+    onWheel,
+    onDrag: (dx) => panBy(-dx * msPerPx()),
   });
-  const onDrag = useEffectEvent((dx: number) => panBy(-dx * msPerPx()));
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    // Drag to pan. A drag must not end in a click, or releasing over an order tag's × would cancel it.
-    let drag: { id: number; x: number; moved: boolean } | null = null;
-    let swallowClick = false;
-    const down = (e: PointerEvent) => {
-      swallowClick = false;
-      if (e.button === 0) drag = { id: e.pointerId, x: e.clientX, moved: false };
-    };
-    const move = (e: PointerEvent) => {
-      if (!drag || e.pointerId !== drag.id) return;
-      const dx = e.clientX - drag.x;
-      if (!drag.moved) {
-        if (Math.abs(dx) < 4) return;
-        drag.moved = true;
-        el.setPointerCapture(e.pointerId);
-        el.dataset.dragging = '';
-      }
-      drag.x = e.clientX;
-      onDrag(dx);
-    };
-    const up = (e: PointerEvent) => {
-      if (!drag || e.pointerId !== drag.id) return;
-      swallowClick = drag.moved;
-      drag = null;
-      delete el.dataset.dragging;
-    };
-    const click = (e: MouseEvent) => {
-      if (swallowClick) e.stopPropagation();
-      swallowClick = false;
-    };
-    const wheel = (e: WheelEvent) => onWheel(e);
-    el.addEventListener('wheel', wheel, { passive: false });
-    el.addEventListener('pointerdown', down);
-    el.addEventListener('pointermove', move);
-    el.addEventListener('pointerup', up);
-    el.addEventListener('pointercancel', up);
-    el.addEventListener('click', click, true);
-    return () => {
-      el.removeEventListener('wheel', wheel);
-      el.removeEventListener('pointerdown', down);
-      el.removeEventListener('pointermove', move);
-      el.removeEventListener('pointerup', up);
-      el.removeEventListener('pointercancel', up);
-      el.removeEventListener('click', click, true);
-    };
-    // onWheel/onDrag are Effect Events: they must not be dependencies (this eslint-plugin version predates useEffectEvent).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Rolling window: the latest candle (or the panned-to one) sits at the right edge, `windowSize` candles
   // back to the left (or back to the first candle, so a young game isn't mostly empty space).
@@ -199,7 +149,7 @@ export const TradingChart = ({className}: {className?: string}) => {
   overlay.current = {
     orders: openOrders,
     news,
-    onCancel: (ids) => ids.forEach((id) => sendMessage({ type: MessageType.ORDER_CANCEL, id })),
+    onCancel: (ids) => ids.forEach(cancelOrder),
   };
   const plugins = useMemo(() => [createChartOverlay(() => overlay.current)], []);
 
@@ -209,22 +159,14 @@ export const TradingChart = ({className}: {className?: string}) => {
         {/* Ticker and price centered between the chart controls and the powers. On phones the ticker
             takes the first row and the controls and powers share the second. */}
         <div className="grid grid-cols-[auto_1fr] sm:grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-2 self-end sm:self-auto">
-            <div className="join" title="Scroll on the chart to zoom, drag or shift + scroll to look back">
-              <button className="btn btn-xs join-item" aria-label="Zoom out" disabled={zoom === ZOOM_LEVELS.length - 1} onClick={() => zoomBy(1)}>
-                <ZoomOut size={14} />
-              </button>
-              <span className="btn btn-xs join-item pointer-events-none w-10 tabular-nums">{zoomLabel(windowSize)}</span>
-              <button className="btn btn-xs join-item" aria-label="Zoom in" disabled={zoom === 0} onClick={() => zoomBy(-1)}>
-                <ZoomIn size={14} />
-              </button>
-            </div>
-            {!view.live && (
-              <button className="btn btn-xs btn-primary" onClick={() => setPanEnd(null)}>
-                Live <ChevronsRight size={14} />
-              </button>
-            )}
-          </div>
+          <ZoomControls
+            windowSize={windowSize}
+            canZoomIn={zoom > 0}
+            canZoomOut={zoom < ZOOM_LEVELS.length - 1}
+            onZoom={zoomBy}
+            live={view.live}
+            onGoLive={() => setPanEnd(null)}
+          />
           {/* Fixed-width digits so the header doesn't shift on every tick. */}
           <h2 className="card-title justify-center gap-3 whitespace-nowrap col-span-2 sm:col-span-1 order-first sm:order-none">
             <span>{settings.ticketName}</span>

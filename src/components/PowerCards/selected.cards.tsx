@@ -1,19 +1,13 @@
 import { useState } from "react"
 import { usePowerStore } from "../../context/game.context"
 import type { PowerDescription } from "../../types/types"
-import { Portal } from "../portal"
+import { Portal } from "../ui/portal"
 import { PowerMiniCard } from "./card.mini"
 import { HandOfCards } from "./handOfCards"
-import { useWebsocketContext } from "../../context/ws.context"
-import { MessageType } from "../../types/messages"
-
-// const fakepower = {
-//     rarity:0.2,
-//     durationTicks:30,
-//     iconSlug:'talk',title:'Talk',description:'Communicate with other players to strategize and share information.',type:'all',isInstant:false,id:'1'}
+import { useGameActions } from "../../hooks/useGameActions"
 
 export const SelectedCards = () => {
-    const {sendMessage} = useWebsocketContext()
+    const {consumePower} = useGameActions()
     const {inventory} = usePowerStore()
     const [selected, setSelected] = useState<PowerDescription | null>(null);
 
@@ -27,10 +21,7 @@ export const SelectedCards = () => {
 
     const onSubmitCard = () => {
         if(!selected) return;
-        sendMessage({
-            type: MessageType.POWER_CONSUME,
-            id: selected.id!
-        })
+        consumePower(selected.id)
         closeModal();
     }
 
@@ -39,7 +30,6 @@ export const SelectedCards = () => {
             {inventory.slice(0,5).map((power, index)=>(
                 <PowerMiniCard key={`${power.id}-${index}`} power={power} onClick={()=>onSelectCard(power)} />
             ))}
-              {/* <PowerMiniCard power={fakepower} onClick={()=>onSelectCard(fakepower)} /> */}
 
            {selected &&  <Portal>
                 <HandOfCards

@@ -3,21 +3,19 @@ import { OrderHistory } from '../components/Trading/OrderHistory';
 import { CurrentOrders } from '../components/Trading/CurrentOrders';
 import { TradingCard } from '../components/Trading/TradingCard';
 import { TradingDepth } from '../components/Trading/TradingDepth';
-import { AdminModal } from '../components/Admin';
 import { useGameStore } from '../context/game.context';
-import { useShallow } from 'zustand/shallow';
-import { ConclusionModal } from '../components/Conclusion';
 import { News } from '../components/Trading/News';
 import { useWebsocketContext } from '../context/ws.context';
 import { useAutoConnect } from '../context/useAutoConnect';
 import { useParams } from 'react-router';
+import { RoomOverlays } from '../components/Room/room.overlays';
 
 
 
 export default function RoomPage() {
   const { roomId: roomCode } = useParams();
   const {connect} = useWebsocketContext()
-  const {paused,ended, setUsername} = useGameStore(useShallow((state) => ({paused: state.paused, ended: state.ended,setUsername:state.setUsername})));
+  const setUsername = useGameStore((state) => state.setUsername);
 
   useAutoConnect(roomCode, () => {
     const storedUsername = localStorage.getItem('username') || `Trader${Math.floor(Math.random() * 1000)}`;
@@ -27,9 +25,7 @@ export default function RoomPage() {
 
   return (
     <div id='room-page' className="relative min-h-screen bg-base-100 p-2 sm:p-4">
-      {(paused || ended) && <div className="modal-backdrop fixed inset-0 bg-black opacity-20 z-40"></div>}
-      <AdminModal  />
-      <ConclusionModal  />
+      <RoomOverlays />
 
       {/* Below lg the two columns dissolve (display: contents) so `order-*` can interleave them:
           chart, order form, order book, then news and orders. */}

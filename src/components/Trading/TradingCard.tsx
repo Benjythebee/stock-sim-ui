@@ -1,109 +1,73 @@
 import { useEffect, useState } from "react";
-import { useWebsocketContext } from "../../context/ws.context";
-import { MessageType } from "../../types/messages";
 import { usePriceStore } from "../../context/stock.store";
 import { MarketStateIndicator } from "./MarketClose";
+import { HackedOverlay } from "./hacked.overlay";
 import { useGameStore } from "../../context/game.context";
 import { cn } from "../../utils/cn";
+import { Field } from "../ui/field";
+import { useGameActions, type OrderKind, type OrderSide } from "../../hooks/useGameActions";
 
 export const TradingCard: React.FC = () => {
-  const { sendMessage } = useWebsocketContext();
+  const { placeOrder } = useGameActions();
   const tradingDisabled = useGameStore((state) => state.tradingDisabled);
   const shares = useGameStore((state) => state.shares);
   const cash = useGameStore((state) => state.cash);
   const price = usePriceStore((state) => state.price);
   const limitOrdersDisabled = useGameStore((state) => !!state.gameSettings.disableLimitOrders);
-  const [pickedOrderType, setOrderType] = useState<"limit" | "market">("limit");
+  const [pickedOrderType, setOrderType] = useState<OrderKind>("LIMIT");
   // The host can turn limit orders off for the game (the server rejects them then).
-  const orderType = limitOrdersDisabled ? "market" : pickedOrderType;
+  const orderType = limitOrdersDisabled ? "MARKET" : pickedOrderType;
   const [limitPrice, setLimitPrice] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
 
-  const disabledSell = tradingDisabled || shares <= 0 || !amount || Number(amount) <= 0 || Number(amount) > shares;
-  const disabledBuy = tradingDisabled || !amount || Number(amount) <= 0 || Number(amount) * (orderType === "limit" ? Number(limitPrice) : price) > cash;
+  const quantity = Number(amount);
+  const noAmount = !amount || quantity <= 0;
+  const disabledSell = tradingDisabled || shares <= 0 || noAmount || quantity > shares;
+  const disabledBuy = tradingDisabled || noAmount || quantity * (orderType === "LIMIT" ? Number(limitPrice) : price) > cash;
 
-  const handleOrder = (side: "buy" | "sell") => {
-    // console.log(`Placing ${side} order:`, {
-    //     type: orderType,
-    //     price: orderType === 'limit' ? limitPrice : 'market',
-
-    //     amount
-    // });
-
-    if (!amount || Number(amount) <= 0) {
-      return;
-    }
-
-    if(tradingDisabled) return
-
-    sendMessage({
-      type: MessageType.STOCK_ACTION,
-      action: side == "buy" ? "BUY" : "SELL",
-      orderType: orderType === "limit" ? "LIMIT" : "MARKET",
-      quantity: Number(amount),
-      price: orderType === "limit" ? Number(limitPrice) : 100,
-    });
+  const handleOrder = (side: OrderSide) => {
+    if (noAmount || tradingDisabled) return;
+    placeOrder(side, orderType, quantity, Number(limitPrice));
   };
 
   // Prefill the limit price with the current price, and fill it in once the first price arrives
   // (the card can mount before it, when the price is still 0).
   const hasPrice = price > 0;
   useEffect(() => {
-    if (orderType === "limit" && hasPrice) {
+    if (orderType === "LIMIT" && hasPrice) {
       setLimitPrice(usePriceStore.getState().price.toString());
     }
   }, [orderType, hasPrice]);
 
+  const orderTypeButton = (type: OrderKind) => cn("btn join-item flex-1", orderType === type ? "btn-primary" : "btn-outline");
+
   return (
     // tradingDisabled only comes from a DDoS (the server's only trading lock), so the form looks hacked.
     <div className={cn("card bg-base-200", { hacked: tradingDisabled })}>
-      {tradingDisabled && (
-        <div
-          role="status"
-          className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none rounded-box border border-green-500/60 bg-black/85 p-3 font-mono text-xs text-green-400 shadow-lg"
-        >
-          <div className="font-bold">&gt; SYSTEM COMPROMISED</div>
-          <div>DDoS attack in progress.</div>
-          <div>Trading offline<span className="hacked-cursor">_</span></div>
-        </div>
-      )}
+      {tradingDisabled && <HackedOverlay />}
       <div className="card-body">
         <MarketStateIndicator />
         <h2 className="card-title">{tradingDisabled ? "Pl4c3 0rd3r" : "Place Order"}</h2>
 
-        {/* Order Type Selector */}
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text">Order Type</span>
-          </label>
+        <Field label="Order Type" bold={false}>
           <div className="join w-full">
             <button
-              className={`btn join-item flex-1 ${
-                orderType === "limit" ? "btn-primary" : "btn-outline"
-              }`}
-              onClick={() => setOrderType("limit")}
+              className={orderTypeButton("LIMIT")}
+              onClick={() => setOrderType("LIMIT")}
               disabled={limitOrdersDisabled}
               title={limitOrdersDisabled ? "The host disabled limit orders for this game" : undefined}
             >
               Limit
             </button>
-            <button
-              className={`btn join-item flex-1 ${
-                orderType === "market" ? "btn-primary" : "btn-outline"
-              }`}
-              onClick={() => setOrderType("market")}
-            >
+            <button className={orderTypeButton("MARKET")} onClick={() => setOrderType("MARKET")}>
               Market
             </button>
           </div>
-        </div>
+        </Field>
 
         {/* Price Input (only for limit orders) */}
-        {orderType === "limit" && (
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Price</span>
-            </label>
+        {orderType === "LIMIT" && (
+          <Field label="Price" bold={false}>
             <input
               type="number"
               placeholder="0.00"
@@ -113,14 +77,10 @@ export const TradingCard: React.FC = () => {
               value={limitPrice}
               onChange={(e) => setLimitPrice(e.target.value)}
             />
-          </div>
+          </Field>
         )}
 
-        {/* Amount Input */}
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text">Amount</span>
-          </label>
+        <Field label="Amount" bold={false}>
           {/* Whole shares only: the server floors quantities, so 0.5 would become 0. */}
           <input
             type="number"
@@ -131,20 +91,13 @@ export const TradingCard: React.FC = () => {
             value={amount}
             onChange={(e) => setAmount(e.target.value.replace(/[.,].*$/, ""))}
           />
-        </div>
+        </Field>
 
-        {/* Buy/Sell Buttons */}
         <div className="grid grid-cols-2 gap-2 mt-4">
-          <button
-            className="btn btn-success"
-            disabled={disabledBuy}
-            onClick={() => handleOrder("buy")}
-          >
+          <button className="btn btn-success" disabled={disabledBuy} onClick={() => handleOrder("BUY")}>
             Buy
           </button>
-          <button className="btn btn-error" 
-          disabled={disabledSell}
-          onClick={() => handleOrder("sell")}>
+          <button className="btn btn-error" disabled={disabledSell} onClick={() => handleOrder("SELL")}>
             Sell
           </button>
         </div>

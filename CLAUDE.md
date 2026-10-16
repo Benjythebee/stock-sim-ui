@@ -53,13 +53,22 @@ src/
     view.context.ts/.provider.tsx   legacy, unused since react-router
   types/messages.ts      MessageType enum + message types (HAND-COPIED from the server)
   types/types.ts         PowerDescription (= server's PublicPower)
+  hooks/                 useGameActions (every outbound message: togglePause, placeOrder, cancelOrder, selectPower,
+                         consumePower, updateSettings, ...), useGameSettings, useMarketOpen/useCanTrade, useRoomConnection,
+                         useLivePnl, useCopyToClipboard, useBotsCatalog/usePowersCatalog (react-query)
+  utils/                 cn, math (money, round, parseNumber), time (formatTime, formatCountdown), fetch (fetchJson),
+                         powerIcon (icon src, powerColor, PowerCardData), server (apiUrl), seo, debug
   components/
-    Trading/             Chart (candles + power UI), TradingCard (order form), TradingDepth (order book),
-                         News, OrderHistory, MarketClose (open/closed badge + countdown), PowerButton (briefcase)
+    ui/                  generic DaisyUI pieces, no game knowledge: OverlayCard + Backdrop, Panel (base-200 card + title),
+                         Field (label + input), Toggle, HelpButton/HelpTooltip ("?" explanations), Tabs, Collapse,
+                         ExternalLink, TableEmptyRow, Pnl (signed, colored $), Portal, Card
+    Room/                RoomOverlays: backdrop + AdminModal + ConclusionModal, shared by Room and RoomSpectate
+    Trading/             Chart (candles + power UI; chart.controls, useChartGestures), TradingCard (order form), TradingDepth (order book),
+                         News, CurrentOrders, OrderHistory, SideBadge, MarketClose (open/closed badge + countdown), PowerButton (briefcase)
     PowerCards/          PowerCard (big collectible card), PowerMiniCard (inventory), HandOfCards (<dialog> fan of cards)
-    Admin/               AdminModal (lobby settings / paused overlay) + tabs
+    Admin/               AdminModal (lobby settings / paused overlay) + one file per tab; SettingInput, NumberSetting, SettingToggle
     Conclusion/          end-of-game leaderboard
-    nav/                 HomeNavigation, InGameNavigation (cash, shares, P/L, host menu, cast button)
+    nav/                 NavBrand (logo + theme), HomeNavigation, InGameNavigation (cash, shares, P/L, host menu, cast button)
     footer/              SiteFooter: Play, About, Credits (/about#credits), Discord, X
     Credits/             icon credits for /about: bundled icons (card.icons.ts) + mod icons from /api/powers.json (iconCredit)
     Toast/               zustand toast store + Toaster
@@ -72,7 +81,7 @@ public/powers/<icon>.svg bundled power icons (game-icons.net, CC BY 3.0; credits
 ### Data flow
 
 - **Inbound**: `ws.provider` parses JSON. It handles `PONG` (ping display) itself and stores the `ID` resume token in `sessionStorage.session_` before passing `ID` on (it resets `isAdmin`; `IS_ADMIN` follows for the host). Everything else goes to `handleGameMessage()` in `game.context.ts`, which writes to the zustand stores via `setState`/`getState()` (it's outside React). Notifications, `ERROR` messages and news also push toasts.
-- **Outbound**: components call `sendMessage({ type: MessageType.X, ... })` from `useWebsocketContext()`. Nothing is optimistic except the pause flag and admin settings echo, and the server corrects both.
+- **Outbound**: components call the helpers from `useGameActions()` (`hooks/useGameActions.ts`), which build the messages and call `sendMessage`. Add new outbound messages there rather than calling `sendMessage` from components. Nothing is optimistic except the pause flag and admin settings echo, and the server corrects both.
 - **Stores** are read with selectors, usually `useShallow` for multi-field picks. Non-React code reads `useXStore.getState()`.
 - **Candles**: `setClock` (on each `CLOCK`) appends a time label and opens a new candle at the last price. `setPrice` (on each `STOCK_MOVEMENT`) updates the high, low and close of the current candle. Before the game starts, `setClock` keeps a single candle. `debug.store` subscribes to the price store and appends a fair/guide sample per new candle.
 - **Resets**: `resetRoomStores()` (game + price + debug stores; keeps the powers catalog) runs whenever you leave a room page. A `ROOM_STATE` with `started: false` (new room, lobby rebuilt by `ADMIN_SETTINGS`, server restart) clears candles, book, debug series, news, conclusion, offers and inventory, but keeps `isAdmin` and the catalog, which arrive just before it.
@@ -121,13 +130,14 @@ public/powers/<icon>.svg bundled power icons (game-icons.net, CC BY 3.0; credits
 ## Adding things
 
 - **A new power** is a server mod (`../stock-sim-server/mods/powers/<id>/`, see its `mods/README.md`). It can ship its own icon (served by the server) with an `iconCredit`. The UI needs no change: the manifest, the icon and the Credits section all pick it up. Only a new *bundled* icon name needs `public/powers/<icon>.svg` plus a credit entry in `components/PowerCards/card.icons.ts`.
-- **A new setting**: add it to the server's `GameSettings` and `applySettingsUpdate` sanitizer, then to this repo's `GameSettings` type and an input in `components/Admin/*-settings.tsx` that calls `setGameSettings({...})`.
+- **A new setting**: add it to the server's `GameSettings` and `applySettingsUpdate` sanitizer, then to this repo's `GameSettings` type and an input in `components/Admin/*-settings.tsx`: a `NumberSetting`, `SettingInput` or `SettingToggle` wired to `const [gameSettings, setGameSettings] = useGameSettings()`.
+- **UI pieces**: before writing DaisyUI markup by hand, check `components/ui/` (cards, fields, toggles, tooltips, tabs, links). Store checks that more than one component needs belong in `hooks/`.
 - **A new message**: see "Wire protocol" above. Change both repos in the same change.
 
 ## Known gaps / gotchas (verify before relying on them)
 
 - **P/L in the nav** is the server's `pnl` from the last `PORTFOLIO_UPDATE`, marked to the live price: `pnl + (shares + reservedShares) × (price − pnlMark)`. The server only re-sends the portfolio when the account changes, and players start with 0 shares, so that is exact until the next update.
-- `OrderHistory` shows **hard-coded mock data**. The server sends no order or fill events yet. The Admin "Powers" tab is a placeholder.
+- The Admin "Powers" tab is a placeholder.
 - The UI no longer sends `SHOCK` (the host-only debug buttons were removed). The message type stays in `messages.ts` to mirror the server.
 - An empty room code on the Join card makes up a 5-character code (room ids must match `^[A-Za-z0-9_-]{1,64}$`; the server 404s `/ws/`).
 - `Layout` sits outside `<Routes>`, so `useParams()` is empty there: it decides home vs room from `useLocation().pathname` (`STATIC_PAGES`). Add new top-level pages to that set, or they'll be treated as room codes.
