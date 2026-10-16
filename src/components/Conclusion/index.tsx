@@ -39,10 +39,10 @@ export const ConclusionModal = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {conclusion.players
+                                {[...conclusion.players]
                                     .sort((a, b) => (b.pnl || 0) - (a.pnl || 0))
                                     .map((user, index) => (
-                                        <tr key={user.name || index}>
+                                        <tr key={`${user.name}-${index}`}>
                                             <td className="font-medium">{user.name}</td>
                                             <td className={`${(user.pnl || 0) >= 0 ? 'text-success' : 'text-error'}`}>
                                                 ${(user.pnl || 0).toFixed(2)}
@@ -69,10 +69,10 @@ export const ConclusionModal = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {conclusion.bots
+                                    {[...conclusion.bots]
                                         .sort((a, b) => (b.pnl || 0) - (a.pnl || 0))
                                         .map((user, index) => (
-                                            <tr key={user.name || index}>
+                                            <tr key={`${user.name}-${index}`}>
                                                 <td className="font-medium">{user.name}</td>
                                                 <td className="font-light">{user.type}</td>
                                                 <td className={`${(user.pnl || 0) >= 0 ? 'text-success' : 'text-error'}`}>

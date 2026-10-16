@@ -25,8 +25,9 @@ export const News = ({className}: {className?: string}) => {
                   </thead>
                   {news.length === 0 && <tbody><tr><td colSpan={2} className="text-center">No news available</td></tr></tbody>}
                   <tbody>
-                    {news.map((order) => (
-                      <tr key={order.title}>
+                    {/* Headlines repeat (e.g. Rumor Mill), so key by position in the append-only list. */}
+                    {news.map((order, index) => (
+                      <tr key={`${order.timestamp}-${index}`}>
                         <td>{new Date(order.timestamp).toLocaleTimeString()}</td>
                         <td>{order.description}</td>
                       </tr>

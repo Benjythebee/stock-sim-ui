@@ -13,7 +13,7 @@ import { PowerSettings } from "./power-settings";
 
 export const AdminModal = () => {
     const {prices} = usePriceStore(useShallow((state) => ({prices: state.prices})));
-    const {paused,isAdmin, onlineUsers} = useGameStore(useShallow((state) => ({paused: state.paused, isAdmin: state.isAdmin, onlineUsers: state.onlineUsers})));
+    const {paused,ended,isAdmin, onlineUsers} = useGameStore(useShallow((state) => ({paused: state.paused, ended: state.ended, isAdmin: state.isAdmin, onlineUsers: state.onlineUsers})));
     const {sendMessage} = useWebsocketContext();
     const {saveGameSettings} = useGameStore(useShallow((state) => ({saveGameSettings: state.saveGameSettings, gameSettings: state.gameSettings})));
 
@@ -31,6 +31,9 @@ export const AdminModal = () => {
     }
     // console.log('AdminModal render', {isAdmin, pricesLength: prices.length, paused});
     const visibleSettings = useMemo(() => isAdmin && prices.length >= 1 && paused, [isAdmin, prices.length, paused]);
+
+    // An ended game reports paused=true on (re)join; the leaderboard (ConclusionModal) takes over.
+    if(ended) return null;
 
     if(visibleSettings){
         return (

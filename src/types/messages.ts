@@ -215,10 +215,13 @@ type PowerOffersMessage = {
     offers: PowerDescription[]
 }
 
+/** `index` into the current offers, or POWER_SKIP_INDEX to decline the whole briefcase. */
 type PowerSelectMessage = {
     type: MessageType.POWER_SELECT;
     index: number;
 }
+/** POWER_SELECT index that tells the server to discard the offers (so they aren't re-sent on reconnect). */
+export const POWER_SKIP_INDEX = -1;
 
 type PowerConsumeMessage = {
     type: MessageType.POWER_CONSUME;

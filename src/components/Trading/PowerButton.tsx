@@ -1,26 +1,35 @@
+import { useState } from "react";
 import { usePowerStore } from "../../context/game.context";
 import { cn } from "../../utils/cn";
 import { Portal } from "../portal";
 import { useWebsocketContext } from "../../context/ws.context";
-import { MessageType } from "../../types/messages";
+import { MessageType, POWER_SKIP_INDEX } from "../../types/messages";
 import { HandOfCards } from "../PowerCards/handOfCards";
 
 
 export const PowerButton = () => {
   const {currentOffers,clearOffers} = usePowerStore()
   const {sendMessage,isSpectate} = useWebsocketContext();
+  const [open, setOpen] = useState(false);
 
-    const modal = ()=>{
-        return (document.getElementById('hand-cards-modal')! as HTMLDialogElement)
-    }
     const onToggle = () => {
       if(!currentOffers || currentOffers.length === 0) return;
-        modal()?.showModal()
+        setOpen(true)
     }
 
-    const onClose = () => {
+    // The offers are used up (picked or skipped): forget them and close.
+    const finish = () => {
         clearOffers();
-        modal()?.close()
+        setOpen(false)
+    }
+
+    const onSkip = () => {
+        // Tell the server too, or it re-sends the offers on reconnect.
+        sendMessage({
+            type:MessageType.POWER_SELECT,
+            index: POWER_SKIP_INDEX
+        })
+        finish();
     }
 
     const onSelectCard = (index: number) => {
@@ -28,7 +37,7 @@ export const PowerButton = () => {
             type:MessageType.POWER_SELECT,
             index
         })
-        onClose();
+        finish();
     }
 
     if(isSpectate) return null;
@@ -40,7 +49,8 @@ export const PowerButton = () => {
             {currentOffers.length === 0 ? 'No Power' : 'Open'}
           </button>
       {currentOffers.length > 0 && <Portal>
-        <HandOfCards cards={currentOffers} onSelectCard={onSelectCard} onSkip={onClose} />
+        {/* Esc only hides the hand: the offers stay and the briefcase can reopen it. */}
+        <HandOfCards cards={currentOffers} open={open} onDismiss={() => setOpen(false)} onSelectCard={onSelectCard} onSkip={onSkip} />
       </Portal>}
     </>
 }

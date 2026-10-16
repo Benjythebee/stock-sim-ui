@@ -9,8 +9,9 @@ export const TradingDepth = () => {
 
     
     const rows = useMemo(() => {
-      const sortedAsks= asks.sort((a,b) => a[0] - b[0]).slice(0,10);
-      const sortedBids= bids.sort((a,b) => b[0] - a[0]).slice(0,10);
+      // Copy first: the arrays belong to the store.
+      const sortedAsks= [...asks].sort((a,b) => a[0] - b[0]).slice(0,10);
+      const sortedBids= [...bids].sort((a,b) => b[0] - a[0]).slice(0,10);
         const max = Math.max(sortedAsks.length, sortedBids.length);
         const combined = [];
         for (let i = 0; i < max; i++) {
