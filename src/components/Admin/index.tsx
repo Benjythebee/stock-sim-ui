@@ -6,6 +6,8 @@ import { useShallow } from "zustand/shallow";
 import { SettingTabs, type AdminSettingsTab } from "./tabs";
 import { BotsSettings } from "./bots-settings";
 import { GeneralSettings } from "./general-settings";
+import { GameplaySettings } from "./gameplay-settings";
+import { MarketSettings } from "./market-settings";
 import { PowerSettings } from "./power-settings";
 import { CastSettings } from "./cast-settings";
 
@@ -45,6 +47,8 @@ export const AdminModal = () => {
                     <SettingTabs tab={tab} setTab={setTab} />
 
                     {tab === 'general' && (<GeneralSettings setGameSettings={setGameSettings} />)}
+                    {tab === 'gameplay' && (<GameplaySettings setGameSettings={setGameSettings} />)}
+                    {tab === 'market' && (<MarketSettings setGameSettings={setGameSettings} />)}
                     {tab === 'bots' && (<BotsSettings setGameSettings={setGameSettings} />)}
                     {tab === 'powers' && (<PowerSettings />)}
                     {tab === 'cast' && (<CastSettings />)}         

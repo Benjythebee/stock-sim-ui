@@ -18,6 +18,8 @@ export type GameSettings = {
     ticketName: string;
     botSelection?: string[]; // array of bot Types
     revealPrices?: boolean; // server only sends DEBUG_PRICES (hidden fair value) when on
+    disableLimitOrders?: boolean; // players can only place market orders
+    disableRandomWalk?: boolean; // no random noise in the price; it moves on news, powers and trades
 }
 
 type GameStore = {

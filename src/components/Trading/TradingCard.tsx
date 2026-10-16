@@ -12,7 +12,10 @@ export const TradingCard: React.FC = () => {
   const shares = useGameStore((state) => state.shares);
   const cash = useGameStore((state) => state.cash);
   const price = usePriceStore((state) => state.price);
-  const [orderType, setOrderType] = useState<"limit" | "market">("limit");
+  const limitOrdersDisabled = useGameStore((state) => !!state.gameSettings.disableLimitOrders);
+  const [pickedOrderType, setOrderType] = useState<"limit" | "market">("limit");
+  // The host can turn limit orders off for the game (the server rejects them then).
+  const orderType = limitOrdersDisabled ? "market" : pickedOrderType;
   const [limitPrice, setLimitPrice] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
 
@@ -79,6 +82,8 @@ export const TradingCard: React.FC = () => {
                 orderType === "limit" ? "btn-primary" : "btn-outline"
               }`}
               onClick={() => setOrderType("limit")}
+              disabled={limitOrdersDisabled}
+              title={limitOrdersDisabled ? "The host disabled limit orders for this game" : undefined}
             >
               Limit
             </button>

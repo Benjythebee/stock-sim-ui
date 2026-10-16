@@ -1,9 +1,15 @@
 
-export type AdminSettingsTab = 'general' | 'bots' | 'powers' | 'cast';
+export type AdminSettingsTab = 'general' | 'gameplay' | 'market' | 'bots' | 'powers' | 'cast';
 
 const ADMIN_SETTINGS_TABS: {label: string, value: AdminSettingsTab}[] = [{
     label: 'General',
     value: 'general'
+},{
+    label: 'Gameplay',
+    value: 'gameplay'
+},{
+    label: 'Market',
+    value: 'market'
 },{
     label: 'Bots',
     value: 'bots'
