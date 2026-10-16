@@ -37,8 +37,8 @@ The server keeps a hidden **intrinsic value** (fair value; moves on news, powers
 ```
 src/
   index.tsx / main.tsx   StrictMode root → WebSocketProvider → BrowserRouter → Layout → Routes
-  layout.tsx             nav (home vs in-game), Toaster, react-query client, Discord button
-  pages/                 Home (join), Room (player view), RoomSpectate, Whatisthis (/about marketing page)
+  layout.tsx             route-aware nav (HomeNavigation on /, /about; InGameNavigation in rooms; none on /cast), SiteFooter (not on /cast or spectate), Toaster, react-query client
+  pages/                 Home (join), Room (player view), RoomSpectate, Whatisthis (/about marketing page; ends with #credits)
   cast.tsx               /cast: Chromecast receiver that iframes /:room/spectate
   context/
     ws.provider.tsx      the ONE WebSocket: connect/disconnect/sendMessage, ping every 3s, session resume
@@ -57,11 +57,13 @@ src/
     Admin/               AdminModal (lobby settings / paused overlay) + tabs
     Conclusion/          end-of-game leaderboard
     nav/                 HomeNavigation, InGameNavigation (cash, shares, P/L, host menu, cast button)
+    footer/              SiteFooter: Play, About, Credits (/about#credits), Discord, X
+    Credits/             icon credits for /about: bundled icons (card.icons.ts) + mod icons from /api/powers.json (iconCredit)
     Toast/               zustand toast store + Toaster
     cast/button.tsx      Chromecast sender
   cards.css              all power-card styling (fan layout, per-type colors, animations)
   index.css              Tailwind 4 + DaisyUI (light default, dark preferred), wiggle/gradient keyframes, .btn-amber
-public/powers/<icon>.svg power icons (game-icons.net; attribution in PowerCards/card.icons.ts)
+public/powers/<icon>.svg bundled power icons (game-icons.net, CC BY 3.0; credits in PowerCards/card.icons.ts, shown on /about#credits). missing.svg is the load-failure placeholder (ours)
 ```
 
 ### Data flow
@@ -70,7 +72,8 @@ public/powers/<icon>.svg power icons (game-icons.net; attribution in PowerCards/
 - **Outbound**: components call `sendMessage({ type: MessageType.X, ... })` from `useWebsocketContext()`. Nothing is optimistic except the pause flag and admin settings echo, and the server corrects both.
 - **Stores** are read with selectors, usually `useShallow` for multi-field picks. Non-React code reads `useXStore.getState()`.
 - **Candles**: `setClock` (on each `CLOCK`) appends a time label and opens a new candle at the last price. `setPrice` (on each `STOCK_MOVEMENT`) updates the high, low and close of the current candle. Before the game starts, `setClock` keeps a single candle. `debug.store` subscribes to the price store and appends a fair/guide sample per new candle.
-- **Powers catalog**: `HandOfCards` fetches `/api/powers.json` once into `powers.data`. `POWER_INVENTORY` carries only ids, which are resolved against that catalog.
+- **Powers catalog**: the server sends `CONTENT_MANIFEST` right after `ID` on every connect: all installed powers (built-ins + server mods) → `powers.data`, and every server-hosted asset is preloaded (`preloadImages`). `POWER_INVENTORY` carries only ids, resolved against that catalog in order (duplicates kept). `HandOfCards` still fetches `/api/powers.json` as a fallback if the catalog is empty.
+- **Power icons**: `PowerIcon` (`components/PowerCards/power-icon.tsx`) uses `iconUrl` (a server-relative URL for icons shipped by a mod, prefixed with the server origin) or else `/powers/<iconSlug>.svg`, swaps to `/powers/missing.svg` on load error, and shows `iconCredit` as a tooltip. See `utils/powerIcon.ts`.
 
 ### Connection and reconnect
 
@@ -111,7 +114,7 @@ public/powers/<icon>.svg power icons (game-icons.net; attribution in PowerCards/
 
 ## Adding things
 
-- **A new power** is server-only (`definePower` in `../stock-sim-server/src/powers/defs/`). The UI picks it up from `/api/powers.json`. If it uses a new `icon`, add `public/powers/<icon>.svg` and an attribution entry in `components/PowerCards/card.icons.ts`.
+- **A new power** is a server mod (`../stock-sim-server/mods/powers/<id>/`, see its `mods/README.md`). It can ship its own icon (served by the server) with an `iconCredit`. The UI needs no change: the manifest, the icon and the Credits section all pick it up. Only a new *bundled* icon name needs `public/powers/<icon>.svg` plus a credit entry in `components/PowerCards/card.icons.ts`.
 - **A new setting**: add it to the server's `GameSettings` and `applySettingsUpdate` sanitizer, then to this repo's `GameSettings` type and an input in `components/Admin/*-settings.tsx` that calls `setGameSettings({...})`.
 - **A new message**: see "Wire protocol" above. Change both repos in the same change.
 
@@ -121,8 +124,7 @@ public/powers/<icon>.svg power icons (game-icons.net; attribution in PowerCards/
 - `OrderHistory` shows **hard-coded mock data**. The server sends no order or fill events yet. The Admin "Powers" tab is a placeholder.
 - The "Send Value shock" / "Send shock" buttons in `TradingCard` show for every player, but only the host may use them (debug tools).
 - The Join card says "Leave empty for a new room", but an empty code builds `/ws/`, which the server 404s (room ids must match `^[A-Za-z0-9_-]{1,64}$`).
-- `Layout` calls `useParams()` outside any `<Route>`, which returns `{}`. So the in-game nav branch is always taken (`HomeNavigation` and the About link never render) and the Discord button never shows.
-- `POWER_INVENTORY` ids are resolved by *filtering* the catalog, so duplicate powers collapse to one card, and the inventory is empty if it arrives before `/api/powers.json` has been fetched (the fetch only happens when `HandOfCards` mounts).
+- `Layout` sits outside `<Routes>`, so `useParams()` is empty there: it decides home vs room from `useLocation().pathname` (`STATIC_PAGES`). Add new top-level pages to that set, or they'll be treated as room codes.
 - `TradingDepth` sorts the store's arrays in place. Market orders send a dummy `price: 100`, which the server ignores.
 - The local `GameSettings` defaults (cash 5000, volatility 5, 1 bot) differ from the server's (10,000 / 0.05 / 5). They're overwritten by `ROOM_STATE` on join.
 - Rooms live in server memory only, so a server restart drops games. The UI auto-reconnects into a fresh empty room.

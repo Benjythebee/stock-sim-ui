@@ -3,6 +3,9 @@ import CandlestickChart from "../components/Candles/candles";
 import { Card } from "../components/Card";
 import { PowerCard } from "../components/PowerCards/card";
 import type { PowerDescription } from "../types/types";
+import { Credits } from "../components/Credits";
+import { useEffect } from "react";
+import { useLocation } from "react-router";
 
 const fakepowers: PowerDescription[] = [
   {
@@ -40,6 +43,12 @@ const fakepowers: PowerDescription[] = [
 ];
 
 export const WhatIsThisPage: React.FC = () => {
+  const { hash } = useLocation();
+  // react-router doesn't scroll to #anchors itself (e.g. the footer's "Credits" link).
+  useEffect(() => {
+    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: "smooth" });
+  }, [hash]);
+
   return (
     <div className="relative min-h-screen bg-base-100 p-4">
       <section className="grid grid-cols-2 gap-4 md:px-20 mb-10">
@@ -80,7 +89,7 @@ export const WhatIsThisPage: React.FC = () => {
           </div>
         </div>
         <Card
-          className={"col-span-1 border-0"}
+          className={"col-span-1 border-0 max-w-full"}
           size="lg"
           title="Random Powers"
           content="Powers are special abilities that can give you an edge in the market. You can acquire them randomly and use them strategically to influence stock prices or gain insights."
@@ -115,6 +124,10 @@ export const WhatIsThisPage: React.FC = () => {
             </div>
           }
         />
+
+        <section id="credits" className="col-span-2 scroll-mt-4">
+          <Card className="border-0" size="full" title="Credits" content={<Credits />} />
+        </section>
       </section>
     </div>
   );

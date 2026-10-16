@@ -1,29 +1,33 @@
-import { useParams } from "react-router"
+import { useLocation } from "react-router"
 import { HomeNavigation } from "./components/nav"
 import { InGameNavigation } from "./components/nav/in-game.nav"
+import { SiteFooter } from "./components/footer"
 import { Toaster } from "./components/Toast/Toaster"
-import { Discord } from "@ridemountainpig/svgl-react"
 import { useState } from "react"
 import { QueryClient ,QueryClientProvider} from "@tanstack/react-query"
 
+/** Top-level pages that are not a room code. Everything else ("/:roomId", "/:roomId/spectate") is a room. */
+const STATIC_PAGES = new Set(["/", "/about", "/cast"]);
 
 export const Layout = ({children}: {children: React.ReactNode}) => {
 
-    const room = useParams<{roomId: string}>()
+    // Layout sits outside <Routes>, so useParams() is always empty here; read the path instead.
+    const { pathname } = useLocation();
+    const path = pathname.replace(/\/+$/, "") || "/";
+    const inRoom = !STATIC_PAGES.has(path);
+    // TV screens (Chromecast receiver, spectator view it embeds) get no site chrome.
+    const isScreen = path === "/cast" || /^\/[^/]+\/spectate$/.test(path);
     const [queryClient,] = useState(() => new QueryClient())
 
     return  <QueryClientProvider client={queryClient}>
-    <div className="relative min-h-screen w-full bg-base-200">
-            {room && room.roomId!==''?<InGameNavigation />:<HomeNavigation />}
-            
-            {children}
+    <div className="relative min-h-screen w-full bg-base-200 flex flex-col">
+            {path === "/cast" ? null : inRoom ? <InGameNavigation /> : <HomeNavigation />}
+
+            <div className="flex-1">
+                {children}
+            </div>
+            {!isScreen && <SiteFooter />}
             <Toaster />
-            {room?.roomId && <div className="fixed bottom-2 right-2 opacity-80 hover:opacity-100 transition-opacity duration-300">
-                <button className="btn btn-ghost btn-sm flex items-center" onClick={() => window.open("https://discord.gg/QyjFdGSmTm", "_blank")}>
-                Join us on Discord&nbsp;
-                <Discord className="w-8 h-8 text-gray-600 hover:text-gray-400 cursor-pointer" onClick={() => window.open("https://discord.gg/QyjFdGSmTm", "_blank")} />
-                </button>
-            </div>}
         </div>
     </QueryClientProvider>
 }
