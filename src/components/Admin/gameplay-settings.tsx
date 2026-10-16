@@ -9,6 +9,7 @@ export const GameplaySettings = ({setGameSettings}:{ setGameSettings: (settings:
         <div className="w-full mb-2 flex flex-col gap-3">
             <SettingToggle
                 label="Disable limit orders"
+                tooltipPosition="right"
                 checked={!!gameSettings.disableLimitOrders}
                 onChange={(disableLimitOrders) => setGameSettings({disableLimitOrders})}
             >
@@ -17,6 +18,7 @@ export const GameplaySettings = ({setGameSettings}:{ setGameSettings: (settings:
 
             <SettingToggle
                 label="Enable news events"
+                tooltipPosition="right"
                 checked={!!gameSettings.enableRandomNews}
                 onChange={(enableRandomNews) => setGameSettings({enableRandomNews})}
             >

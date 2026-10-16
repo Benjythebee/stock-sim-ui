@@ -49,6 +49,7 @@ export const MarketSettings = ({setGameSettings}:{ setGameSettings: (settings: P
         <div className="w-full mb-2">
             <SettingToggle
                 label="Disable random walk"
+                tooltipPosition="right"
                 checked={!!gameSettings.disableRandomWalk}
                 onChange={(disableRandomWalk) => setGameSettings({disableRandomWalk})}
             >
