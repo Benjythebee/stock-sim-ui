@@ -1,11 +1,11 @@
 import { cleanGameStore, useGameStore } from "../../context/game.context"
 import { useWebsocketContext } from "../../context/ws.context";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { MessageType } from "../../types/messages";
 import { useShallow } from "zustand/shallow";
 import { ThemeController } from "../ThemeController";
 import { usePriceStore } from "../../context/stock.store";
-import { decimal } from "../../utils/math";
+import { decimal, money } from "../../utils/math";
 import { CastButton } from "../cast/button";
 import { useNavigate } from "react-router";
 
@@ -57,7 +57,7 @@ export const InGameNavigation = () => {
                         </ul>
                         </details>
                     </li>
-                    <li><a>Cash: ${decimal(cash,3)}</a></li>
+                    <li><a>Cash: ${money(cash)}</a></li>
                     <li><a>Stock: {decimal(shares,0)}</a></li>
                     <li><a><ProfitAndLoss /></a></li>
                 </ul>
@@ -72,15 +72,13 @@ export const InGameNavigation = () => {
 
 const ProfitAndLoss: React.FC = () => {
 
-    const {cash,gameSettings,shares} = useGameStore(useShallow((state) => ({ cash: state.cash, gameSettings: state.gameSettings, shares: state.shares })));
-    const {price} = usePriceStore(useShallow((state) => ({ price: state.price })));
+    const {pnl,pnlMark,shares,reservedShares} = useGameStore(useShallow((state) => ({ pnl: state.pnl, pnlMark: state.pnlMark, shares: state.shares, reservedShares: state.reservedShares })));
+    const price = usePriceStore((state) => state.price);
 
-    const pnl = useMemo(() => {
-        const value = shares * price;
-        return Math.floor(((value + cash) - (gameSettings.startingCash || 0))*1000)/1000;
-    }, [cash,gameSettings,price,shares]);
+    // The server only re-sends PORTFOLIO_UPDATE when the account changes, so mark its P&L to the
+    // live price: players start with no shares, so P&L moves by (all shares held) x (price change).
+    const live = pnl + (shares + reservedShares) * (price - pnlMark);
+    const isNegative = live <= -0.005;
 
-    const isNegative = pnl < 0;
-
-    return <div>P/L: {isNegative ? <span className="text-red-500">-${Math.abs(pnl)}</span> : <span className="text-green-500">+${pnl}</span>}</div>
+    return <div>P/L: {isNegative ? <span className="text-red-500">-${money(live)}</span> : <span className="text-green-500">+${money(live)}</span>}</div>
 }

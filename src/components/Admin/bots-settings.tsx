@@ -1,14 +1,20 @@
 import { useGameStore, type GameSettings } from "../../context/game.context";
 import { useShallow } from "zustand/shallow";
 import { useQuery } from "@tanstack/react-query";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useState } from "react";
 import { useToast } from "../Toast/useToast";
 import { apiUrl } from "../../utils/server";
+import { SettingInput } from "./setting-input";
+import { parseNumber } from "../../utils/math";
 
 
 export const BotsSettings = ({setGameSettings}:{ setGameSettings: (settings: Partial<GameSettings>) => void}) => {
     const {gameSettings} = useGameStore(useShallow((state) => ({gameSettings: state.gameSettings})));
-    const [randomBots, setRandomBots] = useState(true);
+    // An empty/missing botSelection means "every strategy" on the server, which is what Random Bots is.
+    // Derive it from the server's settings so it survives remounts; `picking` only covers the moment
+    // between switching it off and ticking the first box (nothing is sent until then).
+    const [picking, setPicking] = useState(false);
+    const randomBots = !picking && !gameSettings.botSelection?.length;
     const {addToast} = useToast();
     const {data,isLoading,isFetching} = useQuery({
         queryKey: ['bots-available'],
@@ -27,29 +33,18 @@ export const BotsSettings = ({setGameSettings}:{ setGameSettings: (settings: Par
         refetchOnWindowFocus: false,
     })
 
-    useEffect(() => {
-        if(data && data.length > 0){
-            useGameStore.setState((s)=>({
-                ...s,
-                gameSettings:{
-                    ...s.gameSettings,
-                    botSelection: data.map((bot) => bot.id)
-                }
-            }))
-        }
-    },[data])
+    const allBotIds = data?.map((bot) => bot.id) || [];
+    // What the server will actually draw from.
+    const currentBotSelection = gameSettings.botSelection?.length ? gameSettings.botSelection : allBotIds;
 
     const onRandomBotsEnabled = (enabled: boolean) => {
-        setRandomBots(enabled);
-        if(enabled){
-            // If random bots enabled, select all bots
-            const allBotIds = data?.map((bot) => bot.id) || [];
-            setGameSettings({botSelection: allBotIds});
+        setPicking(!enabled);
+        if(enabled && gameSettings.botSelection?.length){
+            setGameSettings({botSelection: []});
         }
     }
     
     const onBotTypeChange = (botId: string) => {
-        const currentBotSelection = gameSettings.botSelection || data?.map((bot) => bot.id) || [];
         let newSelection: string[] = [];
         if(currentBotSelection.includes(botId)){
             newSelection = currentBotSelection.filter((id) => id !== botId);
@@ -74,14 +69,16 @@ export const BotsSettings = ({setGameSettings}:{ setGameSettings: (settings: Par
                     <label className="label">
                         <span className="label-text font-semibold">Bot Count</span>
                     </label>
-                    <input
+                    <SettingInput
                         type="number"
                         placeholder="Enter bot count"
                         className="input input-bordered input-primary w-full"
                         value={gameSettings.bots ?? 0}
                         min={0}
                         max={50}
-                        onChange={(e) => setGameSettings({bots: parseInt(e.target.value)})}
+                        step={1}
+                        parse={parseNumber}
+                        onCommit={(bots) => setGameSettings({bots})}
                     />
                 </div>
 
@@ -105,7 +102,7 @@ export const BotsSettings = ({setGameSettings}:{ setGameSettings: (settings: Par
                             data.map((bot) => (
                                 <Fragment key={bot.id}>
                                 <label className="label" >
-                                    <input type="checkbox" checked={!!gameSettings.botSelection?.includes(bot.id)} className={`toggle ${randomBots ? 'toggle-secondary' : ''}`} onChange={() => onBotTypeChange(bot.id)} />
+                                    <input type="checkbox" checked={currentBotSelection.includes(bot.id)} className={`toggle ${randomBots ? 'toggle-secondary' : ''}`} onChange={() => onBotTypeChange(bot.id)} />
                                     <span className="label-text font-semibold ml-2">{bot.name}</span>
                                 </label>
                                 <p className="text-xs opacity-55 ml-2">{bot.description}</p>

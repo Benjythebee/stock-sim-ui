@@ -4,6 +4,10 @@ import { useWebsocketContext } from "../../context/ws.context";
 import { useGameStore } from "../../context/game.context";
 import { useNavigate } from "react-router";
 
+// No 0/O or 1/I so codes are easy to read out to friends. Must match the server's ^[A-Za-z0-9_-]{1,64}$.
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const newRoomCode = () => Array.from(crypto.getRandomValues(new Uint32Array(5)), (n) => CODE_CHARS[n % CODE_CHARS.length]).join('');
+
 
 export const Join = () => {
   const {connect,status,error} = useWebsocketContext();
@@ -14,8 +18,10 @@ export const Join = () => {
   const handleJoin = () => {
     if (username.trim()) {
       localStorage.setItem('username', username);
-      // Add your join logic here
-      connect(username, roomCode);
+      // An empty code means "new room": the server 404s /ws/ without one, so make one up.
+      const code = roomCode.trim() || newRoomCode();
+      setRoomCode(code);
+      connect(username, code);
     }
   };
 
@@ -63,7 +69,9 @@ export const Join = () => {
               placeholder="Enter room code"
               className="input input-bordered input-secondary w-full uppercase"
               value={roomCode}
-              onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+              maxLength={64}
+              onChange={(e) => setRoomCode(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ''))}
+              onKeyUp={handleKeyPress}
             />
           </div>
 

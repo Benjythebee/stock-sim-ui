@@ -12,7 +12,7 @@ export type GameSettings = {
     openingPrice: number;
     seed: number;
     enableRandomNews: boolean;
-    marketVolatility: number; // percentage from 1 to 100
+    marketVolatility: number; // a fraction (0.05 = 5%); ADMIN_SETTINGS takes it as a percentage
     gameDuration: number; // in minutes
     bots: number;
     ticketName: string;
@@ -29,8 +29,14 @@ type GameStore = {
   started: boolean;
   ended: boolean;
   tradingDisabled: boolean;
+  /** Available cash/shares (excluding what is locked in resting orders). */
   cash: number;
   shares: number;
+  reservedCash: number;
+  reservedShares: number;
+  /** The server's P&L as of the last PORTFOLIO_UPDATE, and the mark price it was valued at. */
+  pnl: number;
+  pnlMark: number;
   onlineUsers: number;
   conclusion: ConclusionMessage|null;
   news: NewsMessage[]
@@ -60,7 +66,7 @@ const initialGameStore: Partial<GameStore> = {
     openingPrice: 1,
     enableRandomNews: true,
     seed: Math.floor(Math.random() * 100000),
-    marketVolatility: 5, 
+    marketVolatility: 0.05, 
     gameDuration: 5, 
     bots: 1, 
     ticketName: 'AAPL',
@@ -70,6 +76,10 @@ const initialGameStore: Partial<GameStore> = {
   isAdmin: false,
   cash: 0,
   shares: 0,
+  reservedCash: 0,
+  reservedShares: 0,
+  pnl: 0,
+  pnlMark: 0,
   onlineUsers: 0,
   powers:{
     data:[],
@@ -133,7 +143,14 @@ export const handleGameMessage = (message: Message) => {
          * Hook onto the join message for room setup
          */
       case MessageType.PORTFOLIO_UPDATE:
-        useGameStore.setState({ cash: message.value.cash || 0, shares: message.value.shares || 0 });
+        useGameStore.setState({
+          cash: message.value.cash || 0,
+          shares: message.value.shares || 0,
+          reservedCash: message.value.reservedCash || 0,
+          reservedShares: message.value.reservedShares || 0,
+          pnl: message.value.pnl || 0,
+          pnlMark: usePriceStore.getState().price,
+        });
         break;
       case MessageType.NEWS:
         useGameStore.setState((s) => ({ news: [...s.news, message ] }));
@@ -144,6 +161,7 @@ export const handleGameMessage = (message: Message) => {
               useGameStore.setState({ 
                   gameSettings: message.settings || {},
                   cash: message.settings?.startingCash || 0,
+                  shares: 0, reservedCash: 0, reservedShares: 0, pnl: 0, pnlMark: message.price || 0,
                   paused: message.paused || false,
                   started: message.started || false,
                   ended: message.ended || false,
