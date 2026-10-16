@@ -20,7 +20,7 @@ export const ConclusionModal = () => {
 
   return <div className="card fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] overflow-y-auto bg-base-100 shadow-xl z-50">
             <div className="card-body items-center ">
-                <h1 className="text-4xl font-bold text-center bg-clip-text text-primary">
+                <h1 className="text-3xl sm:text-4xl font-bold text-center bg-clip-text text-primary">
                     Game Over
                 </h1>
                 <p className="text-center text-base-content/70 mb-2">

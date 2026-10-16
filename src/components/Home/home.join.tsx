@@ -46,7 +46,9 @@ export const Join = () => {
     }
   }, [status, roomCode, navigate]);
 
-  return <div className="card absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 bg-base-100 shadow-xl">
+  // In the page flow (not absolutely centered) so short screens scroll instead of hiding the form under the nav.
+  return <div className="flex items-center justify-center px-4 py-6 min-h-[calc(100dvh-4rem)]">
+    <div className="card w-96 max-w-full bg-base-100 shadow-xl">
         <div className="card-body items-center">
           <img src="/tendies-brawl.webp" alt="Tendies Brawl logo" width={152} height={152} fetchPriority="high" className="w-38 h-38"/>
           <h1 className="text-lg font-bold text-center leading-tight">Multiplayer stock trading game</h1>
@@ -73,7 +75,7 @@ export const Join = () => {
           </div>
 
           <div className="form-control w-full mb-1">
-            <label className="label">
+            <label className="label flex-wrap">
               <span className="label-text font-semibold">Room Code</span>
               <span className="label-text text-sm">Leave empty for a new room</span>
             </label>
@@ -100,4 +102,5 @@ export const Join = () => {
         </>}
       </div>
     </div>
+  </div>
 }

@@ -19,19 +19,19 @@ export default function RoomSpectatePage() {
   useAutoConnect(roomCode, () => connect('', roomCode!, true));
 
   return (
-    <div id='room-page' className="relative min-h-screen bg-base-100 p-4">
+    <div id='room-page' className="relative min-h-screen bg-base-100 p-2 sm:p-4">
       {(paused || ended) && <div className="modal-backdrop fixed inset-0 bg-black opacity-20 z-40"></div>}
       <AdminModal  />
       <ConclusionModal  />
       
       <div className="flex flex-col lg:flex-row gap-4 h-full">
         {/* Main Chart Container */}
-        <div className="flex-1 flex flex-col gap-4">
+        <div className="flex-1 flex flex-col gap-4 min-w-0">
           <TradingChart />
 
           {/* Split section in 3: News,Order history */}
           <div className='flex gap-2 w-full'>
-            <News className="w-1/2" />
+            <News className="w-full lg:w-1/2" />
           </div>
 
         </div>

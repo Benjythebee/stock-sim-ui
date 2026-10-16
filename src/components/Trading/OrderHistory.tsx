@@ -23,7 +23,7 @@ export const OrderHistory: React.FC<{ className?: string }> = ({ className }) =>
           <table className="table table-sm table-pin-rows">
             <thead>
               <tr>
-                <th>Time</th>
+                <th className="hidden sm:table-cell">Time</th>
                 <th>Side</th>
                 <th>Type</th>
                 <th className="text-right">Filled</th>
@@ -37,7 +37,7 @@ export const OrderHistory: React.FC<{ className?: string }> = ({ className }) =>
                 const status = statusOf(order);
                 return (
                   <tr key={order.id}>
-                    <td>{new Date(order.updated).toLocaleTimeString()}</td>
+                    <td className="hidden sm:table-cell">{new Date(order.updated).toLocaleTimeString()}</td>
                     <td><SideBadge action={order.action} /></td>
                     <td className="whitespace-nowrap">
                       {order.orderType === 'LIMIT' ? <>Limit <span className="opacity-60">@ ${money(order.price ?? 0)}</span></> : 'Market'}

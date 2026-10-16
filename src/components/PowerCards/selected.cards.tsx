@@ -34,7 +34,7 @@ export const SelectedCards = () => {
         closeModal();
     }
 
-    return <div className="flex gap-4 mx-2 items-center">
+    return <div className="flex gap-3 sm:gap-4 mx-2 items-center">
             {/** Selected cards max 5. Index keys: the same power can be held twice. */}
             {inventory.slice(0,5).map((power, index)=>(
                 <PowerMiniCard key={`${power.id}-${index}`} power={power} onClick={()=>onSelectCard(power)} />

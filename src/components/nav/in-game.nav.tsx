@@ -8,10 +8,11 @@ import { usePriceStore } from "../../context/stock.store";
 import { decimal, money } from "../../utils/math";
 import { CastButton } from "../cast/button";
 import { useNavigate } from "react-router";
+import { cn } from "../../utils/cn";
 
 export const InGameNavigation = () => {
     const {room,status,sendMessage,disconnect,isSpectate} = useWebsocketContext();
-    const {username,cash,paused,isAdmin,onlineUsers,gameSettings,shares} = useGameStore(useShallow((state) => ({ username: state.username, cash: state.cash, paused: state.paused, isAdmin: state.isAdmin, onlineUsers: state.onlineUsers, gameSettings: state.gameSettings, shares: state.shares })));
+    const {username,paused,isAdmin,onlineUsers,gameSettings} = useGameStore(useShallow((state) => ({ username: state.username, paused: state.paused, isAdmin: state.isAdmin, onlineUsers: state.onlineUsers, gameSettings: state.gameSettings })));
 
 
     const togglePause = useCallback(() => {
@@ -31,41 +32,55 @@ export const InGameNavigation = () => {
     }
 
     const isPaused = room && status === 'CONNECTED' ? paused : true;
+    const showPortfolio = !isSpectate && !!room && status === 'CONNECTED';
 
     return <>
-    <div className="navbar bg-base-100 shadow-sm">
-        <div className="navbar-start">
-            <a className="btn btn-ghost text-xl" href="/"><img src="/tendies-brawl-icon.webp" alt="Tendies Brawl Logo" className="w-12 h-12"/>
+    <div className="navbar bg-base-100 shadow-sm gap-2 px-2 sm:px-4">
+        <div className="navbar-start w-auto shrink-0">
+            <a className="btn btn-ghost px-1 sm:px-2" href="/"><img src="/tendies-brawl-icon.webp" alt="Tendies Brawl Logo" className="w-10 h-10 sm:w-12 sm:h-12"/>
            </a>
             <ThemeController />
         </div>
-        <div className="navbar-center">
-            {isPaused && <div className="font-semibold mr-2">Room {room} PAUSED -</div>}
-            {status === 'CONNECTED' && onlineUsers > 0 && <div className="font-semibold"> Market online with {onlineUsers + gameSettings.bots} participants</div>}
+        <div className="navbar-center flex-1 min-w-0 justify-center">
+            <RoomStatus room={room} isPaused={!!isPaused} participants={status === 'CONNECTED' && onlineUsers > 0 ? onlineUsers + gameSettings.bots : 0} />
         </div>
-        <div className="navbar-end">
+        <div className="navbar-end w-auto shrink-0 gap-1">
             <CastButton room={room!} />
-            {!isSpectate && room && status === 'CONNECTED' && (
-                <ul className="flex w-fit flex-row gap-4 items-center">
-                    <li>
-                        <details className="dropdown">
-                        <summary className="btn m-1"><strong>{username}</strong></summary>
-                        <ul className="menu dropdown-content bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
-                            {isAdmin && <li><a onClick={togglePause}>{paused ? 'Unpause' : 'Pause'}</a></li>}
-                            <li><a onClick={disconnectHandler}>Disconnect</a></li>
-                        </ul>
-                        </details>
-                    </li>
-                    <li><a>Cash: ${money(cash)}</a></li>
-                    <li><a>Stock: {decimal(shares,0)}</a></li>
-                    <li><a><ProfitAndLoss /></a></li>
-                </ul>
+            {showPortfolio && <PortfolioStats className="hidden lg:flex" />}
+            {showPortfolio && (
+                <details className="dropdown dropdown-end">
+                    <summary className="btn btn-sm sm:btn-md max-w-32 sm:max-w-48"><strong className="truncate">{username}</strong></summary>
+                    <ul className="menu dropdown-content bg-base-100 rounded-box z-50 w-52 p-2 shadow-sm">
+                        {isAdmin && <li><a onClick={togglePause}>{paused ? 'Unpause' : 'Pause'}</a></li>}
+                        <li><a onClick={disconnectHandler}>Disconnect</a></li>
+                    </ul>
+                </details>
             )}
-
-
         </div>
     </div>
+    {/* Phones and tablets: the portfolio gets its own row under the nav. */}
+    {showPortfolio && <PortfolioStats className="lg:hidden grid grid-cols-3 bg-base-100 border-t border-base-200 px-2 py-1.5 text-sm text-center" />}
     </>;
+}
+
+const RoomStatus = ({room, isPaused, participants}: {room: string | null, isPaused: boolean, participants: number}) => (
+    <div className="text-center leading-tight min-w-0">
+        {/* The room code gets its own line so it never truncates: it's what friends type to join. */}
+        {room && <div className="font-semibold truncate">Room {room}</div>}
+        <div className="text-xs sm:text-sm truncate">
+            {isPaused && <span className="badge badge-warning badge-xs sm:badge-sm mr-1 align-middle">Paused</span>}
+            {participants > 0 && <span className="opacity-70"><span className="hidden sm:inline">Market online with </span>{participants} participants</span>}
+        </div>
+    </div>
+);
+
+const PortfolioStats = ({className}: {className?: string}) => {
+    const {cash,shares} = useGameStore(useShallow((state) => ({ cash: state.cash, shares: state.shares })));
+    return <div className={cn("items-center gap-4 font-medium tabular-nums whitespace-nowrap", className)}>
+        <div>Cash: ${money(cash)}</div>
+        <div>Stock: {decimal(shares,0)}</div>
+        <ProfitAndLoss />
+    </div>
 }
 
 

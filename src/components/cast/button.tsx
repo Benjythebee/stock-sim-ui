@@ -23,7 +23,8 @@ const waitForCastScript = (): Promise<void> => {
     });
 }
 
-export const CastButton = ({room}: {room: string}) => {
+/** Renders nothing until the Cast sender SDK is ready (Chrome on desktop or Android only). */
+export const CastButton = ({room, className = "btn btn-ghost", children}: {room: string, className?: string, children?: React.ReactNode}) => {
     
     const [castScriptLoaded, setCastScriptLoaded] =  useState(false);
     const loadedOnce = useRef(false);
@@ -88,7 +89,8 @@ export const CastButton = ({room}: {room: string}) => {
     }
     
 
-    return castScriptLoaded && <button className="btn btn-ghost" onClick={() => castRoom(room!)} title="Cast Room to Device" >
+    return castScriptLoaded && <button className={className} onClick={() => castRoom(room!)} title="Cast Room to Device" >
                 <CastIcon className=" cursor-pointer" size={24} />
+                {children}
             </button>
 }

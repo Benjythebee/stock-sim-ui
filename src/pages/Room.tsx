@@ -26,32 +26,34 @@ export default function RoomPage() {
   });
 
   return (
-    <div id='room-page' className="relative min-h-screen bg-base-100 p-4">
+    <div id='room-page' className="relative min-h-screen bg-base-100 p-2 sm:p-4">
       {(paused || ended) && <div className="modal-backdrop fixed inset-0 bg-black opacity-20 z-40"></div>}
       <AdminModal  />
       <ConclusionModal  />
-      
+
+      {/* Below lg the two columns dissolve (display: contents) so `order-*` can interleave them:
+          chart, order form, order book, then news and orders. */}
       <div className="flex flex-col lg:flex-row gap-4 h-full">
         {/* Main Chart Container */}
-        <div className="flex-1 flex flex-col gap-4">
-          <TradingChart />
+        <div className="contents lg:flex flex-1 flex-col gap-4 min-w-0">
+          <TradingChart className="order-1 lg:order-none" />
 
           {/* News, our open orders, and our finished orders */}
-          <div className='grid grid-cols-1 2xl:grid-cols-3 md:grid-cols-2 gap-2 w-full'>
+          <div className='order-4 lg:order-none grid grid-cols-1 2xl:grid-cols-3 md:grid-cols-2 gap-2 w-full'>
             <News className="min-w-0" />
-            <CurrentOrders className="min-w-0" />
+            <CurrentOrders className="min-w-0 order-first md:order-none" />
             <OrderHistory className="min-w-0 md:col-span-2 2xl:col-span-1" />
           </div>
 
         </div>
 
         {/* Right Sidebar */}
-        <div className="w-full lg:w-80 flex flex-col gap-4">
+        <div className="contents lg:flex w-full lg:w-80 flex-col gap-4">
           {/* Trading Panel */}
-            <TradingCard />
+          <div className="order-2 lg:order-none"><TradingCard /></div>
 
           {/* Order Book / Depth Table */}
-            <TradingDepth />
+          <TradingDepth className="order-3 lg:order-none" />
         </div>
       </div>
     </div>

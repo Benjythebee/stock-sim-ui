@@ -1,10 +1,11 @@
+import { cn } from "../../utils/cn";
 import { useShallow } from "zustand/shallow"
 import { usePriceStore } from "../../context/stock.store"
 import { useMemo } from "react";
 
 
 
-export const TradingDepth = () => {
+export const TradingDepth = ({className}: {className?: string}) => {
     const {asks, bids} = usePriceStore(useShallow((state) => ({asks:state.asks, bids:state.bids})));
 
     
@@ -26,7 +27,7 @@ export const TradingDepth = () => {
     const asksPrice = rows?.[0]?.ask?.[0] || 0;
     const bidsPrice = rows?.[0]?.bid?.[0] || 0;
 
-  return (<div className="card bg-base-200 flex-1">
+  return (<div className={cn("card bg-base-200 flex-1", className)}>
             <div className="card-body">
               <h2 className="card-title">Order Book</h2>
                {asks.length > 0 && bids.length > 0 && bids[0].length && asks[0].length && <div className="divider my-1">Spread: {(asksPrice - bidsPrice).toFixed(2)}</div>}

@@ -104,7 +104,7 @@ export const TradingCard: React.FC = () => {
               placeholder="0.00"
               min={0.01}
               step={0.01}
-              className="input input-bordered"
+              className="input input-bordered w-full"
               value={limitPrice}
               onChange={(e) => setLimitPrice(e.target.value)}
             />
@@ -122,7 +122,7 @@ export const TradingCard: React.FC = () => {
             placeholder="0"
             min={1}
             step={1}
-            className="input input-bordered"
+            className="input input-bordered w-full"
             value={amount}
             onChange={(e) => setAmount(e.target.value.replace(/[.,].*$/, ""))}
           />

@@ -377,3 +377,37 @@ Power Card Styles
                 inset 0 -2px 5px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.5);
 }
+
+/*
+Phones: the fanned hand is ~680px wide, so the dialog's hand becomes a swipeable row of
+slightly smaller, upright cards (tap one to pick it). Scoped to the <dialog> so the /about
+page's decorative fan is unaffected.
+*/
+@media (max-width: 639px) {
+    dialog .hand-of-cards-wrapper {
+        left: 0;
+        width: 100%;
+        transform: translateY(-50%);
+    }
+    dialog .hand-of-cards {
+        gap: 20px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        overscroll-behavior-x: contain;
+        scrollbar-width: none;
+        /* room for the cards' ring shadow, and to center the first and last card */
+        padding: 24px calc(50% - 125px);
+    }
+    dialog .hand-of-cards .power-card,
+    dialog .hand-of-cards .power-card:hover {
+        flex: 0 0 auto;
+        width: 250px;
+        height: 360px;
+        margin: 0;
+        transform: none !important;
+        scroll-snap-align: center;
+    }
+    dialog .hand-of-cards .power-card-title { font-size: 24px; }
+    dialog .hand-of-cards .power-card-icon { width: 120px; height: 120px; }
+    dialog .hand-of-cards .power-card-icon img { width: 84px; height: 84px; }
+}

@@ -7,6 +7,7 @@ import { SettingTabs, type AdminSettingsTab } from "./tabs";
 import { BotsSettings } from "./bots-settings";
 import { GeneralSettings } from "./general-settings";
 import { PowerSettings } from "./power-settings";
+import { CastSettings } from "./cast-settings";
 
 
 
@@ -33,9 +34,9 @@ export const AdminModal = () => {
     if(isAdmin && !started){
         return (
             <>
-            <div className="card absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 bg-base-100 shadow-xl z-50">
+            <div className="card fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-2rem)] overflow-y-auto bg-base-100 shadow-xl z-50">
                 <div className="card-body items-center ">
-                    <h1 className="text-4xl font-bold text-center bg-clip-text text-primary">
+                    <h1 className="text-3xl sm:text-4xl font-bold text-center bg-clip-text text-primary">
                         Admin Settings
                     </h1>
                     <p className="text-center text-base-content/70 mb-2">
@@ -45,7 +46,8 @@ export const AdminModal = () => {
 
                     {tab === 'general' && (<GeneralSettings setGameSettings={setGameSettings} />)}
                     {tab === 'bots' && (<BotsSettings setGameSettings={setGameSettings} />)}
-                    {tab === 'powers' && (<PowerSettings />)}         
+                    {tab === 'powers' && (<PowerSettings />)}
+                    {tab === 'cast' && (<CastSettings />)}         
 
                     <p className="text-center text-base-content/70 mb-6">
                         There are currently {onlineUsers} clients connected.
@@ -60,9 +62,9 @@ export const AdminModal = () => {
             </>
         );
     }else if (paused){
-        return (<div className="card absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 bg-base-100 shadow-xl z-50">
+        return (<div className="card fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-2rem)] overflow-y-auto bg-base-100 shadow-xl z-50">
         <div className="card-body items-center">
-            <h1 className="text-4xl font-bold text-center bg-clip-text text-primary">
+            <h1 className="text-3xl sm:text-4xl font-bold text-center bg-clip-text text-primary">
                 {started ? 'Game Paused' : 'Waiting to start'}
             </h1>
 

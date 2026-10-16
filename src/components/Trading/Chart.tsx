@@ -14,6 +14,7 @@ import { MessageType } from "../../types/messages";
 import { PowerButton } from "./PowerButton";
 import { SelectedCards } from "../PowerCards/selected.cards";
 import { createChartOverlay, type ChartOverlayData } from "./chart.overlay";
+import { cn } from "../../utils/cn";
 
 ChartJS.register(CategoryScale, LinearScale,TimeScale,TimeSeriesScale,CandlestickController,OhlcController, CandlestickElement, PointElement,LineController,LineElement,Tooltip,Legend);
 
@@ -39,7 +40,7 @@ const clampPan = (end: number | null, firstX: number, lastX: number, windowSize:
 const zoomLabel = (seconds: number) =>
   seconds === Infinity ? 'All' : seconds < 60 ? `${seconds}s` : `${seconds / 60}m`;
 
-export const TradingChart = () => {
+export const TradingChart = ({className}: {className?: string}) => {
   const { sendMessage } = useWebsocketContext();
   const { settings, openOrders, news } = useGameStore(useShallow((state) => ({
     settings: state.gameSettings,
@@ -203,11 +204,12 @@ export const TradingChart = () => {
   const plugins = useMemo(() => [createChartOverlay(() => overlay.current)], []);
 
   return (
-    <div className="card bg-base-200 flex-1 min-h-[500px]">
+    <div className={cn("card bg-base-200 flex-1 min-h-[420px] sm:min-h-[500px]", className)}>
       <div className="card-body">
-        {/* Ticker and price centered between the chart controls and the powers. */}
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <div className="flex items-center gap-2">
+        {/* Ticker and price centered between the chart controls and the powers. On phones the ticker
+            takes the first row and the controls and powers share the second. */}
+        <div className="grid grid-cols-[auto_1fr] sm:grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 self-end sm:self-auto">
             <div className="join" title="Scroll on the chart to zoom, drag or shift + scroll to look back">
               <button className="btn btn-xs join-item" aria-label="Zoom out" disabled={zoom === ZOOM_LEVELS.length - 1} onClick={() => zoomBy(1)}>
                 <ZoomOut size={14} />
@@ -224,11 +226,11 @@ export const TradingChart = () => {
             )}
           </div>
           {/* Fixed-width digits so the header doesn't shift on every tick. */}
-          <h2 className="card-title justify-center gap-3 whitespace-nowrap">
+          <h2 className="card-title justify-center gap-3 whitespace-nowrap col-span-2 sm:col-span-1 order-first sm:order-none">
             <span>{settings.ticketName}</span>
             <span className="tabular-nums">${price.toFixed(2)}</span>
           </h2>
-          <div className="flex justify-end">
+          <div className="flex flex-wrap items-center justify-end gap-y-2 min-w-0">
             <SelectedCards />
             <PowerButton />
           </div>

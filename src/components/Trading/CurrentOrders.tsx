@@ -37,7 +37,7 @@ export const CurrentOrders: React.FC<{ className?: string }> = ({ className }) =
           <table className="table table-sm table-pin-rows">
             <thead>
               <tr>
-                <th>Time</th>
+                <th className="hidden sm:table-cell">Time</th>
                 <th>Side</th>
                 <th className="text-right">Price</th>
                 <th>Filled</th>
@@ -49,7 +49,7 @@ export const CurrentOrders: React.FC<{ className?: string }> = ({ className }) =
               {orders.length === 0 && <tr><td colSpan={6} className="text-center opacity-60">No open orders</td></tr>}
               {orders.map((order) => (
                 <tr key={order.id}>
-                  <td>{new Date(order.time).toLocaleTimeString()}</td>
+                  <td className="hidden sm:table-cell">{new Date(order.time).toLocaleTimeString()}</td>
                   <td><SideBadge action={order.action} /></td>
                   <td className="text-right tabular-nums">${money(order.price ?? 0)}</td>
                   <td>

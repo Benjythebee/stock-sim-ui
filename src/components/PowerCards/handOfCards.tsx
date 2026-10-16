@@ -42,8 +42,8 @@ export const HandOfCards = ({cards, open, onDismiss, title, onSelectCard, onSkip
     return (
         // Esc fires `cancel` (and usually, but not always, `close`); `close` covers dialog.close(). Handle both.
         <dialog ref={dialogRef} className={cn('modal',className)} onCancel={onDismiss} onClose={onDismiss}>
-            <div className="absolute top-20 left-1/2 -translate-x-1/2 ">
-            {title ? <h2 className="text-primary font-bold text-4xl">{title}</h2> : (onSkip && <div className="btn btn-error btn-lg pointer-events-auto" onClick={onSkip}>
+            <div className="absolute top-8 sm:top-20 left-1/2 -translate-x-1/2 w-max max-w-[calc(100vw-2rem)] text-center">
+            {title ? <h2 className="text-primary font-bold text-3xl sm:text-4xl">{title}</h2> : (onSkip && <div className="btn btn-error btn-lg pointer-events-auto" onClick={onSkip}>
                 Skip Selection
             </div>)}
             </div>
@@ -56,7 +56,7 @@ export const HandOfCards = ({cards, open, onDismiss, title, onSelectCard, onSkip
                 </div>
             </div>
             {onClose &&
-                <button className="btn btn-lg btn-secondary absolute bottom-20 left-1/2 -translate-x-1/2 pointer-events-auto" onClick={onClose}>Close</button>
+                <button className="btn btn-lg btn-secondary absolute bottom-8 sm:bottom-20 left-1/2 -translate-x-1/2 pointer-events-auto" onClick={onClose}>Close</button>
             }
 
         </dialog>
