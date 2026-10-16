@@ -20,10 +20,10 @@ There are no tests in this repo. To see a change working, run the server too (`b
 
 ## How a game plays (the server's rules, as the UI shows them)
 
-1. **Join** (`/`): username + room code → `connect()` → navigate to `/:roomId` once connected (a failed connect shows an error above the form; the username is prefilled from `localStorage.username`). The first player in a room is the **admin/host**.
-2. **Lobby** (phase `lobby`, shown as "paused"): the host sees the Admin modal (General / Bots / Powers tabs). Every field change sends `ADMIN_SETTINGS` immediately and the server **rebuilds the game** (fresh accounts for everyone). Settings: ticker, starting cash, opening price, volatility %, duration (min), random news, "reveal hidden prices" (practice mode), bot count, and bot strategy selection (from `/api/bots.json`). Non-hosts see "Wait for your admin".
+1. **Join** (`/`): username + room code (empty = a random 5-char code) → `connect()` → navigate to `/:roomId` once connected (a failed connect shows an error above the form; the username is prefilled from `localStorage.username`). The first player in a room is the **admin/host**.
+2. **Lobby** (phase `lobby`, shown as "paused"): the host sees the Admin modal (General / Bots / Powers tabs) while `!started`. Text and number fields keep a local draft and send `ADMIN_SETTINGS` on blur or Enter (`Admin/setting-input.tsx`; Escape or an invalid value reverts); toggles and bot checkboxes send immediately. Every `ADMIN_SETTINGS` makes the server **rebuild the game** (fresh accounts for everyone) and echo `ROOM_STATE`. Settings: ticker, starting cash, opening price, volatility %, duration (min), random news, "reveal hidden prices" (practice mode), bot count, and bot strategy selection (from `/api/bots.json`; an empty `botSelection` means every strategy, which is what the "Random Bots" toggle shows). Non-hosts see "Waiting to start".
 3. **Running**: "Save & Start" sends `TOGGLE_PAUSE`. The server ticks 5 market steps per **game second**. Each game second sends `CLOCK`, so **one candle = one game second**. Orders (limit or market, buy or sell, whole shares) are only accepted while running.
-4. **Pause/resume**: only the host (nav dropdown or the Paused modal). Game time stops, so power durations, news and briefcases freeze too.
+4. **Pause/resume**: only the host (nav dropdown or the Paused modal, which shows "Resume" once the game has started; settings are locked then). Game time stops, so power durations, news and briefcases freeze too.
 5. **Briefcases**: 8 drops spread over the game. Each player gets `POWER_OFFERS` (3 weighted-random powers). Instant powers fire on pick; others go to the inventory (shown as mini cards next to the briefcase) and are used later with `POWER_CONSUME`. Skipping discards the offer client-side.
 6. **News**: random headlines every 30–45 game seconds (if enabled). Some silently move the hidden fair value.
 7. **End**: `GAME_CONCLUSION` → leaderboard modal (players and bots ranked by P&L, total volume).
@@ -95,7 +95,7 @@ public/powers/<icon>.svg bundled power icons (game-icons.net, CC BY 3.0; credits
   - `PORTFOLIO_UPDATE.value`: `cash`/`shares` are **available** (excluding what's locked in resting orders), plus `reservedCash`, `reservedShares`, and the server-computed `pnl`.
   - `ORDER_BOOK_UPDATE.depth` = `[asks, bids]`, each `[price, qty][]`, up to 25 levels per side.
   - `TOGGLE_PAUSE` server→client carries the absolute `paused`. Set it, don't toggle it.
-  - `marketVolatility`: the server stores and sends a **fraction** (0.05). `ADMIN_SETTINGS` expects a **percentage** (5). The admin input shows `×100` and sends the raw percentage.
+  - `marketVolatility`: the server stores and sends a **fraction** (0.05). `ADMIN_SETTINGS` expects a **percentage** (5). The store holds the fraction too; the admin input shows it `×100` (rounded) and sends the typed percentage, and `AdminModal`'s optimistic save divides it back.
   - `CLOCK.value` is the game clock in epoch ms (+1000 per game second, frozen while paused). `timeLeft` is ms.
   - `CLIENT_STATE.tradingDisabled` (e.g. while DDoSed) disables the Buy/Sell buttons.
   - Errors and order rejections arrive as `NOTIFICATION` toasts (`ERROR` is only used for "Room does not exist"). The server sends no per-order ack or fill events.
@@ -122,11 +122,11 @@ public/powers/<icon>.svg bundled power icons (game-icons.net, CC BY 3.0; credits
 
 ## Known gaps / gotchas (verify before relying on them)
 
-- **P/L in the nav is computed client-side** as `cash + shares × price − startingCash` using the *available* cash and shares, so it dips while you have resting orders and ignores the server's `pnl`. The leaderboard uses the server's `pnl`.
+- **P/L in the nav** is the server's `pnl` from the last `PORTFOLIO_UPDATE`, marked to the live price: `pnl + (shares + reservedShares) × (price − pnlMark)`. The server only re-sends the portfolio when the account changes, and players start with 0 shares, so that is exact until the next update.
 - `OrderHistory` shows **hard-coded mock data**. The server sends no order or fill events yet. The Admin "Powers" tab is a placeholder.
-- The "Send Value shock" / "Send shock" buttons in `TradingCard` show for every player, but only the host may use them (debug tools).
-- The Join card says "Leave empty for a new room", but an empty code builds `/ws/`, which the server 404s (room ids must match `^[A-Za-z0-9_-]{1,64}$`).
+- The "Send Value shock" / "Send shock" buttons in `TradingCard` are host-only debug tools, shown to every host (not just in dev).
+- An empty room code on the Join card makes up a 5-character code (room ids must match `^[A-Za-z0-9_-]{1,64}$`; the server 404s `/ws/`).
 - `Layout` sits outside `<Routes>`, so `useParams()` is empty there: it decides home vs room from `useLocation().pathname` (`STATIC_PAGES`). Add new top-level pages to that set, or they'll be treated as room codes.
 - `TradingDepth` sorts the store's arrays in place. Market orders send a dummy `price: 100`, which the server ignores.
-- The local `GameSettings` defaults (cash 5000, volatility 5, 1 bot) differ from the server's (10,000 / 0.05 / 5). They're overwritten by `ROOM_STATE` on join.
+- The local `GameSettings` defaults (cash 5000, 1 bot) differ from the server's (10,000 / 5). They're overwritten by `ROOM_STATE` on join.
 - Rooms live in server memory only, so a server restart drops games. The UI auto-reconnects into a fresh empty room.

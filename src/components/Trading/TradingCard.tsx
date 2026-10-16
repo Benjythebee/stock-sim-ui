@@ -10,12 +10,14 @@ export const TradingCard: React.FC = () => {
   const tradingDisabled = useGameStore((state) => state.tradingDisabled);
   const shares = useGameStore((state) => state.shares);
   const cash = useGameStore((state) => state.cash);
+  const isAdmin = useGameStore((state) => state.isAdmin);
+  const price = usePriceStore((state) => state.price);
   const [orderType, setOrderType] = useState<"limit" | "market">("limit");
   const [limitPrice, setLimitPrice] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
 
   const disabledSell = tradingDisabled || shares <= 0 || !amount || Number(amount) <= 0 || Number(amount) > shares;
-  const disabledBuy = tradingDisabled || !amount || Number(amount) <= 0 || Number(amount) * (orderType === "limit" ? Number(limitPrice) : usePriceStore.getState().price) > cash;
+  const disabledBuy = tradingDisabled || !amount || Number(amount) <= 0 || Number(amount) * (orderType === "limit" ? Number(limitPrice) : price) > cash;
 
   const handleOrder = (side: "buy" | "sell") => {
     // console.log(`Placing ${side} order:`, {
@@ -44,11 +46,14 @@ export const TradingCard: React.FC = () => {
     sendMessage({ type: MessageType.SHOCK, target });
   };
 
+  // Prefill the limit price with the current price, and fill it in once the first price arrives
+  // (the card can mount before it, when the price is still 0).
+  const hasPrice = price > 0;
   useEffect(() => {
-    if (orderType === "limit") {
+    if (orderType === "limit" && hasPrice) {
       setLimitPrice(usePriceStore.getState().price.toString());
     }
-  }, [orderType]);
+  }, [orderType, hasPrice]);
 
   return (
     <div className="card bg-base-200">
@@ -90,7 +95,8 @@ export const TradingCard: React.FC = () => {
             <input
               type="number"
               placeholder="0.00"
-              step={0.05}
+              min={0.01}
+              step={0.01}
               className="input input-bordered"
               value={limitPrice}
               onChange={(e) => setLimitPrice(e.target.value)}
@@ -103,12 +109,15 @@ export const TradingCard: React.FC = () => {
           <label className="label">
             <span className="label-text">Amount</span>
           </label>
+          {/* Whole shares only: the server floors quantities, so 0.5 would become 0. */}
           <input
             type="number"
-            placeholder="0.00"
+            placeholder="0"
+            min={1}
+            step={1}
             className="input input-bordered"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => setAmount(e.target.value.replace(/[.,].*$/, ""))}
           />
         </div>
 
@@ -127,7 +136,8 @@ export const TradingCard: React.FC = () => {
             Sell
           </button>
         </div>
-        <div className="grid grid-cols-2 gap-2 mt-4">
+        {/* Host-only debug tools: the server rejects SHOCK from anyone else. */}
+        {isAdmin && <div className="grid grid-cols-2 gap-2 mt-4">
           <button
             className="btn btn-accent btn-sm"
             onClick={() => sendShock("intrinsic")}
@@ -140,7 +150,7 @@ export const TradingCard: React.FC = () => {
           >
             Send shock
           </button>
-        </div>
+        </div>}
       </div>
     </div>
   );

@@ -1,8 +1,7 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useGameStore, type GameSettings } from "../../context/game.context";
 import { useWebsocketContext } from "../../context/ws.context";
 import { MessageType } from "../../types/messages";
-import { usePriceStore } from "../../context/stock.store";
 import { useShallow } from "zustand/shallow";
 import { SettingTabs, type AdminSettingsTab } from "./tabs";
 import { BotsSettings } from "./bots-settings";
@@ -12,14 +11,14 @@ import { PowerSettings } from "./power-settings";
 
 
 export const AdminModal = () => {
-    const {prices} = usePriceStore(useShallow((state) => ({prices: state.prices})));
-    const {paused,isAdmin, onlineUsers} = useGameStore(useShallow((state) => ({paused: state.paused, isAdmin: state.isAdmin, onlineUsers: state.onlineUsers})));
+    const {paused,started,ended,isAdmin, onlineUsers} = useGameStore(useShallow((state) => ({paused: state.paused, started: state.started, ended: state.ended, isAdmin: state.isAdmin, onlineUsers: state.onlineUsers})));
     const {sendMessage} = useWebsocketContext();
-    const {saveGameSettings} = useGameStore(useShallow((state) => ({saveGameSettings: state.saveGameSettings, gameSettings: state.gameSettings})));
+    const saveGameSettings = useGameStore((state) => state.saveGameSettings);
 
     const setGameSettings = useCallback((settings: Partial<GameSettings>) => {
+        // ADMIN_SETTINGS takes volatility as a percentage; the store (like ROOM_STATE) holds a fraction.
         sendMessage({type: MessageType.ADMIN_SETTINGS, settings});
-        saveGameSettings(settings);
+        saveGameSettings(settings.marketVolatility === undefined ? settings : {...settings, marketVolatility: settings.marketVolatility / 100});
     }, [sendMessage, saveGameSettings]);
     const [tab, setTab] = useState<AdminSettingsTab>('general');
 
@@ -29,10 +28,9 @@ export const AdminModal = () => {
             useGameStore.getState().setPaused(!paused);
         })
     }
-    // console.log('AdminModal render', {isAdmin, pricesLength: prices.length, paused});
-    const visibleSettings = useMemo(() => isAdmin && prices.length >= 1 && paused, [isAdmin, prices.length, paused]);
-
-    if(visibleSettings){
+    // Settings can only change in the lobby: the server rejects ADMIN_SETTINGS once the game has started.
+    if(ended) return null;
+    if(isAdmin && !started){
         return (
             <>
             <div className="card absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 bg-base-100 shadow-xl z-50">
@@ -63,15 +61,15 @@ export const AdminModal = () => {
         );
     }else if (paused){
         return (<div className="card absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 bg-base-100 shadow-xl z-50">
-        <div className="card-body items-center bg-white">
+        <div className="card-body items-center">
             <h1 className="text-4xl font-bold text-center bg-clip-text text-primary">
-                Game Paused
+                {started ? 'Game Paused' : 'Waiting to start'}
             </h1>
 
             {isAdmin ? <div className="card-actions">
                 <button className="btn btn-primary" onClick={onStartGame}>Resume</button>
             </div> :  <p className="text-center text-base-content/70 mb-6">
-                Wait for your admin to resume the game.
+                Wait for your admin to {started ? 'resume' : 'start'} the game.
                 </p>}
         </div>
     </div>

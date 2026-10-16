@@ -1,11 +1,15 @@
 import { useGameStore, type GameSettings } from "../../context/game.context";
 import { useShallow } from "zustand/shallow";
+import { SettingInput } from "./setting-input";
+import { parseNumber, round } from "../../utils/math";
+
+const parseTicker = (text: string) => text.trim() || undefined;
 
 
 
 
 export const GeneralSettings = ({setGameSettings}:{ setGameSettings: (settings: Partial<GameSettings>) => void}) => {
-    const {gameSettings} = useGameStore(useShallow((state) => ({saveGameSettings: state.saveGameSettings, gameSettings: state.gameSettings})));
+    const {gameSettings} = useGameStore(useShallow((state) => ({gameSettings: state.gameSettings})));
 
     return (
         <>
@@ -13,16 +17,17 @@ export const GeneralSettings = ({setGameSettings}:{ setGameSettings: (settings: 
             <label className="label">
                 <span className="label-text font-semibold">Stock Ticker</span>
             </label>
-            <input
+            <SettingInput
                 type="text"
                 placeholder="Enter stock ticker"
-                className="input input-bordered input-primary w-full"
+                className="input input-bordered input-primary w-full uppercase"
                 aria-placeholder="AAPL"
-                maxLength={4}
+                maxLength={8}
                 minLength={1}
                 required
                 value={gameSettings.ticketName || ''}
-                onChange={(e) => setGameSettings({ticketName: e.target.value})}
+                parse={parseTicker}
+                onCommit={(ticketName) => setGameSettings({ticketName})}
             />
         </div>
 
@@ -31,30 +36,34 @@ export const GeneralSettings = ({setGameSettings}:{ setGameSettings: (settings: 
                 <label className="label">
                     <span className="label-text font-semibold">Starting Cash</span>
                 </label>
-                <input
+                <SettingInput
                     type="number"
                     required
                     placeholder="Enter starting cash amount"
                     className="input input-bordered input-primary w-full"
-                    value={gameSettings.startingCash || ''}
+                    value={gameSettings.startingCash ?? ''}
                     max={999_999_999}
                     min={1}
-                    onChange={(e) => setGameSettings({startingCash: parseInt(e.target.value)})}
+                    step={1}
+                    parse={parseNumber}
+                    onCommit={(startingCash) => setGameSettings({startingCash})}
                 />
             </div>
             <div>
                 <label className="label">
                     <span className="label-text font-semibold">Opening Price</span>
                 </label>
-                <input
+                <SettingInput
                     type="number"
                     required
                     placeholder="Enter opening price"
                     className="input input-bordered input-primary w-full"
                     max={10_000}
                     min={0.01}
-                    value={gameSettings.openingPrice || ''}
-                    onChange={(e) => setGameSettings({openingPrice: parseInt(e.target.value)})}
+                    step={0.01}
+                    value={gameSettings.openingPrice ?? ''}
+                    parse={parseNumber}
+                    onCommit={(openingPrice) => setGameSettings({openingPrice})}
                 />
             </div>
 
@@ -65,29 +74,33 @@ export const GeneralSettings = ({setGameSettings}:{ setGameSettings: (settings: 
                 <label className="label">
                     <span className="label-text font-semibold">Market Volatility (%)</span>
                 </label>
-                <input
+                {/* The store holds a fraction (0.05); ADMIN_SETTINGS takes a percentage (5). */}
+                <SettingInput
                     type="number"
                     placeholder="Enter market volatility (%)"
                     className="input input-bordered input-primary w-full"
-                    value={(gameSettings.marketVolatility*100) || ''}
-                    min={0.001}
-                    max={100}
-                    onChange={(e) => setGameSettings({marketVolatility: parseInt(e.target.value)})}
+                    value={gameSettings.marketVolatility === undefined ? '' : round(gameSettings.marketVolatility * 100, 4)}
+                    min={0.01}
+                    max={50}
+                    step={0.1}
+                    parse={parseNumber}
+                    onCommit={(marketVolatility) => setGameSettings({marketVolatility})}
                 />
             </div>
             <div>
                 <label className="label">
                     <span className="label-text font-semibold">Game Duration (mins)</span>
                 </label>
-                <input
+                <SettingInput
                     type="number"
                     required
                     min={1}
                     max={60}
                     placeholder="Enter game duration in minutes"
                     className="input input-bordered input-primary w-full"
-                    value={gameSettings.gameDuration || ''}
-                    onChange={(e) => setGameSettings({gameDuration: parseInt(e.target.value)})}
+                    value={gameSettings.gameDuration ?? ''}
+                    parse={parseNumber}
+                    onCommit={(gameDuration) => setGameSettings({gameDuration})}
                 />
             </div>
         </div>
