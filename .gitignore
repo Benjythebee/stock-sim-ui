@@ -24,3 +24,12 @@ dist-ssr
 *.sw?
 
 *-lock.json
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
+!.env.production
+.cloudflare/

@@ -11,7 +11,10 @@ pnpm install          # pnpm is the declared packageManager (bun.lock also exist
 pnpm dev              # Vite on :5173
 pnpm build            # tsc -b && vite build. Typecheck = `npx tsc -b`
 pnpm lint             # eslint (currently 0 errors, a few warnings)
+pnpm run deploy       # tsc -b && cf deploy: builds with .env.production and ships to tendiesbrawl.com (needs `cf auth login`)
 ```
+
+**Production**: the UI is an assets-only Cloudflare Worker `tendiesbrawl` (`cloudflare.config.ts`: custom domains for the apex and www, SPA fallback so `/:roomId` routes work). A zone redirect rule sends www → apex. `.env.production` points the build at `https://api.tendiesbrawl.com`, the game server (see `../stock-sim-server/deploy/README.md`). `cf deploy` runs `vite build` itself, not the `build` script, which is why `deploy` runs `tsc -b` first. It builds from the working tree, so commit (or stash) unrelated edits first. The Cloudflare Vite plugin in `vite.config.ts` came from `cf init`; `pnpm dev` still serves the app on :5173.
 
 There are no tests in this repo. To see a change working, run the server too (`bun run dev` in `../stock-sim-server`, port 3000); its `.claude/launch.json` has `server` and `ui` preview configs. Open two browser tabs on the same room to play against yourself.
 
