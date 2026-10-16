@@ -83,25 +83,25 @@ export const MessageTypeNames: { [key in MessageType]: string } = {
     [MessageType.DEBUG_PRICES]: "DEBUG_PRICES"
 };
 
+/** `id` is `<roomId>-<resumeToken>`: our seat's secret, sent back as `prevSessionData` to resume it. */
 type IDMessage = {
     type: MessageType.ID;
     id: string;
 }
 
+/** Broadcasts carry no player id. */
 type JoinMessage = {
     type: MessageType.JOIN;
     roomId: string;
     username: string;
-    id: string;
 }
 
 type LeaveMessage = {
     type: MessageType.LEAVE;
     roomId: string;
-    id: string;
 }
 
-/** One human in the room (no id: the server keeps those secret). */
+/** One human in the room (no id: the server keeps those private). */
 type PlayerInfo = {
     name: string;
     /** False while their seat is held for a reconnect. */
