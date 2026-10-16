@@ -1,26 +1,56 @@
 import { useGameStore } from "../../context/game.context";
 import { usePriceStore } from "../../context/stock.store";
 import { Chart } from "react-chartjs-2";
-import {CategoryScale} from 'chart.js';
+import {CategoryScale, Legend, TimeScale, Tooltip} from 'chart.js';
 import {Chart as ChartJS, LinearScale,TimeSeriesScale, PointElement,LineController,LineElement} from 'chart.js';
 import {CandlestickController,CandlestickElement,OhlcController} from "chartjs-chart-financial";
-import { useMemo } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { useShallow } from "zustand/shallow";
 import 'chartjs-adapter-luxon'
+import { ChevronsRight, ZoomIn, ZoomOut } from "lucide-react";
 import { useDebugStore } from "../../context/debug.store";
+import { useWebsocketContext } from "../../context/ws.context";
+import { MessageType } from "../../types/messages";
 import { PowerButton } from "./PowerButton";
 import { SelectedCards } from "../PowerCards/selected.cards";
+import { createChartOverlay, type ChartOverlayData } from "./chart.overlay";
 
-ChartJS.register(CategoryScale, LinearScale,TimeSeriesScale,CandlestickController,OhlcController, CandlestickElement, PointElement,LineController,LineElement);
+ChartJS.register(CategoryScale, LinearScale,TimeScale,TimeSeriesScale,CandlestickController,OhlcController, CandlestickElement, PointElement,LineController,LineElement,Tooltip,Legend);
+
+/** Visible window sizes in candles (= game seconds). Infinity shows the whole game. */
+const ZOOM_LEVELS = [30, 60, 120, 240, 480, Infinity];
+const DEFAULT_ZOOM = 2;
+const CANDLE_MS = 1000;
+/** Faint dotted grid, readable on both themes. */
+const GRID_COLOR = 'rgba(127, 127, 127, 0.18)';
+const GRID_DASH = [2, 4];
+
+/**
+ * Where a scrolled-back view ends: never before the first full window, and null (live) once it
+ * reaches the latest candle. "All" shows everything, so there's nothing to pan.
+ */
+const clampPan = (end: number | null, firstX: number, lastX: number, windowSize: number) => {
+  if (end === null || windowSize === Infinity) return null;
+  const earliest = Math.min(lastX, firstX + (windowSize - 1) * CANDLE_MS);
+  const clamped = Math.max(earliest, end);
+  return clamped >= lastX ? null : clamped;
+};
+
+const zoomLabel = (seconds: number) =>
+  seconds === Infinity ? 'All' : seconds < 60 ? `${seconds}s` : `${seconds / 60}m`;
 
 export const TradingChart = () => {
-  const { settings } = useGameStore(useShallow((state) => ({
+  const { sendMessage } = useWebsocketContext();
+  const { settings, openOrders, news } = useGameStore(useShallow((state) => ({
     settings: state.gameSettings,
+    openOrders: state.openOrders,
+    news: state.news,
   })));
 
-  const { prices ,price} = usePriceStore(useShallow((state) => ({
+  const { prices ,price, clock} = usePriceStore(useShallow((state) => ({
     price: state.price,
     prices: state.prices,
+    clock: state.clock,
   })));
 
   const {intrinsicValues, guidePrices} = useDebugStore(useShallow((state) => ({
@@ -32,56 +62,209 @@ export const TradingChart = () => {
   // otherwise the server never sends them.
   const revealPrices = !!settings.revealPrices;
 
-  const memoizedScale = useMemo(() => {
-    const scale = {min: 0, max: 0};
-      const prices_ = prices.length? prices.map(c => [c.l, c.h]).flat() : [];
-      const lastGuide = revealPrices ? guidePrices[guidePrices.length - 1] : undefined;
-      const extra = lastGuide ? [lastGuide] : [];
-      const minP = Math.min(...prices_, ...extra)
-      const maxP = Math.max(...prices_, ...extra)
+  const [zoom, setZoom] = useState(DEFAULT_ZOOM);
+  const windowSize = ZOOM_LEVELS[zoom];
+  const zoomBy = (step: number) => setZoom((z) => Math.min(ZOOM_LEVELS.length - 1, Math.max(0, z + step)));
 
-      const minPrice = isFinite(minP) ? minP : 0;
-      const maxPrice = isFinite(maxP) ? maxP : 1;
-      scale.min = minPrice * 0.95;
-      scale.max = maxPrice * 1.05;
-      return scale
-  }, [prices, guidePrices, revealPrices]);
+  // Time of the rightmost visible candle when scrolled back into history; null = live (follow the latest).
+  const [panEnd, setPanEnd] = useState<number | null>(null);
+  const chartRef = useRef<ChartJS<'candlestick'>>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const panBy = useEffectEvent((ms: number) => {
+    const { prices } = usePriceStore.getState();
+    if (!prices.length || !ms) return;
+    const firstX = Number(prices[0].x);
+    const lastX = Number(prices[prices.length - 1].x);
+    setPanEnd((end) => clampPan((end ?? lastX) + ms, firstX, lastX, windowSize));
+  });
+  /** Chart time per CSS pixel, to turn drags and horizontal scrolls into a pan. */
+  const msPerPx = () => {
+    const chart = chartRef.current;
+    if (!chart?.chartArea?.width) return 0;
+    return (chart.scales.x.max - chart.scales.x.min) / chart.chartArea.width;
+  };
+
+  // Vertical scroll zooms (up = closer), one step per gesture-ish so a trackpad doesn't fly through every
+  // level. Horizontal scroll (or shift + scroll) pans.
+  const lastZoomAt = useRef(0);
+  const onWheel = useEffectEvent((e: WheelEvent) => {
+    const horizontal = Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey;
+    if (horizontal) {
+      e.preventDefault();
+      panBy((e.deltaX || e.deltaY) * msPerPx());
+      return;
+    }
+    if (e.deltaY === 0) return;
+    e.preventDefault();
+    const now = performance.now();
+    if (now - lastZoomAt.current < 150) return;
+    lastZoomAt.current = now;
+    zoomBy(e.deltaY > 0 ? 1 : -1);
+  });
+  const onDrag = useEffectEvent((dx: number) => panBy(-dx * msPerPx()));
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    // Drag to pan. A drag must not end in a click, or releasing over an order tag's × would cancel it.
+    let drag: { id: number; x: number; moved: boolean } | null = null;
+    let swallowClick = false;
+    const down = (e: PointerEvent) => {
+      swallowClick = false;
+      if (e.button === 0) drag = { id: e.pointerId, x: e.clientX, moved: false };
+    };
+    const move = (e: PointerEvent) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const dx = e.clientX - drag.x;
+      if (!drag.moved) {
+        if (Math.abs(dx) < 4) return;
+        drag.moved = true;
+        el.setPointerCapture(e.pointerId);
+        el.dataset.dragging = '';
+      }
+      drag.x = e.clientX;
+      onDrag(dx);
+    };
+    const up = (e: PointerEvent) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      swallowClick = drag.moved;
+      drag = null;
+      delete el.dataset.dragging;
+    };
+    const click = (e: MouseEvent) => {
+      if (swallowClick) e.stopPropagation();
+      swallowClick = false;
+    };
+    const wheel = (e: WheelEvent) => onWheel(e);
+    el.addEventListener('wheel', wheel, { passive: false });
+    el.addEventListener('pointerdown', down);
+    el.addEventListener('pointermove', move);
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', up);
+    el.addEventListener('click', click, true);
+    return () => {
+      el.removeEventListener('wheel', wheel);
+      el.removeEventListener('pointerdown', down);
+      el.removeEventListener('pointermove', move);
+      el.removeEventListener('pointerup', up);
+      el.removeEventListener('pointercancel', up);
+      el.removeEventListener('click', click, true);
+    };
+    // onWheel/onDrag are Effect Events: they must not be dependencies (this eslint-plugin version predates useEffectEvent).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Rolling window: the latest candle (or the panned-to one) sits at the right edge, `windowSize` candles
+  // back to the left (or back to the first candle, so a young game isn't mostly empty space).
+  const view = useMemo(() => {
+    const lastX = prices.length ? Number(prices[prices.length - 1].x) : clock;
+    const firstX = prices.length ? Number(prices[0].x) : clock;
+    const endX = clampPan(panEnd, firstX, lastX, windowSize) ?? lastX;
+    const minX = Math.max(firstX, endX - (windowSize - 1) * CANDLE_MS) - CANDLE_MS / 2;
+    const maxX = endX + CANDLE_MS / 2;
+    const start = prices.findIndex((p) => Number(p.x) >= minX);
+    const from = start === -1 ? prices.length : start;
+    const stop = prices.findIndex((p) => Number(p.x) > maxX);
+    const to = stop === -1 ? prices.length : stop;
+    const series = (values: number[]) =>
+      values.slice(from, to).flatMap((y, i) => prices[from + i] ? [{ x: Number(prices[from + i].x), y }] : []);
+    return {
+      minX,
+      maxX,
+      live: endX === lastX,
+      candles: prices.slice(from, to),
+      intrinsic: revealPrices ? series(intrinsicValues) : [],
+      guide: revealPrices ? series(guidePrices) : [],
+    };
+  }, [prices, clock, windowSize, panEnd, revealPrices, intrinsicValues, guidePrices]);
+
+  // Fit the price axis to what's visible, with a little headroom.
+  const yRange = useMemo(() => {
+    const values = [
+      ...view.candles.flatMap((c) => [c.l, c.h]),
+      ...view.intrinsic.map((p) => p.y),
+      ...view.guide.map((p) => p.y),
+    ].filter((v) => v > 0);
+    if (!values.length) return { min: 0, max: 1 };
+    const lo = Math.min(...values);
+    const hi = Math.max(...values);
+    const pad = Math.max((hi - lo) * 0.1, (hi + lo) / 2 * 0.01, 0.01);
+    return { min: Math.max(0, lo - pad), max: hi + pad };
+  }, [view]);
+
+  // The overlay plugin is created once; it reads the latest orders and news from this ref on every draw.
+  const overlay = useRef<ChartOverlayData>({ orders: [], news: [] });
+  overlay.current = {
+    orders: openOrders,
+    news,
+    onCancel: (ids) => ids.forEach((id) => sendMessage({ type: MessageType.ORDER_CANCEL, id })),
+  };
+  const plugins = useMemo(() => [createChartOverlay(() => overlay.current)], []);
 
   return (
     <div className="card bg-base-200 flex-1 min-h-[500px]">
-      <div className="card-body relative">
-        <h2 className="card-title">Trading {settings.ticketName}, ${price}</h2>
-        <div className="absolute top-5 right-5 flex">
-          <SelectedCards />
-          <PowerButton />
+      <div className="card-body">
+        {/* Ticker and price centered between the chart controls and the powers. */}
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="join" title="Scroll on the chart to zoom, drag or shift + scroll to look back">
+              <button className="btn btn-xs join-item" aria-label="Zoom out" disabled={zoom === ZOOM_LEVELS.length - 1} onClick={() => zoomBy(1)}>
+                <ZoomOut size={14} />
+              </button>
+              <span className="btn btn-xs join-item pointer-events-none w-10 tabular-nums">{zoomLabel(windowSize)}</span>
+              <button className="btn btn-xs join-item" aria-label="Zoom in" disabled={zoom === 0} onClick={() => zoomBy(-1)}>
+                <ZoomIn size={14} />
+              </button>
+            </div>
+            {!view.live && (
+              <button className="btn btn-xs btn-primary" onClick={() => setPanEnd(null)}>
+                Live <ChevronsRight size={14} />
+              </button>
+            )}
+          </div>
+          {/* Fixed-width digits so the header doesn't shift on every tick. */}
+          <h2 className="card-title justify-center gap-3 whitespace-nowrap">
+            <span>{settings.ticketName}</span>
+            <span className="tabular-nums">${price.toFixed(2)}</span>
+          </h2>
+          <div className="flex justify-end">
+            <SelectedCards />
+            <PowerButton />
+          </div>
         </div>
         <div
           id={"chart-container"}
-          className="flex-1 flex items-center justify-center border-2 border-dashed border-base-300 rounded-lg"
+          ref={containerRef}
+          className="flex-1 flex items-center justify-center border-2 border-dashed border-base-300 rounded-lg cursor-grab data-dragging:cursor-grabbing touch-pan-y select-none"
         >
           <Chart
+            ref={chartRef}
             type="candlestick"
+            plugins={plugins}
             data={{
               datasets: [
                 {
-                  label: "Close price",
-                  data: prices,
-                  // borderColor: 'rgb(75, 192, 192)',
-                  // backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                  // tension: 0.1
+                  label: "Price",
+                  data: view.candles,
+                  maxBarThickness: 24,
                 },
                 ...(revealPrices ? [
                 {
                   label: "Intrinsic Value",
-                  data: intrinsicValues.flatMap((value, index) => prices[index] ? [{ x: prices[index].x, y: value }] : []) as unknown[],
+                  data: view.intrinsic as unknown[],
                   type: 'line' as const,
                   borderColor: 'rgb(54, 162, 235)', // blue
+                  borderWidth: 1.5,
+                  pointRadius: 0,
                 },
                 {
                   label: "Guide Price",
-                  data: guidePrices.flatMap((value, index) => prices[index] ? [{ x: prices[index].x, y: value }] : []) as unknown[],
+                  data: view.guide as unknown[],
                   type: 'line' as const,
                   borderColor: 'rgb(255, 99, 132)',
+                  borderWidth: 1.5,
+                  pointRadius: 0,
                 },
               ] : []),
               ],
@@ -89,20 +272,31 @@ export const TradingChart = () => {
             options={{
               responsive: true,
               maintainAspectRatio: false,
+              // Prices tick 5x a second; animating every update makes the candles lag behind.
+              animation: false,
               scales: {
                 x: {
-                  title: {
-                    display: true,
-                    text: "Time",
+                  type: 'time',
+                  min: view.minX,
+                  max: view.maxX,
+                  offset: false,
+                  time: {
+                    minUnit: 'second',
+                    displayFormats: { second: 'HH:mm:ss', minute: 'HH:mm' },
+                    tooltipFormat: 'HH:mm:ss',
                   },
+                  ticks: { source: 'auto', maxRotation: 0, autoSkipPadding: 40 },
+                  grid: { color: GRID_COLOR, drawTicks: false },
+                  border: { display: false, dash: GRID_DASH },
                 },
                 y: {
-                  title: {
-                    display: true,
-                    text: "Price",
-                  },
-                  min: memoizedScale.min,
-                  max: memoizedScale.max,
+                  // Price on the right, like most trading charts; order tags sit on the left.
+                  position: 'right',
+                  min: yRange.min,
+                  max: yRange.max,
+                  ticks: { callback: (value) => `$${Number(value).toFixed(2)}` },
+                  grid: { color: GRID_COLOR, drawTicks: false },
+                  border: { display: false, dash: GRID_DASH },
                 },
               },
               plugins: {
@@ -110,7 +304,9 @@ export const TradingChart = () => {
                   enabled: true,
                 },
                 legend: {
-                  display: true,
+                  // Only the practice-mode lines need a key; the candles explain themselves.
+                  display: revealPrices,
+                  labels: { filter: (item) => item.datasetIndex !== 0 },
                 },
               },
             }}
