@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { MessageType, MessageTypeNames, type ConclusionMessage, type Message, type NewsMessage } from '../types/messages';
-import { usePriceStore } from './stock.store';
-import { useDebugStore } from './debug.store';
+import { resetPriceStore, usePriceStore } from './stock.store';
+import { resetDebugStore, useDebugStore } from './debug.store';
 import { useToast } from '../components/Toast/useToast';
 import type { PowerDescription } from '../types/types';
 import { debugLog } from '../utils/debug';
@@ -94,8 +94,14 @@ export const useGameStore = create<GameStore>((set) => ({
   setShares: (shares) => set({ shares }),
 }));
 
-export const cleanGameStore = () => {
-    useGameStore.setState(initialGameStore as GameStore);
+/**
+ * Forget the room we were in: game, price and debug stores. Called when leaving a room page.
+ * Keeps the installed-powers catalog, which belongs to the server, not the room.
+ */
+export const resetRoomStores = () => {
+    useGameStore.setState((s) => ({ ...initialGameStore, powers: { ...initialGameStore.powers!, data: s.powers.data } }) as GameStore);
+    resetPriceStore();
+    resetDebugStore();
 }
 
 
@@ -111,6 +117,13 @@ export const handleGameMessage = (message: Message) => {
         });
         break;
       }
+      case MessageType.ID:
+        // First message of every (re)join: IS_ADMIN follows if we're (still) the host.
+        useGameStore.setState({ isAdmin: false });
+        break;
+      case MessageType.ERROR:
+        useToast.getState().addToast({type:'error', title:'Error', description:message.message, timeout:5000});
+        break;
       case MessageType.LEAVE:
         useGameStore.setState((s) => ({ onlineUsers: Math.max(0, s.onlineUsers - 1) }));
         break;
@@ -141,6 +154,18 @@ export const handleGameMessage = (message: Message) => {
         break;
           
         case MessageType.ROOM_STATE:
+              if (!message.started) {
+                // A fresh game (new room, lobby rebuilt by ADMIN_SETTINGS, server restart): drop the last game's
+                // leftovers. isAdmin and the powers catalog arrive just before ROOM_STATE, so they stay.
+                useGameStore.setState((s) => ({
+                  conclusion: null,
+                  news: [],
+                  tradingDisabled: false,
+                  powers: { ...s.powers, currentOffers: [], inventory: [] },
+                }));
+                resetPriceStore();
+                resetDebugStore();
+              }
               useGameStore.setState({ 
                   gameSettings: message.settings || {},
                   cash: message.settings?.startingCash || 0,

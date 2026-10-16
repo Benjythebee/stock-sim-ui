@@ -1,17 +1,11 @@
 import { useNavigate } from "react-router";
-import { useWebsocketContext } from "../../context/ws.context";
 import { ThemeController } from "../ThemeController";
 
 
+/** Nav for the non-room pages. Layout picks it by path; leaving a room always disconnects first. */
 export const HomeNavigation = () => {
 
-    const {status,room} = useWebsocketContext();
     const navigate = useNavigate();
-
-    if(status === 'CONNECTED' && (room && room!=='')){
-        return null;
-    }
-
 
     return <div className="navbar bg-base-100 shadow-sm">
         <div className="navbar-start">

@@ -11,11 +11,15 @@ type DebugPriceStore = {
 
 }
 
-export const useDebugStore = create<DebugPriceStore>((set) => ({
+const initialDebugState = () => ({
     intrinsicValue: 0,
     guidePrice: 0,
     intrinsicValues: [],
     guidePrices: [],
+});
+
+export const useDebugStore = create<DebugPriceStore>((set) => ({
+    ...initialDebugState(),
     setIntrinsicValue: (intrinsicValue) => set({
         intrinsicValue,
     }),
@@ -23,6 +27,8 @@ export const useDebugStore = create<DebugPriceStore>((set) => ({
         guidePrice,
     }),
 }))
+
+export const resetDebugStore = () => useDebugStore.setState(initialDebugState());
 
 usePriceStore.subscribe((s)=>{
     if(s.timeLabels.length > useDebugStore.getState().intrinsicValues.length){

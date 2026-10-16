@@ -20,7 +20,7 @@ There are no tests in this repo. To see a change working, run the server too (`b
 
 ## How a game plays (the server's rules, as the UI shows them)
 
-1. **Join** (`/`): username + room code → `connect()` → navigate to `/:roomId`. The first player in a room is the **admin/host**.
+1. **Join** (`/`): username + room code → `connect()` → navigate to `/:roomId` once connected (a failed connect shows an error above the form; the username is prefilled from `localStorage.username`). The first player in a room is the **admin/host**.
 2. **Lobby** (phase `lobby`, shown as "paused"): the host sees the Admin modal (General / Bots / Powers tabs). Every field change sends `ADMIN_SETTINGS` immediately and the server **rebuilds the game** (fresh accounts for everyone). Settings: ticker, starting cash, opening price, volatility %, duration (min), random news, "reveal hidden prices" (practice mode), bot count, and bot strategy selection (from `/api/bots.json`). Non-hosts see "Wait for your admin".
 3. **Running**: "Save & Start" sends `TOGGLE_PAUSE`. The server ticks 5 market steps per **game second**. Each game second sends `CLOCK`, so **one candle = one game second**. Orders (limit or market, buy or sell, whole shares) are only accepted while running.
 4. **Pause/resume**: only the host (nav dropdown or the Paused modal). Game time stops, so power durations, news and briefcases freeze too.
@@ -68,20 +68,22 @@ public/powers/<icon>.svg bundled power icons (game-icons.net, CC BY 3.0; credits
 
 ### Data flow
 
-- **Inbound**: `ws.provider` parses JSON. It handles `ID` (stores the resume token in `localStorage.session_`) and `PONG` (ping display) itself. Everything else goes to `handleGameMessage()` in `game.context.ts`, which writes to the zustand stores via `setState`/`getState()` (it's outside React). Notifications and news also push toasts.
+- **Inbound**: `ws.provider` parses JSON. It handles `PONG` (ping display) itself and stores the `ID` resume token in `sessionStorage.session_` before passing `ID` on (it resets `isAdmin`; `IS_ADMIN` follows for the host). Everything else goes to `handleGameMessage()` in `game.context.ts`, which writes to the zustand stores via `setState`/`getState()` (it's outside React). Notifications, `ERROR` messages and news also push toasts.
 - **Outbound**: components call `sendMessage({ type: MessageType.X, ... })` from `useWebsocketContext()`. Nothing is optimistic except the pause flag and admin settings echo, and the server corrects both.
 - **Stores** are read with selectors, usually `useShallow` for multi-field picks. Non-React code reads `useXStore.getState()`.
 - **Candles**: `setClock` (on each `CLOCK`) appends a time label and opens a new candle at the last price. `setPrice` (on each `STOCK_MOVEMENT`) updates the high, low and close of the current candle. Before the game starts, `setClock` keeps a single candle. `debug.store` subscribes to the price store and appends a fair/guide sample per new candle.
+- **Resets**: `resetRoomStores()` (game + price + debug stores; keeps the powers catalog) runs whenever you leave a room page. A `ROOM_STATE` with `started: false` (new room, lobby rebuilt by `ADMIN_SETTINGS`, server restart) clears candles, book, debug series, news, conclusion, offers and inventory, but keeps `isAdmin` and the catalog, which arrive just before it.
 - **Powers catalog**: the server sends `CONTENT_MANIFEST` right after `ID` on every connect: all installed powers (built-ins + server mods) → `powers.data`, and every server-hosted asset is preloaded (`preloadImages`). `POWER_INVENTORY` carries only ids, resolved against that catalog in order (duplicates kept). `HandOfCards` still fetches `/api/powers.json` as a fallback if the catalog is empty.
 - **Power icons**: `PowerIcon` (`components/PowerCards/power-icon.tsx`) uses `iconUrl` (a server-relative URL for icons shipped by a mod, prefixed with the server origin) or else `/powers/<iconSlug>.svg`, swaps to `/powers/missing.svg` on load error, and shows `iconCredit` as a tooltip. See `utils/powerIcon.ts`.
 
 ### Connection and reconnect
 
 - URL: `ws(s)://<server>/ws/<roomId>?username=…[&spectator=true][&prevSessionData=<roomId>-<playerId>]`.
-- The `ID` message's value is sent back as `prevSessionData` when reconnecting to the same room, so a refresh keeps the seat, cash, shares and powers (the server holds seats for 60s). Joining a different room clears it.
+- The `ID` message's value is sent back as `prevSessionData` when reconnecting to the same room, so a refresh keeps the seat, cash, shares and powers (the server holds seats for 60s). Joining a different room clears it. It lives in `sessionStorage`, so each tab is its own player (in `localStorage`, two tabs shared a seat and the server silently detached the first). A duplicated tab copies sessionStorage, so it still shares the seat.
+- **Leaving a room page** any way (Disconnect, browser Back, footer links) makes `Layout` call `disconnect(false)` + `resetRoomStores()`, so Home starts clean and the old room's toasts stop. It's in `Layout`, keyed on the room path, not in the room pages' unmount cleanup, because StrictMode's test unmount would close the socket Home just opened. The resume token is kept, so Back into the same room within 60s resumes the seat. `disconnect()` (default `stayDisconnected=true`) is the sticky version the Disconnect button uses while the room page is still mounted.
 - `detach()` nulls the handlers before closing, so replacing or abandoning a socket never fires `onclose` and never triggers auto-reconnect. `disconnect()` sets `closedByUser` so `useAutoConnect` stays down. Keep both behaviours: the server deliberately does *not* close a superseded socket, because closing makes the UI reconnect in a loop (two tabs, or StrictMode double-mount).
 - Socket callbacks use `useEffectEvent` + a `wsRef`, not state, because state went stale inside handlers and leaked sockets.
-- Spectators (`/:roomId/spectate`, also the cast target) get room state, depth, prices and news, but no portfolio. The server rejects spectating a room that doesn't exist.
+- Spectators (`/:roomId/spectate`, also the cast target) get room state, depth, prices and news, but no portfolio. The server rejects spectating a room that doesn't exist with an `ERROR` (toasted) then close code 4004, which stops auto-reconnect.
 
 ## Wire protocol (keep in sync with the server)
 
@@ -96,7 +98,7 @@ public/powers/<icon>.svg bundled power icons (game-icons.net, CC BY 3.0; credits
   - `marketVolatility`: the server stores and sends a **fraction** (0.05). `ADMIN_SETTINGS` expects a **percentage** (5). The admin input shows `×100` and sends the raw percentage.
   - `CLOCK.value` is the game clock in epoch ms (+1000 per game second, frozen while paused). `timeLeft` is ms.
   - `CLIENT_STATE.tradingDisabled` (e.g. while DDoSed) disables the Buy/Sell buttons.
-  - Errors and order rejections arrive as `NOTIFICATION` toasts. The server sends no per-order ack or fill events.
+  - Errors and order rejections arrive as `NOTIFICATION` toasts (`ERROR` is only used for "Room does not exist"). The server sends no per-order ack or fill events.
   - Host-only messages (`TOGGLE_PAUSE`, `ADMIN_SETTINGS`, `SHOCK`) from non-hosts get a "Host only" toast.
 - HTTP: `/api/powers.json` (`PowerDescription[]`), `/api/bots.json` (`{ data: [{id, name, description}] }`), via `apiUrl()`.
 

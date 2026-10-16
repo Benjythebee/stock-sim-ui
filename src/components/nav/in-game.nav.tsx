@@ -1,4 +1,4 @@
-import { cleanGameStore, useGameStore } from "../../context/game.context"
+import { useGameStore } from "../../context/game.context"
 import { useWebsocketContext } from "../../context/ws.context";
 import { useCallback, useMemo } from "react";
 import { MessageType } from "../../types/messages";
@@ -22,9 +22,8 @@ export const InGameNavigation = () => {
 
     const navigate = useNavigate();
     const disconnectHandler = useCallback(() => {
-        disconnect();
-        cleanGameStore();
-        navigate('/'); // leaving the room page also stops auto-reconnect
+        disconnect(); // stops auto-reconnect while this page is still mounted
+        navigate('/'); // Layout resets the stores on leaving the room page
     }, [disconnect, navigate]);
 
     if(status === 'DISCONNECTED' && !room){

@@ -6,6 +6,13 @@ import { SERVER_WS_URL } from "../utils/server";
 import { debugLog } from "../utils/debug";
 
 const PING_INTERVAL_MS = 3000;
+/** Server close code for "Room does not exist" (spectating an unknown room): retrying won't help. */
+const CLOSE_ROOM_NOT_FOUND = 4004;
+
+// The resume token ("<roomId>-<playerId>", from the ID message) is per tab: in localStorage, two tabs
+// shared one seat and the server silently detached the first. sessionStorage survives a refresh.
+const SESSION_KEY = 'session_';
+localStorage.removeItem(SESSION_KEY); // where older builds kept it
 
 export const WebSocketProvider = ({ children }: { children: React.ReactNode }) => {
   // The live socket. State alone goes stale inside callbacks, which left old sockets open.
@@ -42,8 +49,7 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
         debugLog('Received message:', message);
 
         if(message.type === MessageType.ID ){
-            localStorage.setItem('session_', message.id);
-            return
+            sessionStorage.setItem(SESSION_KEY, message.id);
         }
 
         if(message.type === MessageType.PONG){
@@ -58,14 +64,16 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
 
         handleGameMessage(message);
     })
-    const onDisconnected = useEffectEvent(() => {
-        debugLog('Disconnected from WebSocket server');
+    const onDisconnected = useEffectEvent((event: CloseEvent) => {
+        debugLog('Disconnected from WebSocket server', event.code, event.reason);
         stopPing();
+        // The ERROR message before this close already toasted the reason; don't retry in a loop.
+        if (event.code === CLOSE_ROOM_NOT_FOUND) setClosedByUser(true);
         setStatus('DISCONNECTED');
     })
     const onError = useEffectEvent(() => {
         debugLog('WebSocket error');
-        setError('WebSocket error occurred');
+        setError('Could not connect. Check the room code and that the server is running.');
     })
 
   const setListeners = useCallback((websocket: WebSocket) => {
@@ -89,20 +97,22 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
   const connect = useCallback((username: string, roomCode: string, spectate: boolean=false) => {
     detach();
     setClosedByUser(false);
+    setError(null);
     setStatus('PENDING');
     setIsSpectate(spectate);
 
-    const pastSession = localStorage.getItem(`session_`);
-    if(!pastSession?.startsWith(roomCode)){
+    const pastSession = sessionStorage.getItem(SESSION_KEY);
+    const resumes = !!pastSession?.startsWith(`${roomCode}-`);
+    if(!resumes){
       // we're connecting to a new room;
-      localStorage.removeItem('session_');
+      sessionStorage.removeItem(SESSION_KEY);
     }
 
     const wsUrl = new URL(`${SERVER_WS_URL}/ws/${encodeURIComponent(roomCode)}`);
     wsUrl.searchParams.append('username', username);
-    if(pastSession?.startsWith(roomCode)){
+    if(resumes){
       // reconnecting to an existing session
-      wsUrl.searchParams.append('prevSessionData', pastSession);
+      wsUrl.searchParams.append('prevSessionData', pastSession!);
     }
 
     if(spectate){
@@ -115,13 +125,18 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
     setListeners(websocket);
   }, [setListeners, detach]);
 
-  /** Leave on purpose: closes the socket and forgets the room, so nothing reconnects. */
-  const disconnect = () => {
+  /**
+   * Leave on purpose: closes the socket and forgets the room. By default nothing reconnects;
+   * `stayDisconnected=false` lets a mounted room page connect again (moving straight to another room).
+   * The resume token is kept, so coming back to the same room within the server's grace period keeps the seat.
+   */
+  const disconnect = useCallback((stayDisconnected: boolean = true) => {
     detach();
-    setClosedByUser(true);
+    setClosedByUser(stayDisconnected);
+    setError(null);
     setRoom('');
     setStatus('DISCONNECTED');
-  }
+  }, [detach]);
 
   const sendMessage = (message: Message) => {
     if(!(message.type in MessageType)){

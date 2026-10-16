@@ -22,9 +22,19 @@ export type PriceStore = {
     setClock: (clock: number) => void,
 }
 
-export const usePriceStore = create<PriceStore>((set,get) => ({
+/** Everything that belongs to one game (not the actions). */
+const initialPriceState = () => ({
     price: 0,
+    prices: [],
     timeLabels: [],
+    asks: [],
+    bids: [],
+    clock: 0,
+    timeLeft: 0,
+});
+
+export const usePriceStore = create<PriceStore>((set,get) => ({
+    ...initialPriceState(),
     setPrice: (price) => {
         const prices = get().prices;
         const labels = get().timeLabels
@@ -62,12 +72,8 @@ export const usePriceStore = create<PriceStore>((set,get) => ({
         // console.log('Updated prices:', prices,labels);
        return set({ price, prices: [...prices], timeLabels: [...labels] });
     },
-    prices: [],
-    asks: [],
     setAsks: (asks: [number, number][]) => set({ asks }),
-    bids: [],
     setBids: (bids: [number, number][]) => set({ bids }),
-    clock: 0,
     setClock: (clock) =>{
         const luxonTime = DateTime.fromMillis(clock);
         const timeLabels = get().timeLabels;
@@ -137,6 +143,8 @@ export const usePriceStore = create<PriceStore>((set,get) => ({
 
         set({ clock: clock, timeLabels: [...timeLabels, luxonTime] });
     },
-    timeLeft: 0,
 }));
+
+/** Drop the previous game's candles and book (fresh arrays: setPrice/setClock mutate them in place). */
+export const resetPriceStore = () => usePriceStore.setState(initialPriceState());
 

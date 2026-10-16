@@ -3,7 +3,7 @@ import type { Message } from "../types/messages";
 
 export const WebsocketContext = createContext<{
     connect: (username:string,roomCode: string, spectate?: boolean) => void;
-    disconnect: () => void;
+    disconnect: (stayDisconnected?: boolean) => void;
     sendMessage: (message: Message) => void;
     error?: string | null;
     ping?: number;
