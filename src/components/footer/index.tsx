@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 
-const DISCORD_URL = "https://discord.gg/QyjFdGSmTm";
-const X_URL = "https://x.com/jybendev";
+export const DISCORD_URL = "https://discord.gg/VKrqQQ7UzR";
+export const X_URL = "https://x.com/jybendev";
 
 /** Site-wide footer: secondary links (About, Credits) and socials. */
 export const SiteFooter = () => (

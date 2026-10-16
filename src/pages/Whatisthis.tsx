@@ -5,7 +5,8 @@ import { PowerCard } from "../components/PowerCards/card";
 import type { PowerDescription } from "../types/types";
 import { Credits } from "../components/Credits";
 import { useEffect } from "react";
-import { useLocation } from "react-router";
+import { Link, useLocation } from "react-router";
+import { DISCORD_URL, X_URL } from "../components/footer";
 
 const fakepowers: PowerDescription[] = [
   {
@@ -14,7 +15,7 @@ const fakepowers: PowerDescription[] = [
     iconSlug: "stop",
     title: "The Hacker: DDoS Attack",
     description:
-      "Communicate with other players to strategize and share information.",
+      "Launch a DDoS attack on all traders, disabling their ability to trade for 15 seconds.",
     type: "others",
     isInstant: false,
     id: "the-hacker-ddos",
@@ -25,7 +26,7 @@ const fakepowers: PowerDescription[] = [
     iconSlug: "talk",
     title: "Rumor Mill",
     description:
-      "Trigger a false rumor that causes a random shock to the market for 20 seconds (everyone suffers).",
+      "Spread a false rumor that jolts the market up or down for a few seconds (everyone suffers).",
     type: "market",
     isInstant: false,
     id: "21",
@@ -39,6 +40,52 @@ const fakepowers: PowerDescription[] = [
     type: "client",
     isInstant: true,
     id: "cash-heritage",
+  },
+];
+
+const HOW_TO_PLAY: { title: string; body: string }[] = [
+  {
+    title: "Open a room",
+    body: "Pick a username and leave the room code empty to create a new room, or type a friend's code to join theirs. The first player in is the host.",
+  },
+  {
+    title: "Set up the market",
+    body: "The host picks the ticker, starting cash, opening price, volatility, game length and how many AI trading bots join, then hits start.",
+  },
+  {
+    title: "Trade the order book",
+    body: "Place limit or market orders to buy and sell against everyone else on a real limit order book. Watch the candlestick chart, the depth and the news feed.",
+  },
+  {
+    title: "Open briefcases",
+    body: "Eight briefcases drop during the game. Each one offers you three random power-ups: keep one, use it right away or save it for the right moment.",
+  },
+  {
+    title: "Win on P&L",
+    body: "When the clock runs out, players and bots are ranked by profit and loss. Highest P&L takes the tendies.",
+  },
+];
+
+const FAQ: { q: string; a: string }[] = [
+  {
+    q: "Is Tendies Brawl free?",
+    a: "Yes. It runs in your browser with no download or sign-up. Pick a username and play.",
+  },
+  {
+    q: "Is it real money or real stocks?",
+    a: "No. The stock is fictional and so is the cash. It's a trading simulator and party game, not investing.",
+  },
+  {
+    q: "Can I play alone?",
+    a: "Yes. Create a room and add AI bots: market makers, momentum traders and informed traders who know where the fair value is.",
+  },
+  {
+    q: "How do I play with friends?",
+    a: "Create a room and share its code or URL. Everyone who opens it joins the same market. You can also cast the spectator view to a TV.",
+  },
+  {
+    q: "How does the price move?",
+    a: "Every trade happens on a real order book. A hidden fair value moves on news and power-ups, bots trade around it, and big trades from players push the price.",
   },
 ];
 
@@ -57,13 +104,15 @@ export const WhatIsThisPage: React.FC = () => {
             <CandlestickChart />
             <div>
               <h1 className="text-5xl font-bold">
-                Multiplayer trading simulator with a twist.
+                Multiplayer stock trading game with a twist.
               </h1>
               <p className="py-6">
-                Try to get the trade virtual stocks, utilize special powers, and
-                compete with other players to win the Tendies Brawl!
+                Tendies Brawl is a free browser party game. Trade a virtual
+                stock against your friends and AI bots on a live order book,
+                use random power-ups to swing the market, and finish with the
+                best P&amp;L to win the brawl.
               </p>
-              <button className="btn btn-primary">Play for FREE</button>
+              <Link to="/" className="btn btn-primary">Play for free</Link>
             </div>
           </div>
         </div>
@@ -91,9 +140,45 @@ export const WhatIsThisPage: React.FC = () => {
         <Card
           className={"col-span-1 border-0 max-w-full"}
           size="lg"
-          title="Random Powers"
-          content="Powers are special abilities that can give you an edge in the market. You can acquire them randomly and use them strategically to influence stock prices or gain insights."
+          title="Random power-ups"
+          content={
+            <p>
+              Like items in a kart racer, power-ups give you an edge. Collect
+              cash, get an insider tip on the stock's real value, spread a
+              rumor, whip up a volatility storm, or DDoS everyone else so
+              nobody can trade but you.
+            </p>
+          }
         />
+
+        <section className="col-span-2" aria-labelledby="how-to-play">
+          <h2 id="how-to-play" className="text-3xl font-bold mb-4">How to play</h2>
+          <ol className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            {HOW_TO_PLAY.map((step, i) => (
+              <li key={step.title} className="card card-border bg-base-100">
+                <div className="card-body">
+                  <h3 className="card-title">
+                    <span className="badge badge-primary">{i + 1}</span>
+                    {step.title}
+                  </h3>
+                  <p>{step.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section className="col-span-2" aria-labelledby="faq">
+          <h2 id="faq" className="text-3xl font-bold mb-4">FAQ</h2>
+          <div className="flex flex-col gap-2">
+            {FAQ.map(({ q, a }) => (
+              <details key={q} className="collapse collapse-arrow bg-base-200">
+                <summary className="collapse-title font-semibold">{q}</summary>
+                <div className="collapse-content"><p>{a}</p></div>
+              </details>
+            ))}
+          </div>
+        </section>
 
         <Card
           className={"col-span-2 h-50"}
@@ -104,7 +189,7 @@ export const WhatIsThisPage: React.FC = () => {
               <ul className="menu menu-vertical lg:menu-horizontal">
                 <li>
                   <a
-                    href="https://discord.gg/QyjFdGSmTm"
+                    href={DISCORD_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -113,7 +198,7 @@ export const WhatIsThisPage: React.FC = () => {
                 </li>
                 <li>
                   <a
-                    href="https://x.com/jybendev"
+                    href={X_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                   >

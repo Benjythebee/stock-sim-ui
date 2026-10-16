@@ -2,13 +2,80 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Defaults for "/". src/utils/seo.ts rewrites title, description, canonical, og/twitter tags and
+         robots per route at runtime; social crawlers don't run JS, so they always see these. -->
+    <title>Tendies Brawl – Multiplayer Stock Trading Game with Friends</title>
+    <meta name="description" content="Free multiplayer stock trading game in your browser. Trade one stock against friends and AI bots on a live order book, grab power-ups, and finish with the best P&amp;L to win." />
+    <link rel="canonical" href="https://tendiesbrawl.com/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tendies Brawl</title>
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#15191e" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="application-name" content="Tendies Brawl" />
+    <meta name="apple-mobile-web-app-title" content="Tendies Brawl" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Tendies Brawl" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:url" content="https://tendiesbrawl.com/" />
+    <meta property="og:title" content="Tendies Brawl – Multiplayer Stock Trading Game with Friends" />
+    <meta property="og:description" content="Trade stocks, beat your friends. A free browser party game with a real order book, AI bots and Mario Kart-style power-ups." />
+    <meta property="og:image" content="https://tendiesbrawl.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Tendies Brawl logo: a chicken in sunglasses holding cash in front of a rising stock chart" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@jybendev" />
+    <meta name="twitter:creator" content="@jybendev" />
+    <meta name="twitter:title" content="Tendies Brawl – Multiplayer Stock Trading Game with Friends" />
+    <meta name="twitter:description" content="Trade stocks, beat your friends. A free browser party game with a real order book, AI bots and Mario Kart-style power-ups." />
+    <meta name="twitter:image" content="https://tendiesbrawl.com/og-image.png" />
+    <meta name="twitter:image:alt" content="Tendies Brawl logo: a chicken in sunglasses holding cash in front of a rising stock chart" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://tendiesbrawl.com/#website",
+            "url": "https://tendiesbrawl.com/",
+            "name": "Tendies Brawl",
+            "inLanguage": "en"
+          },
+          {
+            "@type": ["VideoGame", "WebApplication"],
+            "@id": "https://tendiesbrawl.com/#game",
+            "name": "Tendies Brawl",
+            "url": "https://tendiesbrawl.com/",
+            "description": "Free multiplayer stock trading party game. Join a room with friends, trade one fictional stock against each other and AI bots on a real limit order book, use random power-ups, and finish with the highest P&L to win.",
+            "image": "https://tendiesbrawl.com/og-image.png",
+            "applicationCategory": "GameApplication",
+            "operatingSystem": "Any (web browser)",
+            "gamePlatform": "Web browser",
+            "genre": ["Party game", "Trading simulation", "Strategy"],
+            "playMode": ["MultiPlayer", "SinglePlayer"],
+            "isAccessibleForFree": true,
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+            "author": { "@type": "Person", "name": "jybendev", "url": "https://x.com/jybendev" },
+            "sameAs": ["https://x.com/jybendev", "https://discord.gg/VKrqQQ7UzR"]
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <h1>Tendies Brawl – multiplayer stock trading game</h1>
+      <p>Trade one stock against your friends and AI bots on a live order book, open briefcases for random power-ups, and finish with the highest profit to win. Tendies Brawl needs JavaScript to run.</p>
+      <p><a href="/about">How Tendies Brawl works</a></p>
+    </noscript>
     <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>

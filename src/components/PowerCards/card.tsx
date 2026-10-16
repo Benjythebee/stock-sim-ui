@@ -25,7 +25,7 @@ export const PowerCard = (props: React.ComponentProps<'div'>&{mini?:boolean, pow
             </div>
             <div className="power-card-content">
                 {power.isInstant ? <div className="instant-banner">Instant</div> : null}
-                <h2 className="power-card-title">{power.title}</h2>
+                <p className="power-card-title">{power.title}</p>
                 <div className="power-card-icon">
                     <PowerIcon power={power} />
                 </div>

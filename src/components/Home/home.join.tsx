@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {useShallow} from "zustand/shallow";
 import { useWebsocketContext } from "../../context/ws.context";
 import { useGameStore } from "../../context/game.context";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 // No 0/O or 1/I so codes are easy to read out to friends. Must match the server's ^[A-Za-z0-9_-]{1,64}$.
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -48,7 +48,11 @@ export const Join = () => {
 
   return <div className="card absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 bg-base-100 shadow-xl">
         <div className="card-body items-center">
-          <img src="/tendies-brawl.webp" alt="Tendies Brawl Logo" className="w-38 h-38"/>
+          <img src="/tendies-brawl.webp" alt="Tendies Brawl logo" width={152} height={152} fetchPriority="high" className="w-38 h-38"/>
+          <h1 className="text-lg font-bold text-center leading-tight">Multiplayer stock trading game</h1>
+          <p className="text-sm text-center opacity-70 mb-2">
+            Trade against friends and bots, grab power-ups, finish with the best P&amp;L. <Link className="link" to="/about">How to play</Link>
+          </p>
           {joining && <div>
             <span className="loading loading-dots loading-lg"></span>
             </div>}

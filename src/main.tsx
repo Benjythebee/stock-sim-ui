@@ -2,16 +2,20 @@ import { WebSocketProvider } from "./context/ws.provider";
 import { BrowserRouter, Routes, Route } from "react-router";
 import { Layout } from "./layout";
 import { Home } from "./pages/Home";
-import RoomPage from "./pages/Room";
 import { WhatIsThisPage } from "./pages/Whatisthis";
-import RoomSpectatePage from "./pages/RoomSpectate";
-import CastPage from "./cast";
+import { lazy, Suspense } from "react";
+
+// Split off the game screens (Chart.js, the trading UI) so Home and /about load fast.
+const RoomPage = lazy(() => import("./pages/Room"));
+const RoomSpectatePage = lazy(() => import("./pages/RoomSpectate"));
+const CastPage = lazy(() => import("./cast"));
 
 const Main = () => {
   return (
     <WebSocketProvider>
       <BrowserRouter>
         <Layout>
+          <Suspense fallback={<div className="flex justify-center p-10"><span className="loading loading-dots loading-lg"></span></div>}>
           <Routes>
             <Route path="/cast" element={<CastPage />} />
             <Route path="/about" element={<WhatIsThisPage />} />
@@ -21,6 +25,7 @@ const Main = () => {
             <Route path="/:roomId/spectate" element={<RoomSpectatePage />} />
       
           </Routes>
+          </Suspense>
     </Layout>
       </BrowserRouter>
         </WebSocketProvider>
