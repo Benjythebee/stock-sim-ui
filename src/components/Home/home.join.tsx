@@ -54,7 +54,7 @@ export const Join = () => {
           <img src="/tendies-brawl.webp" alt="Tendies Brawl logo" width={152} height={152} fetchPriority="high" className="w-38 h-38"/>
           <h1 className="text-lg font-bold text-center leading-tight">Multiplayer stock trading game</h1>
           <p className="text-sm text-center opacity-70 mb-2">
-            Trade against friends and bots, grab power-ups, finish with the best P&amp;L. <Link className="link" to="/about">How to play</Link>
+            Trade against friends and bots, grab power-ups, finish with the best P&amp;L. <Link className="link" to="/how-to-play">How to play</Link>
           </p>
           {joining && <div>
             <span className="loading loading-dots loading-lg"></span>

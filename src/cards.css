@@ -380,7 +380,7 @@ Power Card Styles
 
 /*
 Phones: the fanned hand is ~680px wide, so the dialog's hand becomes a swipeable row of
-slightly smaller, upright cards (tap one to pick it). Scoped to the <dialog> so the /about
+slightly smaller, upright cards (tap one to pick it). Scoped to the <dialog> so the /how-to-play
 page's decorative fan is unaffected.
 */
 @media (max-width: 639px) {

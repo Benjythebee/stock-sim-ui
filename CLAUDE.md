@@ -40,8 +40,8 @@ The server keeps a hidden **intrinsic value** (fair value; moves on news, powers
 ```
 src/
   index.tsx / main.tsx   StrictMode root → WebSocketProvider → BrowserRouter → Layout → Routes
-  layout.tsx             route-aware nav (HomeNavigation on /, /about; InGameNavigation in rooms; none on /cast), SiteFooter (not on /cast or spectate), PresentationOverlay, Toaster, react-query client
-  pages/                 Home (join), Room (player view), RoomSpectate, Whatisthis (/about marketing page; ends with #credits), Powers (/powers library)
+  layout.tsx             route-aware nav (HomeNavigation on /, /about, /how-to-play, /powers; InGameNavigation in rooms; none on /cast), SiteFooter (not on /cast or spectate), PresentationOverlay, Toaster, react-query client
+  pages/                 Home (join), Room (player view), RoomSpectate, Whatisthis (/about: short hero, features, FAQ, socials, #credits), HowToPlay (/how-to-play: rules, the screen, orders, powers, tips, hosting), Powers (/powers library)
   cast.tsx               /cast: Chromecast receiver that iframes /:room/spectate
   context/
     ws.provider.tsx      the ONE WebSocket: connect/disconnect/sendMessage, ping every 3s, session resume

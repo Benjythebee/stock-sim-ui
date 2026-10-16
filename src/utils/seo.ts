@@ -23,10 +23,17 @@ const HOME: PageMeta = {
   path: '/',
 };
 
-const ABOUT: PageMeta = {
+const HOW_TO_PLAY: PageMeta = {
   title: 'How to Play Tendies Brawl – Stock Market Party Game with Power-Ups',
   description:
-    'How Tendies Brawl works: create a room, invite friends, trade a fictional stock against AI bots, open briefcases for power-ups like Insider Tips and DDoS attacks, and win on P&L.',
+    'How Tendies Brawl works: create a room, invite friends, trade a fictional stock with limit and market orders, open briefcases for power-ups like Insider Tips and DDoS attacks, and win on P&L.',
+  path: '/how-to-play',
+};
+
+const ABOUT: PageMeta = {
+  title: 'About Tendies Brawl – Free Multiplayer Stock Trading Party Game',
+  description:
+    'Tendies Brawl is a free browser party game: trade one stock against friends and AI bots on a real order book, swing the market with power-ups, and cast it to the TV.',
   path: '/about',
 };
 
@@ -41,6 +48,7 @@ const POWERS: PageMeta = {
 export function pageMetaFor(path: string): PageMeta {
   if (path === '/') return HOME;
   if (path === '/about') return ABOUT;
+  if (path === '/how-to-play') return HOW_TO_PLAY;
   if (path === '/powers') return POWERS;
   if (path === '/cast') return { title: `${SITE_NAME} – Cast`, description: HOME.description, noindex: true };
 

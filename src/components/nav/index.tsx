@@ -10,7 +10,8 @@ export const HomeNavigation = () => {
         <div className="navbar-end flex-1">
             <ul className="menu menu-horizontal px-1">
                 <li><Link to="/powers">Powers</Link></li>
-                <li><Link to="/about">How to play</Link></li>
+                <li><Link to="/how-to-play">How to play</Link></li>
+                <li><Link to="/about">About</Link></li>
             </ul>
         </div>
     </div>

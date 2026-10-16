@@ -9,7 +9,7 @@ export const PowersPage = () => (
         <p className="py-4 max-w-2xl">
             Every few minutes a briefcase drops and offers each player 3 random powers. Instant ones fire as soon
             as you pick them; the others wait in your inventory until you use them. Rarer powers show up less often.{" "}
-            <Link to="/about" className="link">How to play</Link>
+            <Link to="/how-to-play" className="link">How to play</Link>
         </p>
         <PowerLibrary />
     </main>
