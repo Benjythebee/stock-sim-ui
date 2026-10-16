@@ -37,7 +37,7 @@ export default function CastPage() {
 
             // Register custom message handler
             context.addCustomMessageListener(
-                "urn:x-cast:com.stonklords.room",
+                "urn:x-cast:com.tendiesbrawl.room",
                 (customEvent: { data: { room: string}; }) => {
                     const { room } = customEvent.data;
                     if (room && iframeRef.current) {

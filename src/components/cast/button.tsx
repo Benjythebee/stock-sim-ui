@@ -82,7 +82,7 @@ export const CastButton = ({room}: {room: string}) => {
 
         const session = context.getCurrentSession();
         session.sendMessage(
-            "urn:x-cast:com.stonklords.room",
+            "urn:x-cast:com.tendiesbrawl.room",
             { room }
         );
     }

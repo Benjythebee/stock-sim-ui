@@ -48,7 +48,7 @@ export const Join = () => {
 
   return <div className="card absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 bg-base-100 shadow-xl">
         <div className="card-body items-center">
-          <img src="/stonk-lord_alpha.webp" alt="Stonk Lords Logo" className="w-38 h-38"/>
+          <img src="/tendies-brawl.webp" alt="Tendies Brawl Logo" className="w-38 h-38"/>
           {joining && <div>
             <span className="loading loading-dots loading-lg"></span>
             </div>}

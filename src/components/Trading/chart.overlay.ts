@@ -264,7 +264,7 @@ export const createChartOverlay = (getData: () => ChartOverlayData): Plugin<'can
   };
 
   return {
-    id: 'stonkOverlay',
+    id: 'tendiesOverlay',
     afterDatasetsDraw(chart) {
       const area = chart.chartArea;
       if (!area || !chart.scales.x || !chart.scales.y) return;

@@ -19,5 +19,5 @@ export const powerCardIcons: Record<string, IconCredit> = {
     "present": { author: "Delapouite", url: "https://game-icons.net/1x1/delapouite/present.html", license: "CC BY 3.0" },
     "stop": { author: "Delapouite", url: "https://game-icons.net/1x1/delapouite/stop-sign.html", license: "CC BY 3.0" },
     // Drawn for this project: shown when a power's icon fails to load.
-    "missing": { author: "Stonk Lords" },
+    "missing": { author: "Tendies Brawl" },
 };

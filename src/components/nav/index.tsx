@@ -9,7 +9,7 @@ export const HomeNavigation = () => {
 
     return <div className="navbar bg-base-100 shadow-sm">
         <div className="navbar-start">
-            <a className="btn btn-ghost text-xl" href="/"><img src="/stonk-lord_alpha.webp" alt="Stonk Lords Logo" className="w-12 h-12"/>
+            <a className="btn btn-ghost text-xl" href="/"><img src="/tendies-brawl-icon.webp" alt="Tendies Brawl Logo" className="w-12 h-12"/>
            </a>
             <ThemeController />
         </div>

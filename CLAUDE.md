@@ -1,4 +1,4 @@
-# stock-sim-ui ("Stonk Lords")
+# stock-sim-ui ("Tendies Brawl")
 
 React front-end for a multiplayer stock-trading party game. Friends join a room by code and trade one fictional ticker against each other and AI bots on a real limit order book. The twist: every so often a **briefcase** offers each player 3 random **powers** (Mario Kart-style items: free cash, insider tips, rumors that move the price, a DDoS that blocks everyone else from trading, volatility storms). Whoever has the highest P&L when the clock runs out wins.
 
@@ -113,7 +113,7 @@ public/powers/<icon>.svg bundled power icons (game-icons.net, CC BY 3.0; credits
 - **Powers are presented as collectible cards.** The card color comes from the power's `type` (`client` = self, `all`, `market`; `others` currently falls back to the market style). Instant powers get a banner. Offers fan out as a hand in a full-screen `<dialog>` rendered through `Portal`. Each `HandOfCards` owns its dialog (a ref driven by its `open` prop, no global id: the offers hand and the consume hand can both be mounted) and calls `onDismiss` on the dialog's `cancel`/`close` events (Esc), so the owner's state stays in sync. The briefcase button is `.btn-amber`: it shimmers (`data-active`) and the open-briefcase image wiggles when an offer is waiting. Up to 5 inventory mini cards sit next to it, and clicking one asks for confirmation before consuming it.
 - Feedback is toast-driven: server notifications, joins and news all appear bottom-right for about 5s.
 - Theme switching uses `theme-change` (DaisyUI light/dark).
-- Branding: "Stonk Lords" (`/stonk-lord_alpha.webp` logo), Discord and X links. Chromecast receiver app id `6030BF63`, namespace `urn:x-cast:com.stonklords.room`.
+- Branding: "Tendies Brawl" (tendiesbrawl.com; `/tendies-brawl.webp` full logo on Home, `/tendies-brawl-icon.webp` square icon in the navs, `favicon.png` + `apple-touch-icon.png` from the icon), Discord and X links. Chromecast receiver app id `6030BF63`, namespace `urn:x-cast:com.tendiesbrawl.room`.
 
 ## Adding things
 

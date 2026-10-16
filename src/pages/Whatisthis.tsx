@@ -61,7 +61,7 @@ export const WhatIsThisPage: React.FC = () => {
               </h1>
               <p className="py-6">
                 Try to get the trade virtual stocks, utilize special powers, and
-                compete with other players to become the ultimate Stonk Lord!
+                compete with other players to win the Tendies Brawl!
               </p>
               <button className="btn btn-primary">Play for FREE</button>
             </div>

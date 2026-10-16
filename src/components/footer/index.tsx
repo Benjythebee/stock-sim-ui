@@ -14,7 +14,7 @@ export const SiteFooter = () => (
       <a className="link link-hover" href={X_URL} target="_blank" rel="noopener noreferrer">Twitter / X</a>
     </nav>
     <aside className="text-sm opacity-70">
-      <p>Stonk Lords · a multiplayer trading game with a twist</p>
+      <p>Tendies Brawl · a multiplayer trading game with a twist</p>
     </aside>
   </footer>
 );
