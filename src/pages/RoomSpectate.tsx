@@ -5,21 +5,17 @@ import { useGameStore } from '../context/game.context';
 import { useShallow } from 'zustand/shallow';
 import { News } from '../components/Trading/News';
 import { useWebsocketContext } from '../context/ws.context';
-import { useEffect } from 'react';
+import { useAutoConnect } from '../context/useAutoConnect';
 import { useParams } from 'react-router';
 
 
 
 export default function RoomSpectatePage() {
   const { roomId: roomCode } = useParams();
-  const {status,connect} = useWebsocketContext()
-  const {paused,ended} = useGameStore(useShallow((state) => ({paused: state.paused, ended: state.ended,setUsername:state.setUsername})));
+  const {connect} = useWebsocketContext()
+  const {paused,ended} = useGameStore(useShallow((state) => ({paused: state.paused, ended: state.ended})));
 
-  useEffect(() => {
-    if (status == 'DISCONNECTED' && roomCode) {
-      connect('', roomCode,true);
-    }
-  }, [status]);
+  useAutoConnect(roomCode, () => connect('', roomCode!, true));
 
   return (
     <div id='room-page' className="relative min-h-screen bg-base-100 p-4">

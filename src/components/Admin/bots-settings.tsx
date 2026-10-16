@@ -3,6 +3,7 @@ import { useShallow } from "zustand/shallow";
 import { useQuery } from "@tanstack/react-query";
 import { Fragment, useEffect, useState } from "react";
 import { useToast } from "../Toast/useToast";
+import { apiUrl } from "../../utils/server";
 
 
 export const BotsSettings = ({setGameSettings}:{ setGameSettings: (settings: Partial<GameSettings>) => void}) => {
@@ -12,7 +13,7 @@ export const BotsSettings = ({setGameSettings}:{ setGameSettings: (settings: Par
     const {data,isLoading,isFetching} = useQuery({
         queryKey: ['bots-available'],
         queryFn: async () => {
-            const response = await fetch('http://localhost:3000/api/bots.json');
+            const response = await fetch(apiUrl('/api/bots.json'));
             if(!response.ok){
                 throw new Error('Failed to fetch bots');
             }

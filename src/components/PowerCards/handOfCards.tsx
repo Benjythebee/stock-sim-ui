@@ -3,6 +3,7 @@ import { PowerCard } from "./card"
 import { usePowerStore } from "../../context/game.context";
 import type { PowerDescription } from "../../types/types";
 import { cn } from "../../utils/cn";
+import { apiUrl } from "../../utils/server";
 
 type HandOfCardsProps = {
     cards: PowerDescription[];
@@ -18,10 +19,9 @@ export const HandOfCards = ({cards, title, onSelectCard, onSkip, onClose, classN
     
     useEffect(() => {
         if(data.length) return
-       fetch('http://localhost:3000/api/powers.json').then((r)=>{
+       fetch(apiUrl('/api/powers.json')).then((r)=>{
         return r.json()
        }).then((data: PowerDescription[])=>{
-        console.log("Fetched powers:", data);
         setPowers(data);
        })
     }, [data]);

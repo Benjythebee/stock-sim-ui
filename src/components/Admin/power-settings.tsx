@@ -1,7 +1,4 @@
-import type { GameSettings } from "../../context/game.context"
-
-
-export const PowerSettings = ({setGameSettings}:{ setGameSettings: (settings: Partial<GameSettings>) => void}) => {
+export const PowerSettings = () => {
 
     return (
         <>

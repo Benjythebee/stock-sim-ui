@@ -98,6 +98,13 @@ export const GeneralSettings = ({setGameSettings}:{ setGameSettings: (settings: 
                 <span className="label-text font-semibold ml-2">Enable News Events</span>
             </label>
         </div>
+
+        <div>
+            <label className="label" title="Plots the stock's hidden fair value and guide price for every player. Great for learning, but it gives the game away.">
+                <input type="checkbox" checked={!!gameSettings.revealPrices} className={`toggle ${gameSettings.revealPrices ? 'toggle-warning' : ''}`} onChange={(e) => setGameSettings({revealPrices: e.target.checked})} />
+                <span className="label-text font-semibold ml-2">Reveal hidden prices (practice mode)</span>
+            </label>
+        </div>
             </>
     )
 }

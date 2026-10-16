@@ -8,24 +8,21 @@ import { useShallow } from 'zustand/shallow';
 import { ConclusionModal } from '../components/Conclusion';
 import { News } from '../components/Trading/News';
 import { useWebsocketContext } from '../context/ws.context';
-import { useEffect } from 'react';
+import { useAutoConnect } from '../context/useAutoConnect';
 import { useParams } from 'react-router';
 
 
 
 export default function RoomPage() {
   const { roomId: roomCode } = useParams();
-  const {status,connect} = useWebsocketContext()
+  const {connect} = useWebsocketContext()
   const {paused,ended, setUsername} = useGameStore(useShallow((state) => ({paused: state.paused, ended: state.ended,setUsername:state.setUsername})));
 
-  useEffect(() => {
-    console.log("RoomPage useEffect", {status, roomCode});
-    if (status == 'DISCONNECTED' && roomCode) {
-      const storedUsername = localStorage.getItem('username') || `Trader${Math.floor(Math.random() * 1000)}`;
-      setUsername(storedUsername);
-      connect(storedUsername, roomCode);
-    }
-  }, [status]);
+  useAutoConnect(roomCode, () => {
+    const storedUsername = localStorage.getItem('username') || `Trader${Math.floor(Math.random() * 1000)}`;
+    setUsername(storedUsername);
+    connect(storedUsername, roomCode!);
+  });
 
   return (
     <div id='room-page' className="relative min-h-screen bg-base-100 p-4">

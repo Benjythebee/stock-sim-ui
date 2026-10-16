@@ -7,6 +7,7 @@ import { ThemeController } from "../ThemeController";
 import { usePriceStore } from "../../context/stock.store";
 import { decimal } from "../../utils/math";
 import { CastButton } from "../cast/button";
+import { useNavigate } from "react-router";
 
 export const InGameNavigation = () => {
     const {room,status,sendMessage,disconnect,isSpectate} = useWebsocketContext();
@@ -19,10 +20,12 @@ export const InGameNavigation = () => {
         useGameStore.setState({paused: newPausedState});
     }, [paused, sendMessage]);
 
+    const navigate = useNavigate();
     const disconnectHandler = useCallback(() => {
         disconnect();
         cleanGameStore();
-    }, [disconnect]);
+        navigate('/'); // leaving the room page also stops auto-reconnect
+    }, [disconnect, navigate]);
 
     if(status === 'DISCONNECTED' && !room){
         return null;

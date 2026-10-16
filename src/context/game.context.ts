@@ -4,6 +4,7 @@ import { usePriceStore } from './stock.store';
 import { useDebugStore } from './debug.store';
 import { useToast } from '../components/Toast/useToast';
 import type { PowerDescription } from '../types/types';
+import { debugLog } from '../utils/debug';
 
 export type GameSettings = {
     startingCash: number;
@@ -15,6 +16,7 @@ export type GameSettings = {
     bots: number;
     ticketName: string;
     botSelection?: string[]; // array of bot Types
+    revealPrices?: boolean; // server only sends DEBUG_PRICES (hidden fair value) when on
 }
 
 type GameStore = {
@@ -60,7 +62,8 @@ const initialGameStore: Partial<GameStore> = {
     marketVolatility: 5, 
     gameDuration: 5, 
     bots: 1, 
-    ticketName: 'AAPL' 
+    ticketName: 'AAPL',
+    revealPrices: false,
   },
   news: [],
   isAdmin: false,
@@ -97,10 +100,18 @@ export const cleanGameStore = () => {
 
 export const handleGameMessage = (message: Message) => {
     const { type } = message;
-    console.log(MessageTypeNames[type]);
+    debugLog(MessageTypeNames[type]);
     switch (type) {
-      case MessageType.TOGGLE_PAUSE:
-        useGameStore.setState((s) => ({ paused: !s.paused, started: s.started ===false? true : s.started }));
+      case MessageType.TOGGLE_PAUSE: {
+        // The server sends the absolute state; fall back to toggling for older servers.
+        useGameStore.setState((s) => {
+          const paused = message.paused ?? !s.paused;
+          return { paused, started: s.started || !paused };
+        });
+        break;
+      }
+      case MessageType.LEAVE:
+        useGameStore.setState((s) => ({ onlineUsers: Math.max(0, s.onlineUsers - 1) }));
         break;
         
       case MessageType.CLOCK:

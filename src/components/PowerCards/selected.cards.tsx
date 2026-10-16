@@ -18,7 +18,6 @@ export const SelectedCards = () => {
     const [selected, setSelected] = useState<PowerDescription | null>(null);
 
     const onSelectCard = (power: PowerDescription) => {
-        console.log("Selected power:", power);
         setSelected(power);
     }
 

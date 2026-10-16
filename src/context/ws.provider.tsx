@@ -2,33 +2,44 @@ import {  useCallback, useEffectEvent, useRef, useState } from "react";
 import { WebsocketContext } from "./ws.context";
 import { handleGameMessage } from "./game.context";
 import { MessageType, type Message } from "../types/messages";
+import { SERVER_WS_URL } from "../utils/server";
+import { debugLog } from "../utils/debug";
 
-
+const PING_INTERVAL_MS = 3000;
 
 export const WebSocketProvider = ({ children }: { children: React.ReactNode }) => {
-  const [ws, setWs] = useState<WebSocket | null>(null);
+  // The live socket. State alone goes stale inside callbacks, which left old sockets open.
+  const wsRef = useRef<WebSocket | null>(null);
+  const pingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [status, setStatus] = useState<'CONNECTED' | 'PENDING' | 'DISCONNECTED'>('DISCONNECTED');
   const [error, setError] = useState<string | null>(null);
   const pingTimeRef = useRef<number | null>(null);
   const [room, setRoom] = useState<string>('');
   const [ping, setPing] = useState<number>(0);
   const [isSpectate, setIsSpectate] = useState<boolean>(false);
+  const [closedByUser, setClosedByUser] = useState<boolean>(false);
+
+    const stopPing = useCallback(() => {
+        if (pingTimerRef.current) clearInterval(pingTimerRef.current);
+        pingTimerRef.current = null;
+    }, []);
 
     const onConnected = useEffectEvent(() => {
         setStatus('CONNECTED');
-        setInterval(() => {
+        setError(null);
+        stopPing();
+        pingTimerRef.current = setInterval(() => {
             pingTimeRef.current = Date.now();
-            ws?.send(JSON.stringify({ type: MessageType.PING }));
-        }, 3000);
+            wsRef.current?.send(JSON.stringify({ type: MessageType.PING }));
+        }, PING_INTERVAL_MS);
     })
     const onMessage = useEffectEvent((event: MessageEvent<string>) => {
-
-        const message = JSON.parse(event.data) as Message;
-        console.log('Received message:', message);
         if(!event.data){
             console.error('Received invalid message:', event.data);
             return;
         }
+        const message = JSON.parse(event.data) as Message;
+        debugLog('Received message:', message);
 
         if(message.type === MessageType.ID ){
             localStorage.setItem('session_', message.id);
@@ -48,11 +59,12 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
         handleGameMessage(message);
     })
     const onDisconnected = useEffectEvent(() => {
-        console.log('Disconnected from WebSocket server');
+        debugLog('Disconnected from WebSocket server');
+        stopPing();
         setStatus('DISCONNECTED');
     })
     const onError = useEffectEvent(() => {
-        console.log('WebSocket error');
+        debugLog('WebSocket error');
         setError('WebSocket error occurred');
     })
 
@@ -63,19 +75,20 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
     websocket.onclose = onDisconnected;
   }, [onConnected, onMessage, onError, onDisconnected]);
 
-//   useEffect(() => {
-//     const websocket = new WebSocket('ws://localhost:3000/ws/');
-//     setListeners(websocket);
-//     setWs(websocket);
-
-//     // Cleanup on unmount
-//     return () => websocket.close();
-//   }, []);
+  /** Close the current socket without firing its handlers (no DISCONNECTED, so no auto-reconnect). */
+  const detach = useCallback(() => {
+    const previous = wsRef.current;
+    if (previous) {
+      previous.onopen = previous.onclose = previous.onerror = previous.onmessage = null;
+      previous.close();
+    }
+    wsRef.current = null;
+    stopPing();
+  }, [stopPing]);
 
   const connect = useCallback((username: string, roomCode: string, spectate: boolean=false) => {
-    if (ws) {
-      ws.close();
-    }
+    detach();
+    setClosedByUser(false);
     setStatus('PENDING');
     setIsSpectate(spectate);
 
@@ -85,11 +98,11 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
       localStorage.removeItem('session_');
     }
 
-    const wsUrl = new URL(`ws://localhost:3000/ws/${roomCode}`);
+    const wsUrl = new URL(`${SERVER_WS_URL}/ws/${encodeURIComponent(roomCode)}`);
     wsUrl.searchParams.append('username', username);
-    if(pastSession){
+    if(pastSession?.startsWith(roomCode)){
       // reconnecting to an existing session
-      wsUrl.searchParams.append('prevSessionData', pastSession || '');
+      wsUrl.searchParams.append('prevSessionData', pastSession);
     }
 
     if(spectate){
@@ -97,15 +110,17 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
     }
 
     const websocket = new WebSocket(wsUrl.toString());
+    wsRef.current = websocket;
     setRoom(roomCode);
     setListeners(websocket);
-    setWs(websocket);
-  }, [setListeners]);
+  }, [setListeners, detach]);
 
+  /** Leave on purpose: closes the socket and forgets the room, so nothing reconnects. */
   const disconnect = () => {
-    if (ws) {
-      ws.close();
-    }
+    detach();
+    setClosedByUser(true);
+    setRoom('');
+    setStatus('DISCONNECTED');
   }
 
   const sendMessage = (message: Message) => {
@@ -114,16 +129,15 @@ export const WebSocketProvider = ({ children }: { children: React.ReactNode }) =
       return;
     }
 
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(message));
+    const socket = wsRef.current;
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify(message));
     }
   }
 
     return (
-        <WebsocketContext.Provider value={{ connect, disconnect, sendMessage, error, ping, room, status, isSpectate}}>
+        <WebsocketContext.Provider value={{ connect, disconnect, sendMessage, error, ping, room, status, isSpectate, closedByUser}}>
             {children}
         </WebsocketContext.Provider>
     );
 };
-
-

@@ -47,7 +47,7 @@ export const AdminModal = () => {
 
                     {tab === 'general' && (<GeneralSettings setGameSettings={setGameSettings} />)}
                     {tab === 'bots' && (<BotsSettings setGameSettings={setGameSettings} />)}
-                    {tab === 'powers' && (<PowerSettings setGameSettings={setGameSettings} />)}         
+                    {tab === 'powers' && (<PowerSettings />)}         
 
                     <p className="text-center text-base-content/70 mb-6">
                         There are currently {onlineUsers} clients connected.

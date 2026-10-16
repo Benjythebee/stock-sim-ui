@@ -10,6 +10,8 @@ export const WebsocketContext = createContext<{
     room: string;
     status: 'CONNECTED' | 'DISCONNECTED' | 'PENDING';
     isSpectate: boolean;
+    /** True after disconnect() (the user left on purpose); auto-reconnect must not undo it. */
+    closedByUser: boolean;
 }>({
   connect: () => {},
   disconnect: () => {},
@@ -18,7 +20,8 @@ export const WebsocketContext = createContext<{
   ping: 0,
   room: '',
   status: 'DISCONNECTED',
-  isSpectate: false
+  isSpectate: false,
+  closedByUser: false
 });
 
 export const useWebsocketContext = () => {

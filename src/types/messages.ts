@@ -109,6 +109,8 @@ type RoomStateMessage = {
 
 type TogglePauseMessage = {
     type: MessageType.TOGGLE_PAUSE;
+    /** Server -> client: the new absolute state. Omitted when the client sends the request. */
+    paused?: boolean;
 }
 type PingMessage = {
     type: MessageType.PING;
@@ -175,6 +177,9 @@ type PortfolioUpdateMessage = {
         cash: number;
         pnl: number;
         shares: number;
+        /** Cash/shares locked in open orders (not included in cash/shares). */
+        reservedCash?: number;
+        reservedShares?: number;
     };
 }
 

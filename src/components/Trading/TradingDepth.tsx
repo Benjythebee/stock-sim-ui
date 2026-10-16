@@ -28,7 +28,7 @@ export const TradingDepth = () => {
   return (<div className="card bg-base-200 flex-1">
             <div className="card-body">
               <h2 className="card-title">Order Book</h2>
-               {asks.length > 0 && bids.length > 0 && bids[0].length && asks[0].length && <div className="divider my-1">Spread: {asksPrice - bidsPrice}</div>}
+               {asks.length > 0 && bids.length > 0 && bids[0].length && asks[0].length && <div className="divider my-1">Spread: {(asksPrice - bidsPrice).toFixed(2)}</div>}
               
               {/* Asks */}
               <div className="overflow-x-auto">
