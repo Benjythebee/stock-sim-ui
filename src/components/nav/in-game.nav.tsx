@@ -11,6 +11,7 @@ import { Pnl } from "../ui/pnl";
 import { useGameActions } from "../../hooks/useGameActions";
 import { useRoomConnection } from "../../hooks/useRoomConnection";
 import { useLivePnl } from "../../hooks/useLivePnl";
+import { PowerLibraryButton } from "../PowerLibrary/library.button";
 
 export const InGameNavigation = () => {
     const {status,disconnect} = useWebsocketContext();
@@ -38,6 +39,7 @@ export const InGameNavigation = () => {
             <RoomStatus room={room} isPaused={isPaused} participants={connected && onlineUsers > 0 ? onlineUsers + bots : 0} />
         </div>
         <div className="navbar-end w-auto shrink-0 gap-1">
+            <PowerLibraryButton />
             <CastButton room={room!} />
             {showPortfolio && <PortfolioStats className="hidden lg:flex" />}
             {showPortfolio && (

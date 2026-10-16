@@ -30,10 +30,18 @@ const ABOUT: PageMeta = {
   path: '/about',
 };
 
+const POWERS: PageMeta = {
+  title: 'Power Library – Every Tendies Brawl Power-Up',
+  description:
+    'All the power-ups a Tendies Brawl briefcase can hold, from Insider Tips and rumors to DDoS attacks and volatility storms, with how rare each one is and what it does.',
+  path: '/powers',
+};
+
 /** Path is Layout's normalized pathname (no trailing slash, "/" for home). */
 export function pageMetaFor(path: string): PageMeta {
   if (path === '/') return HOME;
   if (path === '/about') return ABOUT;
+  if (path === '/powers') return POWERS;
   if (path === '/cast') return { title: `${SITE_NAME} – Cast`, description: HOME.description, noindex: true };
 
   // Everything else is a room code: ephemeral, so never indexed.

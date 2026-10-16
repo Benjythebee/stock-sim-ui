@@ -16,6 +16,7 @@ import { PlayerList } from "./player-list";
 import { OverlayCard, OverlayShell } from "../ui/overlay-card";
 import { useGameActions } from "../../hooks/useGameActions";
 import { cn } from "../../utils/cn";
+import { PowerLibraryButton } from "../PowerLibrary/library.button";
 
 const SECTIONS: Record<AdminSettingsTab, () => ReactNode> = {
     general: GeneralSettings,
@@ -37,7 +38,10 @@ export const AdminModal = () => {
         return (
             <OverlayCard
                 title="Game Paused"
-                actions={isAdmin && <button className="btn btn-primary" onClick={togglePause}>Resume</button>}
+                actions={<>
+                    <PowerLibraryButton className="btn btn-ghost" label="Powers" />
+                    {isAdmin && <button className="btn btn-primary" onClick={togglePause}>Resume</button>}
+                </>}
             >
                 {!isAdmin && (
                     <p className="text-center text-base-content/70 mb-2">
@@ -62,6 +66,7 @@ const LobbyShell = ({title, subtitle, footer, children}: {title: ReactNode, subt
                 <div className="flex flex-wrap items-center gap-2">
                     <PlayerName />
                     <PlayerList />
+                    <PowerLibraryButton className="btn btn-sm btn-ghost" label="Powers" />
                 </div>
             </header>
 

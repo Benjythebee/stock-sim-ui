@@ -151,7 +151,8 @@ export const WhatIsThisPage: React.FC = () => {
               Like items in a kart racer, power-ups give you an edge. Collect
               cash, get an insider tip on the stock's real value, spread a
               rumor, whip up a volatility storm, or DDoS everyone else so
-              nobody can trade but you.
+              nobody can trade but you.{" "}
+              <Link to="/powers" className="link">See every power</Link>
             </p>
           }
         />

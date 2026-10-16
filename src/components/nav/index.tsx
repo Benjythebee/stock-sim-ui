@@ -9,6 +9,7 @@ export const HomeNavigation = () => {
         <NavBrand />
         <div className="navbar-end flex-1">
             <ul className="menu menu-horizontal px-1">
+                <li><Link to="/powers">Powers</Link></li>
                 <li><Link to="/about">How to play</Link></li>
             </ul>
         </div>

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router";
 import { Layout } from "./layout";
 import { Home } from "./pages/Home";
 import { WhatIsThisPage } from "./pages/Whatisthis";
+import { PowersPage } from "./pages/Powers";
 import { lazy, Suspense } from "react";
 
 // Split off the game screens (Chart.js, the trading UI) so Home and /about load fast.
@@ -19,6 +20,7 @@ const Main = () => {
           <Routes>
             <Route path="/cast" element={<CastPage />} />
             <Route path="/about" element={<WhatIsThisPage />} />
+            <Route path="/powers" element={<PowersPage />} />
 
             <Route index path="/" element={<Home />} />
             <Route path="/:roomId" element={<RoomPage />} />

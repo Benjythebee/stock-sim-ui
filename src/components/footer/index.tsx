@@ -12,6 +12,7 @@ export const SiteFooter = () => (
     <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2">
       <Link className="link link-hover" to="/">Play</Link>
       <Link className="link link-hover" to="/about">About</Link>
+      <Link className="link link-hover" to="/powers">Powers</Link>
       <Link className="link link-hover" to="/about#credits">Credits</Link>
       <ExternalLink className="link link-hover" href={DISCORD_URL}>Discord</ExternalLink>
       <ExternalLink className="link link-hover" href={X_URL}>Twitter / X</ExternalLink>

@@ -11,7 +11,7 @@ import { resetRoomStores } from "./context/game.context"
 import { applyPageMeta, pageMetaFor } from "./utils/seo"
 
 /** Top-level pages that are not a room code. Everything else ("/:roomId", "/:roomId/spectate") is a room. */
-const STATIC_PAGES = new Set(["/", "/about", "/cast"]);
+const STATIC_PAGES = new Set(["/", "/about", "/powers", "/cast"]);
 
 export const Layout = ({children}: {children: React.ReactNode}) => {
 

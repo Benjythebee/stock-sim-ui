@@ -41,7 +41,7 @@ The server keeps a hidden **intrinsic value** (fair value; moves on news, powers
 src/
   index.tsx / main.tsx   StrictMode root → WebSocketProvider → BrowserRouter → Layout → Routes
   layout.tsx             route-aware nav (HomeNavigation on /, /about; InGameNavigation in rooms; none on /cast), SiteFooter (not on /cast or spectate), PresentationOverlay, Toaster, react-query client
-  pages/                 Home (join), Room (player view), RoomSpectate, Whatisthis (/about marketing page; ends with #credits)
+  pages/                 Home (join), Room (player view), RoomSpectate, Whatisthis (/about marketing page; ends with #credits), Powers (/powers library)
   cast.tsx               /cast: Chromecast receiver that iframes /:room/spectate
   context/
     ws.provider.tsx      the ONE WebSocket: connect/disconnect/sendMessage, ping every 3s, session resume
@@ -67,6 +67,9 @@ src/
     Trading/             Chart (candles + power UI; chart.controls, useChartGestures), TradingCard (order form), TradingDepth (order book),
                          News, CurrentOrders, OrderHistory, SideBadge, MarketClose (open/closed badge + countdown), PowerButton (briefcase)
     PowerCards/          PowerCard (big collectible card), PowerMiniCard (inventory), HandOfCards (<dialog> fan of cards)
+    PowerLibrary/        PowerLibrary (searchable catalog: name, rarity tier, description, target, duration) + PowerLibraryButton (book icon → <dialog>).
+                         On /powers, and in rooms from the nav, the lobby header and the Paused card (the overlays' backdrop covers the nav).
+                         Rarity tiers come from the briefcase weight (`utils/rarity.ts`); in a room it lists the CONTENT_MANIFEST, else /api/powers.json (`useInstalledPowers`)
     Admin/               AdminModal (lobby "Game setup" / paused overlay) + one file per section; InvitePanel; SettingInput, NumberSetting, SettingToggle
     Conclusion/          end-of-game leaderboard
     nav/                 NavBrand (logo + theme), HomeNavigation, InGameNavigation (cash, shares, P/L, host menu, cast button)
