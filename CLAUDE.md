@@ -128,7 +128,7 @@ public/powers/<icon>.svg bundled power icons (game-icons.net, CC BY 3.0; credits
 
 - **P/L in the nav** is the server's `pnl` from the last `PORTFOLIO_UPDATE`, marked to the live price: `pnl + (shares + reservedShares) × (price − pnlMark)`. The server only re-sends the portfolio when the account changes, and players start with 0 shares, so that is exact until the next update.
 - `OrderHistory` shows **hard-coded mock data**. The server sends no order or fill events yet. The Admin "Powers" tab is a placeholder.
-- The "Send Value shock" / "Send shock" buttons in `TradingCard` are host-only debug tools, shown to every host (not just in dev).
+- The UI no longer sends `SHOCK` (the host-only debug buttons were removed). The message type stays in `messages.ts` to mirror the server.
 - An empty room code on the Join card makes up a 5-character code (room ids must match `^[A-Za-z0-9_-]{1,64}$`; the server 404s `/ws/`).
 - `Layout` sits outside `<Routes>`, so `useParams()` is empty there: it decides home vs room from `useLocation().pathname` (`STATIC_PAGES`). Add new top-level pages to that set, or they'll be treated as room codes.
 - Market orders send a dummy `price: 100`, which the server ignores. Store arrays are shared state: copy before sorting (`[...asks].sort(...)`).

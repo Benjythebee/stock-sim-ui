@@ -11,7 +11,6 @@ export const TradingCard: React.FC = () => {
   const tradingDisabled = useGameStore((state) => state.tradingDisabled);
   const shares = useGameStore((state) => state.shares);
   const cash = useGameStore((state) => state.cash);
-  const isAdmin = useGameStore((state) => state.isAdmin);
   const price = usePriceStore((state) => state.price);
   const [orderType, setOrderType] = useState<"limit" | "market">("limit");
   const [limitPrice, setLimitPrice] = useState<string>("");
@@ -41,10 +40,6 @@ export const TradingCard: React.FC = () => {
       quantity: Number(amount),
       price: orderType === "limit" ? Number(limitPrice) : 100,
     });
-  };
-
-  const sendShock = (target: "intrinsic" | "market") => {
-    sendMessage({ type: MessageType.SHOCK, target });
   };
 
   // Prefill the limit price with the current price, and fill it in once the first price arrives
@@ -148,21 +143,6 @@ export const TradingCard: React.FC = () => {
             Sell
           </button>
         </div>
-        {/* Host-only debug tools: the server rejects SHOCK from anyone else. */}
-        {isAdmin && <div className="grid grid-cols-2 gap-2 mt-4">
-          <button
-            className="btn btn-accent btn-sm"
-            onClick={() => sendShock("intrinsic")}
-          >
-            Send Value shock
-          </button>
-          <button
-            className="btn btn-accent btn-sm"
-            onClick={() => sendShock("market")}
-          >
-            Send shock
-          </button>
-        </div>}
       </div>
     </div>
   );
