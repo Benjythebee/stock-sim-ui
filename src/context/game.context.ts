@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { MessageType, MessageTypeNames, type ConclusionMessage, type Message, type NewsMessage } from '../types/messages';
+import { MessageType, MessageTypeNames, type ConclusionMessage, type Message, type NewsMessage, type OrderInfo } from '../types/messages';
 import { resetPriceStore, usePriceStore } from './stock.store';
 import { resetDebugStore, useDebugStore } from './debug.store';
 import { useToast } from '../components/Toast/useToast';
@@ -40,6 +40,10 @@ type GameStore = {
   onlineUsers: number;
   conclusion: ConclusionMessage|null;
   news: NewsMessage[]
+  /** Our resting limit orders, oldest first. */
+  openOrders: OrderInfo[];
+  /** Our finished orders, most recently changed first. */
+  orderHistory: OrderInfo[];
   powers:{
     data:PowerDescription[],
     currentOffers:PowerDescription[],
@@ -73,6 +77,8 @@ const initialGameStore: Partial<GameStore> = {
     revealPrices: false,
   },
   news: [],
+  openOrders: [],
+  orderHistory: [],
   isAdmin: false,
   cash: 0,
   shares: 0,
@@ -114,6 +120,25 @@ export const resetRoomStores = () => {
     resetDebugStore();
 }
 
+
+/** Finished orders the UI keeps (the server keeps about as many). */
+const ORDER_HISTORY_LIMIT = 100;
+
+/** Apply an ORDER_UPDATE: a reset replaces both lists, otherwise upsert by id. */
+const mergeOrders = (state: Pick<GameStore, 'openOrders' | 'orderHistory'>, orders: OrderInfo[], reset: boolean) => {
+  const changed = new Map(orders.map((o) => [o.id, o]));
+  // Open orders that are still open keep their position; finished ones move to the history.
+  const open = reset ? [] : state.openOrders
+    .filter((o) => (changed.get(o.id)?.status ?? 'open') === 'open')
+    .map((o) => changed.get(o.id) ?? o);
+  const history = reset ? [] : state.orderHistory.filter((o) => !changed.has(o.id));
+  for (const o of orders) {
+    if (o.status !== 'open') history.push(o);
+    else if (!open.some((p) => p.id === o.id)) open.push(o);
+  }
+  history.sort((a, b) => b.updated - a.updated || b.id - a.id);
+  return { openOrders: open, orderHistory: history.slice(0, ORDER_HISTORY_LIMIT) };
+};
 
 export const handleGameMessage = (message: Message) => {
     const { type } = message;
@@ -165,6 +190,9 @@ export const handleGameMessage = (message: Message) => {
           pnlMark: usePriceStore.getState().price,
         });
         break;
+      case MessageType.ORDER_UPDATE:
+        useGameStore.setState((s) => mergeOrders(s, message.orders, message.reset));
+        break;
       case MessageType.NEWS:
         useGameStore.setState((s) => ({ news: [...s.news, message ] }));
         useToast.getState().addToast({type:'info', title: message.title, description: message.description});
@@ -177,6 +205,8 @@ export const handleGameMessage = (message: Message) => {
                 useGameStore.setState((s) => ({
                   conclusion: null,
                   news: [],
+                  openOrders: [],
+                  orderHistory: [],
                   tradingDisabled: false,
                   powers: { ...s.powers, currentOffers: [], inventory: [] },
                 }));
