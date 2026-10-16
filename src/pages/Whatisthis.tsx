@@ -101,9 +101,12 @@ export const WhatIsThisPage: React.FC = () => {
   return (
     <div className="relative min-h-screen bg-base-100 p-4">
       <section className="grid grid-cols-2 gap-4 md:px-20 mb-10">
-        <div className="hero bg-base-200 col-span-2 min-h-screen">
-          <div className="hero-content flex-col lg:flex-row">
+        <div className="hero bg-base-200 col-span-2 min-h-screen relative overflow-hidden">
+          {/* Decorative chart, dimmed behind the text */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-25 pointer-events-none scale-150" aria-hidden="true">
             <CandlestickChart />
+          </div>
+          <div className="hero-content relative z-10">
             <div>
               <h1 className="text-5xl font-bold">
                 Multiplayer stock trading game with a twist.

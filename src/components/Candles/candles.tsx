@@ -128,4 +128,6 @@ const [data] = useState<CandleData[]>(() => {
   );
 };
 
+CandlestickChart.displayName="CandlestickChart"
+
 export default CandlestickChart;
