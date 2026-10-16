@@ -35,6 +35,7 @@ export enum MessageType {
     POWER_SELECT=81,
     POWER_CONSUME=82,
     POWER_INVENTORY=83,
+    POWER_PRESENT=84,
 
     DEBUG_PRICES=99
 }
@@ -73,6 +74,7 @@ export const MessageTypeNames: { [key in MessageType]: string } = {
     [MessageType.POWER_SELECT]: "POWER_SELECT",
     [MessageType.POWER_CONSUME]: "POWER_CONSUME",
     [MessageType.POWER_INVENTORY]: "POWER_INVENTORY",
+    [MessageType.POWER_PRESENT]: "POWER_PRESENT",
 
     [MessageType.DEBUG_PRICES]: "DEBUG_PRICES"
 };
@@ -285,8 +287,36 @@ type PowerInventoryMessage = {
     inventory: string[]
 }
 
+/** One slice of a prize wheel. */
+type WheelSegment = {
+    label: string;
+    /** CSS color of the slice; the UI picks one when omitted. */
+    color?: string;
+    /** Relative size of the slice (default 1). */
+    weight?: number;
+}
+
+/** A prize wheel that spins for durationMs and lands on segments[result] (decided by the server). */
+type WheelPresentation = {
+    kind: 'wheel';
+    segments: WheelSegment[];
+    result: number;
+    durationMs: number;
+}
+
+/** Animations a power can ask for. Kinds this UI doesn't know are ignored (the server also sends a NOTIFICATION). */
+type Presentation = WheelPresentation;
+
+/** Private. Play a power's animation; the outcome arrives as a normal NOTIFICATION once it's over. */
+type PowerPresentMessage = {
+    type: MessageType.POWER_PRESENT;
+    powerId: string;
+    title: string;
+    presentation: Presentation;
+}
+
 export type Message = IDMessage|JoinMessage | LeaveMessage | IsShockMessage | ClientStateMessage|OrderBookUpdateMessage | NotificationMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | NewsMessage | IsAdminMessage | AdminSettingMessage | ResetGameMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage | ConclusionMessage|
-PowerOffersMessage | PowerSelectMessage | PowerConsumeMessage | PowerInventoryMessage | ContentManifestMessage | OrderUpdateMessage | OrderCancelMessage;
+PowerOffersMessage | PowerSelectMessage | PowerConsumeMessage | PowerInventoryMessage | ContentManifestMessage | OrderUpdateMessage | OrderCancelMessage | PowerPresentMessage;
 
 export type {
     IDMessage,
@@ -314,6 +344,10 @@ export type {
     OrderBookUpdateMessage,
     PowerInventoryMessage,
     ContentManifestMessage,
+    PowerPresentMessage,
+    Presentation,
+    WheelPresentation,
+    WheelSegment,
     OrderStatus,
     OrderInfo,
     OrderUpdateMessage,

@@ -4,6 +4,7 @@ import { resetPriceStore, usePriceStore } from './stock.store';
 import { resetDebugStore, useDebugStore } from './debug.store';
 import { resetOrderFormStore } from './order-form.store';
 import { useToast } from '../components/Toast/useToast';
+import { usePresentations } from '../components/Presentation/usePresentations';
 import type { PowerDescription } from '../types/types';
 import { debugLog } from '../utils/debug';
 import { powerIconSrc, preloadImages, serverAsset } from '../utils/powerIcon';
@@ -122,6 +123,7 @@ export const resetRoomStores = () => {
     resetPriceStore();
     resetDebugStore();
     resetOrderFormStore();
+    usePresentations.getState().clear();
 }
 
 
@@ -284,6 +286,10 @@ export const handleGameMessage = (message: Message) => {
           }))
           // Anything else that needs to be done on power consume can go here
 
+          break;
+        case MessageType.POWER_PRESENT:
+          // A power animation (prize wheel, ...). Its outcome follows as a normal NOTIFICATION.
+          usePresentations.getState().push(message);
           break;
         case MessageType.IS_ADMIN:
             useGameStore.setState({ isAdmin: true });

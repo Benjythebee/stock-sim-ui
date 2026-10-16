@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { PowerDescription } from "../types/types";
 import { fetchJson } from "../utils/fetch";
+import type { ServerVersion } from "../utils/version";
 
 export type BotDescription = { id: string, name: string, description: string };
 
@@ -19,5 +20,14 @@ export const usePowersCatalog = () => useQuery({
     queryKey: ['powers-catalog'],
     queryFn: () => fetchJson<PowerDescription[]>('/api/powers.json'),
     retry: false,
+    refetchOnWindowFocus: false,
+});
+
+/** The game server's version and mod API version (/api/version.json), for the footer. */
+export const useServerVersion = () => useQuery({
+    queryKey: ['server-version'],
+    queryFn: () => fetchJson<ServerVersion>('/api/version.json'),
+    retry: false,
+    staleTime: Infinity,
     refetchOnWindowFocus: false,
 });

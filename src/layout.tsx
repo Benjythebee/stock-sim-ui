@@ -3,6 +3,7 @@ import { HomeNavigation } from "./components/nav"
 import { InGameNavigation } from "./components/nav/in-game.nav"
 import { SiteFooter } from "./components/footer"
 import { Toaster } from "./components/Toast/Toaster"
+import { PresentationOverlay } from "./components/Presentation/PresentationOverlay"
 import { useEffect, useRef, useState } from "react"
 import { QueryClient ,QueryClientProvider} from "@tanstack/react-query"
 import { useWebsocketContext } from "./context/ws.context"
@@ -49,6 +50,7 @@ export const Layout = ({children}: {children: React.ReactNode}) => {
                 {children}
             </div>
             {!isScreen && <SiteFooter />}
+            <PresentationOverlay />
             <Toaster />
         </div>
     </QueryClientProvider>

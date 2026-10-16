@@ -40,7 +40,7 @@ The server keeps a hidden **intrinsic value** (fair value; moves on news, powers
 ```
 src/
   index.tsx / main.tsx   StrictMode root → WebSocketProvider → BrowserRouter → Layout → Routes
-  layout.tsx             route-aware nav (HomeNavigation on /, /about; InGameNavigation in rooms; none on /cast), SiteFooter (not on /cast or spectate), Toaster, react-query client
+  layout.tsx             route-aware nav (HomeNavigation on /, /about; InGameNavigation in rooms; none on /cast), SiteFooter (not on /cast or spectate), PresentationOverlay, Toaster, react-query client
   pages/                 Home (join), Room (player view), RoomSpectate, Whatisthis (/about marketing page; ends with #credits)
   cast.tsx               /cast: Chromecast receiver that iframes /:room/spectate
   context/
@@ -70,9 +70,10 @@ src/
     Admin/               AdminModal (lobby settings / paused overlay) + one file per tab; SettingInput, NumberSetting, SettingToggle
     Conclusion/          end-of-game leaderboard
     nav/                 NavBrand (logo + theme), HomeNavigation, InGameNavigation (cash, shares, P/L, host menu, cast button)
-    footer/              SiteFooter: Play, About, Credits (/about#credits), Discord, X
+    footer/              SiteFooter: Play, About, Credits (/about#credits), Discord, X, plus app/server/mods API versions
     Credits/             icon credits for /about: bundled icons (card.icons.ts) + mod icons from /api/powers.json (iconCredit)
     Toast/               zustand toast store + Toaster
+    Presentation/        power animations (POWER_PRESENT): queue store, PresentationOverlay, PrizeWheel
     cast/button.tsx      Chromecast sender
   cards.css              all power-card styling (fan layout, per-type colors, animations)
   index.css              Tailwind 4 + DaisyUI (light default, dark preferred), wiggle/gradient keyframes, .btn-amber
@@ -112,9 +113,15 @@ public/powers/<icon>.svg bundled power icons (game-icons.net, CC BY 3.0; credits
   - `CLOCK.value` is the game clock in epoch ms (+1000 per game second, frozen while paused). `timeLeft` is ms.
   - `CLIENT_STATE.tradingDisabled` (e.g. while DDoSed) disables the Buy/Sell buttons.
   - `POWER_SELECT.index` is an offer index, or `-1` (`POWER_SKIP_INDEX`) to decline the briefcase.
+  - `POWER_PRESENT` (84, private) asks for a power animation, e.g. `{ kind: "wheel", segments, result, durationMs }`. The server has already decided the outcome and reports it with a normal `NOTIFICATION` once the animation is over, so `usePresentations` drops kinds it doesn't know (`SUPPORTED_PRESENTATIONS`) and the toast still tells the player what happened. Animations play one at a time in `PresentationOverlay`, and Skip/Close never hides anything.
   - Errors and order rejections arrive as `NOTIFICATION` toasts (`ERROR` is only used for "Room does not exist"). The server sends no per-order ack or fill events.
   - Host-only messages (`TOGGLE_PAUSE`, `ADMIN_SETTINGS`, `SHOCK`) from non-hosts get a "Host only" toast.
-- HTTP: `/api/powers.json` (`PowerDescription[]`), `/api/bots.json` (`{ data: [{id, name, description}] }`), via `apiUrl()`.
+- HTTP: `/api/powers.json` (`PowerDescription[]`), `/api/bots.json` (`{ data: [{id, name, description}] }`), `/api/version.json` (`{ version, revision, modApi }`), via `apiUrl()`.
+
+### Versions
+
+- The footer shows the app version (`package.json`) and the commit it was built from (both injected by `vite.config.ts` as `__APP_VERSION__` / `__APP_REVISION__`, see `utils/version.ts`), the server's version and commit (`/api/version.json`), and the **mods API** version this app supports (`SUPPORTED_MOD_API`).
+- The mods API version (`MOD_API_VERSION` in the server's `src/version.ts`) counts what mods can use, including what the UI must render. When a new presentation kind (or anything else mods rely on) lands, bump it on the server **and** bump `SUPPORTED_MOD_API` here with the new component. The footer warns when the server's is newer than this build's.
 
 ## UI conventions and design choices
 
@@ -131,6 +138,7 @@ public/powers/<icon>.svg bundled power icons (game-icons.net, CC BY 3.0; credits
 ## Adding things
 
 - **A new power** is a server mod (`../stock-sim-server/mods/powers/<id>/`, see its `mods/README.md`). It can ship its own icon (served by the server) with an `iconCredit`. The UI needs no change: the manifest, the icon and the Credits section all pick it up. Only a new *bundled* icon name needs `public/powers/<icon>.svg` plus a credit entry in `components/PowerCards/card.icons.ts`.
+- **A new power animation** (a "presentation" kind, like the prize wheel): a component in `components/Presentation/`, a case in `PresentationOverlay`, its type in `types/messages.ts` (`Presentation`), and the kind in `SUPPORTED_PRESENTATIONS`. On the server: the type and validation in `src/powers/presentation.ts`. Bump the mods API version on both sides.
 - **A new setting**: add it to the server's `GameSettings` and `applySettingsUpdate` sanitizer, then to this repo's `GameSettings` type and an input in `components/Admin/*-settings.tsx`: a `NumberSetting`, `SettingInput` or `SettingToggle` wired to `const [gameSettings, setGameSettings] = useGameSettings()`.
 - **UI pieces**: before writing DaisyUI markup by hand, check `components/ui/` (cards, fields, toggles, tooltips, tabs, links). Store checks that more than one component needs belong in `hooks/`.
 - **A new message**: see "Wire protocol" above. Change both repos in the same change.

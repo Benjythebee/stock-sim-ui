@@ -1,5 +1,7 @@
 import { Link } from "react-router";
 import { ExternalLink } from "../ui/external-link";
+import { useServerVersion } from "../../hooks/useCatalogs";
+import { APP_REVISION, APP_VERSION, SUPPORTED_MOD_API } from "../../utils/version";
 
 export const DISCORD_URL = "https://discord.gg/VKrqQQ7UzR";
 export const X_URL = "https://x.com/jybendev";
@@ -16,6 +18,28 @@ export const SiteFooter = () => (
     </nav>
     <aside className="text-sm opacity-70">
       <p>Tendies Brawl · a multiplayer trading game with a twist</p>
+      <Versions />
     </aside>
   </footer>
 );
+
+/**
+ * App and server versions, and the mod API version: what mods can use that this app can show.
+ * Warns when the server's mods need a newer app (e.g. an animation this build doesn't have).
+ */
+const Versions = () => {
+  const { data: server } = useServerVersion();
+  const outdated = server !== undefined && server.modApi > SUPPORTED_MOD_API;
+  return (
+    <p className="text-xs flex flex-wrap justify-center gap-x-3">
+      <span title={`Built from ${APP_REVISION}`}>App v{APP_VERSION} ({APP_REVISION})</span>
+      {server && <span title={`Running ${server.revision}`}>Server v{server.version} ({server.revision})</span>}
+      <span title="The mod features this app can show (powers' animations, ...)">Mods API v{SUPPORTED_MOD_API}</span>
+      {outdated && (
+        <span className="text-warning font-semibold">
+          This server's mods need mods API v{server.modApi}: refresh to update the app.
+        </span>
+      )}
+    </p>
+  );
+};
