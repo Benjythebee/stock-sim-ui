@@ -13,9 +13,9 @@ export const CastSettings = () => {
     const spectateUrl = `${window.location.origin}/${room}/spectate`;
 
     return (
-        <div className="w-full mb-2 flex flex-col gap-3 text-sm">
+        <div className="w-full mb-2 flex flex-col gap-3 text-base">
             <p className="text-base-content/80">
-                Put the market on a TV so the whole room can watch: the live chart, order book and news, without anyone's cash or shares.
+                The TV shows the live chart, order book and news, without anyone's cash or shares.
             </p>
 
             <div className="flex flex-col gap-1">

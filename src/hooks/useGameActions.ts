@@ -45,5 +45,12 @@ export const useGameActions = () => {
         skipPowers: () => sendMessage({ type: MessageType.POWER_SELECT, index: POWER_SKIP_INDEX }),
         /** Use a power from the inventory. */
         consumePower: (id: string) => sendMessage({ type: MessageType.POWER_CONSUME, id }),
+
+        /** Change our display name, here and on the server, and remember it for the next join. */
+        rename: (username: string) => {
+            sendMessage({ type: MessageType.RENAME, username });
+            localStorage.setItem('username', username);
+            useGameStore.getState().setUsername(username);
+        },
     }), [sendMessage]);
 };

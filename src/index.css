@@ -13,6 +13,14 @@
         45%, 100% { transform: rotate(0deg); }
     }
 
+    /* A lobby setting the host just changed (Admin/settings-summary.tsx). No color-mix: Cast TVs run old Chromium. */
+    --animate-setting-flash: setting-flash 1.6s ease-out;
+
+    @keyframes setting-flash {
+        0%, 30% { background-color: var(--color-warning); color: var(--color-warning-content); }
+        100% { background-color: transparent; }
+    }
+
     @keyframes gradient {
         0%, 100% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }

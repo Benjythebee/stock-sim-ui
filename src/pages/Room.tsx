@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { TradingChart } from '../components/Trading/Chart';
 import { OrderHistory } from '../components/Trading/OrderHistory';
 import { CurrentOrders } from '../components/Trading/CurrentOrders';
@@ -10,6 +11,7 @@ import { useWebsocketContext } from '../context/ws.context';
 import { useAutoConnect } from '../context/useAutoConnect';
 import { useParams } from 'react-router';
 import { RoomOverlays } from '../components/Room/room.overlays';
+import { NamePrompt } from '../components/Room/room.name-prompt';
 
 
 
@@ -17,16 +19,24 @@ export default function RoomPage() {
   const { roomId: roomCode } = useParams();
   const {connect} = useWebsocketContext()
   const setUsername = useGameStore((state) => state.setUsername);
+  // Opened from an invite link without ever having played here: ask for a name before taking a seat.
+  // Anyone who has joined before (Home or this prompt) has one saved, including a refresh resuming a seat.
+  const [needsName, setNeedsName] = useState(() => !localStorage.getItem('username')?.trim());
 
-  useAutoConnect(roomCode, () => {
-    const storedUsername = localStorage.getItem('username') || `Trader${Math.floor(Math.random() * 1000)}`;
+  useAutoConnect(needsName ? undefined : roomCode, () => {
+    const storedUsername = localStorage.getItem('username')!;
     setUsername(storedUsername);
     connect(storedUsername, roomCode!);
   });
 
+  const onName = (name: string) => {
+    localStorage.setItem('username', name);
+    setNeedsName(false);
+  };
+
   return (
     <div id='room-page' className="relative min-h-screen bg-base-100 p-2 sm:p-4">
-      <RoomOverlays />
+      {needsName ? <NamePrompt room={roomCode!} onSubmit={onName} /> : <RoomOverlays />}
 
       {/* Below lg the two columns dissolve (display: contents) so `order-*` can interleave them:
           chart, order form, order book, then news and orders. */}

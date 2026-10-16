@@ -8,7 +8,7 @@ export const MarketSettings = () => {
 
     return (
         <>
-        <div className="w-full mb-2 grid grid-cols-2 gap-2">
+        <div className="w-full mb-4 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
             <NumberSetting
                 label="Opening Price"
                 required

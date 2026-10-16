@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { MessageType, MessageTypeNames, type ConclusionMessage, type Message, type NewsMessage, type OrderInfo } from '../types/messages';
+import { MessageType, MessageTypeNames, type ConclusionMessage, type Message, type NewsMessage, type OrderInfo, type PlayerInfo } from '../types/messages';
 import { resetPriceStore, usePriceStore } from './stock.store';
 import { resetDebugStore, useDebugStore } from './debug.store';
 import { resetOrderFormStore } from './order-form.store';
@@ -42,6 +42,11 @@ type GameStore = {
   pnl: number;
   pnlMark: number;
   onlineUsers: number;
+  /** True once this room's first ROOM_STATE arrived, so gameSettings are the room's and not the local defaults. */
+  hasRoomState: boolean;
+  /** The room's humans (PLAYERS), and our index in it (-1 for spectators). Empty until the server sends it. */
+  players: PlayerInfo[];
+  you: number;
   conclusion: ConclusionMessage|null;
   news: NewsMessage[]
   /** Our resting limit orders, oldest first. */
@@ -91,6 +96,9 @@ const initialGameStore: Partial<GameStore> = {
   pnl: 0,
   pnlMark: 0,
   onlineUsers: 0,
+  hasRoomState: false,
+  players: [],
+  you: -1,
   powers:{
     data:[],
     currentOffers:[],
@@ -168,6 +176,9 @@ export const handleGameMessage = (message: Message) => {
       case MessageType.LEAVE:
         useGameStore.setState((s) => ({ onlineUsers: Math.max(0, s.onlineUsers - 1) }));
         break;
+      case MessageType.PLAYERS:
+        useGameStore.setState({ players: message.players, you: message.you });
+        break;
         
       case MessageType.CLOCK:
         usePriceStore.getState().setClock(message.value);
@@ -227,7 +238,8 @@ export const handleGameMessage = (message: Message) => {
                   paused: message.paused || false,
                   started: message.started || false,
                   ended: message.ended || false,
-                  onlineUsers: message.clients || 0
+                  onlineUsers: message.clients || 0,
+                  hasRoomState: true,
                 });
               // Set the debug and price store initial values BEFORE any stock movements
               useDebugStore.setState({ 

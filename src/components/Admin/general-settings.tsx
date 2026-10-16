@@ -15,7 +15,7 @@ export const GeneralSettings = () => {
             <SettingInput
                 type="text"
                 placeholder="Enter stock ticker"
-                className="input input-bordered input-primary w-full uppercase"
+                className="input input-bordered input-primary w-full uppercase text-base"
                 aria-placeholder="AAPL"
                 maxLength={8}
                 minLength={1}
@@ -26,7 +26,7 @@ export const GeneralSettings = () => {
             />
         </Field>
 
-        <div className="w-full mb-2 grid grid-cols-2 gap-2">
+        <div className="w-full mb-4 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
             <NumberSetting
                 label="Starting Cash"
                 required

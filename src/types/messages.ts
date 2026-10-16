@@ -25,6 +25,8 @@ export enum MessageType {
     CONTENT_MANIFEST = 18,
     ORDER_UPDATE = 19,
     ORDER_CANCEL = 20,
+    RENAME = 21,
+    PLAYERS = 22,
 
     ADMIN_SETTINGS = 30,
     RESET_GAME = 31,
@@ -63,6 +65,8 @@ export const MessageTypeNames: { [key in MessageType]: string } = {
     [MessageType.CONTENT_MANIFEST]: "CONTENT_MANIFEST",
     [MessageType.ORDER_UPDATE]: "ORDER_UPDATE",
     [MessageType.ORDER_CANCEL]: "ORDER_CANCEL",
+    [MessageType.RENAME]: "RENAME",
+    [MessageType.PLAYERS]: "PLAYERS",
     // Admin Messages - 30
     [MessageType.ADMIN_SETTINGS]: "ADMIN_SETTINGS",
     [MessageType.RESET_GAME]: "RESET_GAME",
@@ -95,6 +99,21 @@ type LeaveMessage = {
     type: MessageType.LEAVE;
     roomId: string;
     id: string;
+}
+
+/** One human in the room (no id: the server keeps those secret). */
+type PlayerInfo = {
+    name: string;
+    /** False while their seat is held for a reconnect. */
+    connected: boolean;
+    host: boolean;
+}
+
+/** Everyone in the room, re-sent whole on any change. `you` is our index in `players`, -1 for spectators. */
+type PlayersMessage = {
+    type: MessageType.PLAYERS;
+    players: PlayerInfo[];
+    you: number;
 }
 
 type IsAdminMessage = {
@@ -282,6 +301,12 @@ type OrderCancelMessage = {
 }
 export const ORDER_CANCEL_ALL = -1;
 
+/** Change our display name. The server keeps the first 32 characters and drops an empty name. */
+type RenameMessage = {
+    type: MessageType.RENAME;
+    username: string;
+}
+
 type PowerInventoryMessage = {
     type: MessageType.POWER_INVENTORY;
     inventory: string[]
@@ -316,7 +341,7 @@ type PowerPresentMessage = {
 }
 
 export type Message = IDMessage|JoinMessage | LeaveMessage | IsShockMessage | ClientStateMessage|OrderBookUpdateMessage | NotificationMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | NewsMessage | IsAdminMessage | AdminSettingMessage | ResetGameMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage | ConclusionMessage|
-PowerOffersMessage | PowerSelectMessage | PowerConsumeMessage | PowerInventoryMessage | ContentManifestMessage | OrderUpdateMessage | OrderCancelMessage | PowerPresentMessage;
+PowerOffersMessage | PowerSelectMessage | PowerConsumeMessage | PowerInventoryMessage | ContentManifestMessage | OrderUpdateMessage | OrderCancelMessage | RenameMessage | PlayersMessage | PowerPresentMessage;
 
 export type {
     IDMessage,
@@ -352,6 +377,9 @@ export type {
     OrderInfo,
     OrderUpdateMessage,
     OrderCancelMessage,
+    RenameMessage,
+    PlayerInfo,
+    PlayersMessage,
     DebugPricesMessage,
     ConclusionMessage
 }

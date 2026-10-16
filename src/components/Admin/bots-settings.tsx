@@ -44,7 +44,7 @@ export const BotsSettings = () => {
     }
 
     return (<>
-            <div className="w-full mb-2 grid grid-cols-2 gap-2">
+            <div className="w-full mb-4 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
                 <NumberSetting
                     label="Bot Count"
                     placeholder="Enter bot count"
@@ -59,14 +59,14 @@ export const BotsSettings = () => {
 
             {!randomBots && (
                 <Field label="Select Type of Bots" className="mb-2">
-                    <div className="flex flex-col gap-1.5 max-h-40 overflow-y-scroll border border-white/25 rounded-md p-2">
+                    <div className="flex flex-col gap-1.5 max-h-72 overflow-y-auto border border-base-300 rounded-box p-3">
                         {isLoading || isFetching ? (
                             <span>Loading bot types...</span>
                         ) : data && data.length > 0 ? (
                             data.map((bot) => (
                                 <Fragment key={bot.id}>
                                     <Toggle label={bot.name} color="toggle-secondary" checked={currentBotSelection.includes(bot.id)} onChange={() => onBotTypeChange(bot.id)} />
-                                    <p className="text-xs opacity-55 ml-2">{bot.description}</p>
+                                    <p className="text-sm opacity-60 ml-2">{bot.description}</p>
                                 </Fragment>
                             ))
                         ) : (
