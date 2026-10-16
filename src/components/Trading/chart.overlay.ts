@@ -9,6 +9,8 @@ export type ChartOverlayData = {
   news: NewsMessage[];
   /** Click on an order tag's ×. Omitted (spectators) = no cancel button. */
   onCancel?: (ids: number[]) => void;
+  /** Click on the chart: the price under the cursor. Omitted (spectators, no limit orders) = nothing. */
+  onPickPrice?: (price: number) => void;
 };
 
 type Rect = { x: number; y: number; w: number; h: number };
@@ -26,6 +28,11 @@ const TAG_H = 18;
 const BELL_R = 9;
 
 const inside = (r: Rect, x: number, y: number) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
+const insideArea = (area: ChartArea, x: number, y: number) =>
+  x >= area.left && x <= area.right && y >= area.top && y <= area.bottom;
+
+/** The price at a pixel height, in whole cents like the server's prices. */
+const priceAt = (chart: Chart, py: number) => Math.round(chart.scales.y.getValueForPixel(py)! * 100) / 100;
 
 /** Same marker across redraws (its position changes as the chart scrolls). */
 const sameTarget = (a: Hit, b: Hit) =>
@@ -87,12 +94,45 @@ const wrap = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number, max
 };
 
 /**
- * Chart.js plugin drawing the player's open limit orders (dashed price lines with a tag; × cancels)
- * and news markers (dotted vertical line with a bell; hover shows the headline).
+ * Chart.js plugin drawing the player's open limit orders (dashed price lines with a tag; × cancels),
+ * news markers (dotted vertical line with a bell; hover shows the headline) and a price crosshair
+ * under the cursor (click picks that price).
  */
 export const createChartOverlay = (getData: () => ChartOverlayData): Plugin<'candlestick'> => {
   let hits: Hit[] = [];
   let hovered: Hit | null = null;
+  /** Cursor height in canvas pixels while it's over the plot area. */
+  let pointerY: number | null = null;
+
+  /** Dotted line across the plot at the cursor, with its price in a tag over the price axis. */
+  const drawCrosshair = (chart: Chart, area: ChartArea, colors: ReturnType<typeof themeColors>) => {
+    if (pointerY === null) return;
+    const { ctx } = chart;
+    const py = Math.round(pointerY) + 0.5;
+    ctx.save();
+    ctx.strokeStyle = colors.content;
+    ctx.globalAlpha = 0.6;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 3]);
+    ctx.beginPath();
+    ctx.moveTo(area.left, py);
+    ctx.lineTo(area.right, py);
+    ctx.stroke();
+    ctx.restore();
+
+    const label = `$${priceAt(chart, pointerY).toFixed(2)}`;
+    ctx.save();
+    ctx.font = FONT;
+    const w = Math.max(ctx.measureText(label).width + 10, chart.width - area.right - 2);
+    const tag: Rect = { x: area.right + 2, y: py - TAG_H / 2, w, h: TAG_H };
+    ctx.fillStyle = colors.content;
+    roundRect(ctx, tag, 4);
+    ctx.fill();
+    ctx.fillStyle = colors.base;
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, tag.x + 5, tag.y + TAG_H / 2 + 0.5);
+    ctx.restore();
+  };
 
   const drawOrders = (chart: Chart, area: ChartArea, colors: ReturnType<typeof themeColors>) => {
     const { ctx } = chart;
@@ -282,18 +322,32 @@ export const createChartOverlay = (getData: () => ChartOverlayData): Plugin<'can
     afterDraw(chart) {
       // After the built-in tooltip, so the headline sits on top of everything.
       const area = chart.chartArea;
-      if (area) drawNewsTooltip(chart, area, themeColors(chart.canvas));
+      if (!area || !chart.scales.y) return;
+      const colors = themeColors(chart.canvas);
+      drawCrosshair(chart, area, colors);
+      drawNewsTooltip(chart, area, colors);
     },
     afterEvent(chart, args) {
       const { event } = args;
+      const area = chart.chartArea;
       let hit: Hit | null = null;
+      let nextPointerY: number | null = null;
       if (event.type !== 'mouseout' && event.x !== null && event.y !== null) {
         // Last drawn is on top.
         for (const h of hits) if (inside(h, event.x, event.y)) hit = h;
+        if (area && insideArea(area, event.x, event.y)) nextPointerY = event.y;
+      }
+      if (nextPointerY !== pointerY) {
+        pointerY = nextPointerY;
+        args.changed = true;
       }
       if (event.type === 'click' && hit?.kind === 'cancel') {
         getData().onCancel?.(hit.ids);
         return;
+      }
+      // A click on the plot (not on a marker) picks the price under the cursor.
+      if (event.type === 'click' && !hit && pointerY !== null) {
+        getData().onPickPrice?.(priceAt(chart, pointerY));
       }
       const same = hit && hovered ? sameTarget(hit, hovered) : hit === hovered;
       if (!same) {

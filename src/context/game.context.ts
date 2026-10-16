@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { MessageType, MessageTypeNames, type ConclusionMessage, type Message, type NewsMessage, type OrderInfo } from '../types/messages';
 import { resetPriceStore, usePriceStore } from './stock.store';
 import { resetDebugStore, useDebugStore } from './debug.store';
+import { resetOrderFormStore } from './order-form.store';
 import { useToast } from '../components/Toast/useToast';
 import type { PowerDescription } from '../types/types';
 import { debugLog } from '../utils/debug';
@@ -120,6 +121,7 @@ export const resetRoomStores = () => {
     useGameStore.setState((s) => ({ ...initialGameStore, powers: { ...initialGameStore.powers!, data: s.powers.data } }) as GameStore);
     resetPriceStore();
     resetDebugStore();
+    resetOrderFormStore();
 }
 
 
@@ -214,6 +216,7 @@ export const handleGameMessage = (message: Message) => {
                 }));
                 resetPriceStore();
                 resetDebugStore();
+                resetOrderFormStore();
               }
               useGameStore.setState({ 
                   gameSettings: message.settings || {},

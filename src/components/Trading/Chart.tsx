@@ -12,7 +12,7 @@ import { PowerButton } from "./PowerButton";
 import { SelectedCards } from "../PowerCards/selected.cards";
 import { createChartOverlay, type ChartOverlayData } from "./chart.overlay";
 import { cn } from "../../utils/cn";
-import { ZoomControls } from "./chart.controls";
+import { ZoomControls, type ChartStyle } from "./chart.controls";
 import { useChartGestures } from "./useChartGestures";
 import { useGameActions } from "../../hooks/useGameActions";
 
@@ -25,6 +25,24 @@ const CANDLE_MS = 1000;
 /** Faint dotted grid, readable on both themes. */
 const GRID_COLOR = 'rgba(127, 127, 127, 0.18)';
 const GRID_DASH = [2, 4];
+/** chartjs-chart-financial's default candle colors, reused for the line chart. */
+const UP_COLOR = 'rgba(80, 160, 115, 1)';
+const DOWN_COLOR = 'rgba(215, 85, 65, 1)';
+const CHART_STYLE_KEY = 'chartStyle';
+
+/** The last candle / line choice, remembered per browser. Storage can be unavailable (private mode). */
+const loadChartStyle = (): ChartStyle => {
+  try {
+    return localStorage.getItem(CHART_STYLE_KEY) === 'line' ? 'line' : 'candles';
+  } catch {
+    return 'candles';
+  }
+};
+const saveChartStyle = (style: ChartStyle) => {
+  try {
+    localStorage.setItem(CHART_STYLE_KEY, style);
+  } catch { /* not remembered, still applied */ }
+};
 
 /**
  * Where a scrolled-back view ends: never before the first full window, and null (live) once it
@@ -37,7 +55,11 @@ const clampPan = (end: number | null, firstX: number, lastX: number, windowSize:
   return clamped >= lastX ? null : clamped;
 };
 
-export const TradingChart = ({className}: {className?: string}) => {
+export const TradingChart = ({className, onPickPrice}: {
+  className?: string;
+  /** Clicking the chart picks the price under the cursor (the player's order form). */
+  onPickPrice?: (price: number) => void;
+}) => {
   const { cancelOrder } = useGameActions();
   const { settings, openOrders, news } = useGameStore(useShallow((state) => ({
     settings: state.gameSettings,
@@ -59,6 +81,13 @@ export const TradingChart = ({className}: {className?: string}) => {
   // The fair value / guide price lines only exist when the host enabled "Reveal hidden prices";
   // otherwise the server never sends them.
   const revealPrices = !!settings.revealPrices;
+
+  const [chartStyle, setChartStyle] = useState(loadChartStyle);
+  const changeChartStyle = (style: ChartStyle) => {
+    setChartStyle(style);
+    saveChartStyle(style);
+  };
+  const isLine = chartStyle === 'line';
 
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const windowSize = ZOOM_LEVELS[zoom];
@@ -120,20 +149,23 @@ export const TradingChart = ({className}: {className?: string}) => {
     const to = stop === -1 ? prices.length : stop;
     const series = (values: number[]) =>
       values.slice(from, to).flatMap((y, i) => prices[from + i] ? [{ x: Number(prices[from + i].x), y }] : []);
+    const candles = prices.slice(from, to);
     return {
       minX,
       maxX,
       live: endX === lastX,
-      candles: prices.slice(from, to),
+      candles,
+      closes: candles.map((c) => ({ x: Number(c.x), y: c.c })),
       intrinsic: revealPrices ? series(intrinsicValues) : [],
       guide: revealPrices ? series(guidePrices) : [],
     };
   }, [prices, clock, windowSize, panEnd, revealPrices, intrinsicValues, guidePrices]);
 
-  // Fit the price axis to what's visible, with a little headroom.
+  // Fit the price axis to what's visible, with a little headroom. The line only draws closes, so
+  // wicks shouldn't stretch the axis.
   const yRange = useMemo(() => {
     const values = [
-      ...view.candles.flatMap((c) => [c.l, c.h]),
+      ...(isLine ? view.closes.map((p) => p.y) : view.candles.flatMap((c) => [c.l, c.h])),
       ...view.intrinsic.map((p) => p.y),
       ...view.guide.map((p) => p.y),
     ].filter((v) => v > 0);
@@ -142,7 +174,12 @@ export const TradingChart = ({className}: {className?: string}) => {
     const hi = Math.max(...values);
     const pad = Math.max((hi - lo) * 0.1, (hi + lo) / 2 * 0.01, 0.01);
     return { min: Math.max(0, lo - pad), max: hi + pad };
-  }, [view]);
+  }, [view, isLine]);
+
+  // The line is green or red depending on whether the price is up over the visible window.
+  const first = view.candles[0];
+  const last = view.candles[view.candles.length - 1];
+  const lineColor = first && last && last.c < first.o ? DOWN_COLOR : UP_COLOR;
 
   // The overlay plugin is created once; it reads the latest orders and news from this ref on every draw.
   const overlay = useRef<ChartOverlayData>({ orders: [], news: [] });
@@ -150,6 +187,8 @@ export const TradingChart = ({className}: {className?: string}) => {
     orders: openOrders,
     news,
     onCancel: (ids) => ids.forEach(cancelOrder),
+    // A picked price is for a limit order, so not when the host turned those off.
+    onPickPrice: settings.disableLimitOrders ? undefined : onPickPrice,
   };
   const plugins = useMemo(() => [createChartOverlay(() => overlay.current)], []);
 
@@ -160,6 +199,8 @@ export const TradingChart = ({className}: {className?: string}) => {
             takes the first row and the controls and powers share the second. */}
         <div className="grid grid-cols-[auto_1fr] sm:grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3">
           <ZoomControls
+            chartStyle={chartStyle}
+            onChartStyle={changeChartStyle}
             windowSize={windowSize}
             canZoomIn={zoom > 0}
             canZoomOut={zoom < ZOOM_LEVELS.length - 1}
@@ -182,13 +223,24 @@ export const TradingChart = ({className}: {className?: string}) => {
           ref={containerRef}
           className="flex-1 flex items-center justify-center border-2 border-dashed border-base-300 rounded-lg cursor-grab data-dragging:cursor-grabbing touch-pan-y select-none"
         >
+          {/* Remount on a style change: react-chartjs-2 merges datasets with the same label in place, and
+              the line's leftover options would break the candles. */}
           <Chart
+            key={chartStyle}
             ref={chartRef}
             type="candlestick"
             plugins={plugins}
             data={{
               datasets: [
-                {
+                isLine ? {
+                  label: "Price",
+                  data: view.closes as unknown[],
+                  type: 'line' as const,
+                  borderColor: lineColor,
+                  borderWidth: 2,
+                  pointRadius: 0,
+                  pointHitRadius: 6,
+                } : {
                   label: "Price",
                   data: view.candles,
                   maxBarThickness: 24,

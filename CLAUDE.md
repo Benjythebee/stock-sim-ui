@@ -50,6 +50,7 @@ src/
     game.context.ts      useGameStore (zustand) + handleGameMessage(): the inbound message switch
     stock.store.ts       usePriceStore: price, candles (prices + timeLabels), asks/bids, clock, timeLeft
     debug.store.ts       hidden fair value / guide series for the practice-mode chart lines
+    order-form.store.ts  the order form's type + limit price draft (clicking the chart picks a limit price)
     view.context.ts/.provider.tsx   legacy, unused since react-router
   types/messages.ts      MessageType enum + message types (HAND-COPIED from the server)
   types/types.ts         PowerDescription (= server's PublicPower)

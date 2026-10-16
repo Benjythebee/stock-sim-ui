@@ -6,6 +6,8 @@ import { useGameStore } from "../../context/game.context";
 import { cn } from "../../utils/cn";
 import { Field } from "../ui/field";
 import { useGameActions, type OrderKind, type OrderSide } from "../../hooks/useGameActions";
+import { useOrderFormStore } from "../../context/order-form.store";
+import { useShallow } from "zustand/shallow";
 
 export const TradingCard: React.FC = () => {
   const { placeOrder } = useGameActions();
@@ -14,10 +16,10 @@ export const TradingCard: React.FC = () => {
   const cash = useGameStore((state) => state.cash);
   const price = usePriceStore((state) => state.price);
   const limitOrdersDisabled = useGameStore((state) => !!state.gameSettings.disableLimitOrders);
-  const [pickedOrderType, setOrderType] = useState<OrderKind>("LIMIT");
+  // In a store so clicking the chart can switch to a limit order at that price.
+  const { orderType: pickedOrderType, setOrderType, limitPrice, setLimitPrice } = useOrderFormStore(useShallow((state) => state));
   // The host can turn limit orders off for the game (the server rejects them then).
   const orderType = limitOrdersDisabled ? "MARKET" : pickedOrderType;
-  const [limitPrice, setLimitPrice] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
 
   const quantity = Number(amount);
@@ -30,14 +32,18 @@ export const TradingCard: React.FC = () => {
     placeOrder(side, orderType, quantity, Number(limitPrice));
   };
 
-  // Prefill the limit price with the current price, and fill it in once the first price arrives
-  // (the card can mount before it, when the price is still 0).
+  // Prefill the limit price once the first price arrives (the card can mount before it, when the price
+  // is still 0). Switching to Limit refreshes it too, but a price picked on the chart is kept.
   const hasPrice = price > 0;
   useEffect(() => {
-    if (orderType === "LIMIT" && hasPrice) {
+    if (hasPrice && !useOrderFormStore.getState().limitPrice) {
       setLimitPrice(usePriceStore.getState().price.toString());
     }
-  }, [orderType, hasPrice]);
+  }, [hasPrice, setLimitPrice]);
+  const switchToLimit = () => {
+    setOrderType("LIMIT");
+    if (hasPrice) setLimitPrice(price.toString());
+  };
 
   const orderTypeButton = (type: OrderKind) => cn("btn join-item flex-1", orderType === type ? "btn-primary" : "btn-outline");
 
@@ -53,7 +59,7 @@ export const TradingCard: React.FC = () => {
           <div className="join w-full">
             <button
               className={orderTypeButton("LIMIT")}
-              onClick={() => setOrderType("LIMIT")}
+              onClick={switchToLimit}
               disabled={limitOrdersDisabled}
               title={limitOrdersDisabled ? "The host disabled limit orders for this game" : undefined}
             >

@@ -2,6 +2,7 @@ import { TradingChart } from '../components/Trading/Chart';
 import { OrderHistory } from '../components/Trading/OrderHistory';
 import { CurrentOrders } from '../components/Trading/CurrentOrders';
 import { TradingCard } from '../components/Trading/TradingCard';
+import { useOrderFormStore } from '../context/order-form.store';
 import { TradingDepth } from '../components/Trading/TradingDepth';
 import { useGameStore } from '../context/game.context';
 import { News } from '../components/Trading/News';
@@ -32,7 +33,7 @@ export default function RoomPage() {
       <div className="flex flex-col lg:flex-row gap-4 h-full">
         {/* Main Chart Container */}
         <div className="contents lg:flex flex-1 flex-col gap-4 min-w-0">
-          <TradingChart className="order-1 lg:order-none" />
+          <TradingChart className="order-1 lg:order-none" onPickPrice={useOrderFormStore.getState().pickLimitPrice} />
 
           {/* News, our open orders, and our finished orders */}
           <div className='order-4 lg:order-none grid grid-cols-1 2xl:grid-cols-3 md:grid-cols-2 gap-2 w-full'>
