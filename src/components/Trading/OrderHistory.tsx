@@ -1,4 +1,7 @@
+import { Repeat } from "lucide-react";
 import { useGameStore } from "../../context/game.context";
+import { useGameActions } from "../../hooks/useGameActions";
+import { useCanTrade } from "../../hooks/useMarketStatus";
 import type { OrderInfo, OrderStatus } from "../../types/messages";
 import { money } from "../../utils/math";
 import { formatTime } from "../../utils/time";
@@ -17,6 +20,9 @@ const statusOf = (order: OrderInfo) => STATUS[order.status as Exclude<OrderStatu
 /** Our finished orders: filled, partially filled market orders, and cancels. Newest first. */
 export const OrderHistory: React.FC<{ className?: string }> = ({ className }) => {
   const orders = useGameStore((state) => state.orderHistory);
+  const limitOrdersDisabled = useGameStore((state) => !!state.gameSettings.disableLimitOrders);
+  const canTrade = useCanTrade();
+  const { placeOrder } = useGameActions();
 
   return (
     <Panel className={className} title="Order History">
@@ -30,10 +36,11 @@ export const OrderHistory: React.FC<{ className?: string }> = ({ className }) =>
               <th className="text-right">Filled</th>
               <th className="text-right">Avg price</th>
               <th>Status</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
-            {orders.length === 0 && <TableEmptyRow colSpan={6}>No orders yet</TableEmptyRow>}
+            {orders.length === 0 && <TableEmptyRow colSpan={7}>No orders yet</TableEmptyRow>}
             {orders.map((order) => {
               const status = statusOf(order);
               return (
@@ -46,6 +53,17 @@ export const OrderHistory: React.FC<{ className?: string }> = ({ className }) =>
                   <td className="text-right tabular-nums">{order.filled}/{order.quantity}</td>
                   <td className="text-right tabular-nums">{order.avgPrice === null ? '—' : `$${money(order.avgPrice)}`}</td>
                   <td><span className={`badge badge-sm ${status.className}`}>{status.label}</span></td>
+                  <td className="text-right">
+                    <button
+                      className="btn btn-xs btn-ghost btn-square"
+                      aria-label="Repeat order"
+                      title="Place the same order again"
+                      disabled={!canTrade || (order.orderType === 'LIMIT' && limitOrdersDisabled)}
+                      onClick={() => placeOrder(order.action, order.orderType, order.quantity, order.price ?? undefined)}
+                    >
+                      <Repeat className="size-3.5" />
+                    </button>
+                  </td>
                 </tr>
               );
             })}
