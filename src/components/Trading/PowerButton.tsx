@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { usePowerStore } from "../../context/game.context";
+import { useGameStore, usePowerStore } from "../../context/game.context";
 import { Portal } from "../ui/portal";
 import { useWebsocketContext } from "../../context/ws.context";
 import { HandOfCards } from "../PowerCards/handOfCards";
@@ -9,6 +9,8 @@ import { useGameActions } from "../../hooks/useGameActions";
 export const PowerButton = () => {
   const {currentOffers,clearOffers} = usePowerStore()
   const {isSpectate} = useWebsocketContext();
+  // The host turned powers off: no briefcase will ever drop.
+  const powersOff = useGameStore((state) => state.gameSettings.enablePowers === false);
   const {selectPower, skipPowers} = useGameActions();
   const [open, setOpen] = useState(false);
   const hasOffers = currentOffers.length > 0;
@@ -29,7 +31,7 @@ export const PowerButton = () => {
     finish();
   }
 
-  if(isSpectate) return null;
+  if(isSpectate || powersOff) return null;
 
   return <>
     <button className="btn btn-sm btn-amber" data-active={hasOffers} disabled={!hasOffers} onClick={() => setOpen(true)}>

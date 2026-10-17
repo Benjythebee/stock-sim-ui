@@ -22,6 +22,8 @@ export type GameSettings = {
     revealPrices?: boolean; // server only sends DEBUG_PRICES (hidden fair value) when on
     disableLimitOrders?: boolean; // players can only place market orders
     disableRandomWalk?: boolean; // no random noise in the price; it moves on news, powers and trades
+    enablePowers?: boolean; // off = no briefcases at all
+    disabledPowers?: string[]; // power ids briefcases never offer (a blocklist: new mod powers start on)
 }
 
 type GameStore = {

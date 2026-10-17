@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { useGameStore } from "../../context/game.context";
-import { useBotsCatalog } from "../../hooks/useCatalogs";
+import { useBotsCatalog, useInstalledPowers } from "../../hooks/useCatalogs";
 import { money, round } from "../../utils/math";
 import { cn } from "../../utils/cn";
 import { ADMIN_SETTINGS_TABS, type AdminSettingsTab } from "./tabs";
@@ -44,11 +44,18 @@ const Group = ({section, children}: {section: AdminSettingsTab, children: ReactN
 export const SettingsSummary = () => {
     const settings = useGameStore((state) => state.gameSettings);
     const {data: bots} = useBotsCatalog();
+    const {powers} = useInstalledPowers();
 
     // An empty selection means every strategy.
     const selected = settings.botSelection?.length
         ? settings.botSelection.map((id) => bots?.find((b) => b.id === id)?.name ?? id).join(', ')
         : 'Random mix';
+
+    // Only powers a briefcase can hold (weight > 0) count.
+    const offerable = powers.filter((p) => p.rarity > 0);
+    const disabled = settings.disabledPowers ?? [];
+    const off = offerable.filter((p) => disabled.includes(p.id));
+    const powersValue = off.length === 0 ? 'All' : `${offerable.length - off.length} of ${offerable.length}`;
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -61,7 +68,7 @@ export const SettingsSummary = () => {
             <Group section="market">
                 <Row label="Opening price" value={`$${money(settings.openingPrice ?? 0)}`} />
                 <Row label="Volatility" value={`${round((settings.marketVolatility ?? 0) * 100, 2)}%`} />
-                <Row label="Random walk" value={onOff(!settings.disableRandomWalk)} />
+                <Row label="Background activity"value={onOff(!settings.disableRandomWalk)} />
             </Group>
             <Group section="gameplay">
                 <Row label="Orders" value={settings.disableLimitOrders ? 'Market only' : 'Limit and market'} />
@@ -70,6 +77,13 @@ export const SettingsSummary = () => {
             <Group section="bots">
                 <Row label="Bots" value={String(settings.bots ?? 0)} />
                 {!!settings.bots && <Row label="Strategies" value={selected} />}
+            </Group>
+            <Group section="powers">
+                <Row label="Briefcases" value={onOff(settings.enablePowers ?? true)} />
+                {settings.enablePowers !== false && offerable.length > 0 && <Row label="Powers" value={powersValue} />}
+                {settings.enablePowers !== false && off.length > 0 && off.length <= 5 && (
+                    <Row label="Turned off" value={off.map((p) => p.title).join(', ')} />
+                )}
             </Group>
         </div>
     );

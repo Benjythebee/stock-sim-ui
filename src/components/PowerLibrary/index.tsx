@@ -3,21 +3,13 @@ import { Search } from "lucide-react";
 import type { PowerDescription } from "../../types/types";
 import { useInstalledPowers } from "../../hooks/useCatalogs";
 import { cn } from "../../utils/cn";
-import { powerColor } from "../../utils/powerIcon";
+import { powerColor, TARGET_LABEL } from "../../utils/powerIcon";
 import { byRarity, dropChance, rarityOf } from "../../utils/rarity";
 import { PowerIcon } from "../PowerCards/power-icon";
 import { Tabs, type TabOption } from "../ui/tabs";
 
 type TargetFilter = "any" | NonNullable<PowerDescription["type"]>;
 type SortOrder = "rarity" | "common" | "name";
-
-/** Who a power hits, in the players' words. */
-const TARGET_LABEL: Record<NonNullable<PowerDescription["type"]>, string> = {
-    client: "You",
-    others: "Opponents",
-    all: "Everyone",
-    market: "Market",
-};
 
 const TARGET_TABS: TabOption<TargetFilter>[] = [
     { label: "All", value: "any" },

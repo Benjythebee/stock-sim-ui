@@ -17,6 +17,14 @@ export function powerIconSrc(power: Pick<PowerDescription, "iconUrl" | "iconSlug
 export type PowerCardData = Pick<PowerDescription, "id" | "type" | "isInstant" | "description" | "title" | "iconSlug" | "iconUrl" | "iconCredit">;
 
 /** The card color class (cards.css) for a power's type. `others` has no style of its own yet, so it uses the market one. */
+/** Who a power hits, in the players' words. */
+export const TARGET_LABEL: Record<NonNullable<PowerDescription["type"]>, string> = {
+    client: "You",
+    others: "Opponents",
+    all: "Everyone",
+    market: "Market",
+};
+
 export const powerColor = (type: PowerDescription["type"]): "all" | "client" | "market" =>
     type === "all" ? "all" : type === "client" ? "client" : "market";
 
