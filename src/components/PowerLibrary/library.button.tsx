@@ -9,17 +9,19 @@ import { PowerLibrary } from ".";
  * showModal() puts it in the top layer, so it shows over the lobby and pause overlays too.
  * The nav has one, but their backdrop covers it, so those overlays carry their own.
  */
-export const PowerLibraryButton = ({ className = "btn btn-ghost btn-square", label }: {
+export const PowerLibraryButton = ({ className = "btn btn-ghost btn-square", label, labelClassName }: {
     className?: string;
     /** Text next to the icon (icon only without it). */
     label?: string;
+    /** Classes for the label, e.g. to hide it on small screens. */
+    labelClassName?: string;
 }) => {
     const dialog = useRef<HTMLDialogElement>(null);
     const titleId = useId();
     return (
         <>
             <button type="button" className={cn(className)} aria-label="Power library" title="Power library" onClick={() => dialog.current?.showModal()}>
-                <BookOpen size={label ? 16 : 20} />{label}
+                <BookOpen size={label ? 16 : 20} />{label && <span className={labelClassName}>{label}</span>}
             </button>
             <dialog ref={dialog} className="modal" aria-labelledby={titleId}>
                 <div className="modal-box w-full max-w-4xl max-h-[calc(100dvh-2rem)]">

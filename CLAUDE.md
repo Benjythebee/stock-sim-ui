@@ -65,14 +65,14 @@ src/
                          ExternalLink, TableEmptyRow, Pnl (signed, colored $), Portal, Card
     Room/                RoomOverlays: backdrop + AdminModal + ConclusionModal, shared by Room and RoomSpectate
     Trading/             Chart (candles + power UI; chart.controls, useChartGestures), TradingCard (order form), TradingDepth (order book),
-                         News, CurrentOrders, OrderHistory, SideBadge, MarketClose (open/closed badge + countdown), PowerButton (briefcase)
+                         Portfolio (P/L, cash, shares, amounts in orders; top of the sidebar, above the chart on phones), News, CurrentOrders, OrderHistory, SideBadge, MarketClose (open/closed badge + countdown), PowerButton (briefcase)
     PowerCards/          PowerCard (big collectible card), PowerMiniCard (inventory), HandOfCards (<dialog> fan of cards)
     PowerLibrary/        PowerLibrary (searchable catalog: name, rarity tier, description, target, duration) + PowerLibraryButton (book icon → <dialog>).
                          On /powers, and in rooms from the nav, the lobby header and the Paused card (the overlays' backdrop covers the nav).
                          Rarity tiers come from the briefcase weight (`utils/rarity.ts`); in a room it lists the CONTENT_MANIFEST, else /api/powers.json (`useInstalledPowers`)
     Admin/               AdminModal (lobby "Game setup" / paused overlay) + one file per section; InvitePanel; SettingInput, NumberSetting, SettingToggle
     Conclusion/          end-of-game leaderboard
-    nav/                 NavBrand (logo + theme), HomeNavigation, InGameNavigation (cash, shares, P/L, host menu, cast button)
+    nav/                 NavBrand (logo + theme), HomeNavigation, InGameNavigation (room code that copies the invite link, game status badge, player list; labeled Powers, Cast, host Pause, name, Leave buttons, icon-only below md)
     footer/              SiteFooter: Play, About, Credits (/about#credits), Discord, X, plus app/server/mods API versions
     Credits/             icon credits for /about: bundled icons (card.icons.ts) + mod icons from /api/powers.json (iconCredit)
     Toast/               zustand toast store + Toaster
@@ -150,7 +150,7 @@ public/powers/<icon>.svg bundled power icons (game-icons.net, CC BY 3.0; credits
 
 ## Known gaps / gotchas (verify before relying on them)
 
-- **P/L in the nav** is the server's `pnl` from the last `PORTFOLIO_UPDATE`, marked to the live price: `pnl + (shares + reservedShares) × (price − pnlMark)`. The server only re-sends the portfolio when the account changes, and players start with 0 shares, so that is exact until the next update.
+- **P/L** (the Portfolio panel) is the server's `pnl` from the last `PORTFOLIO_UPDATE`, marked to the live price: `pnl + (shares + reservedShares) × (price − pnlMark)`. The server only re-sends the portfolio when the account changes, and players start with 0 shares, so that is exact until the next update.
 - The UI no longer sends `SHOCK` (the host-only debug buttons were removed). The message type stays in `messages.ts` to mirror the server.
 - An empty room code on the Join card makes up a 5-character code (room ids must match `^[A-Za-z0-9_-]{1,64}$`; the server 404s `/ws/`).
 - `Layout` sits outside `<Routes>`, so `useParams()` is empty there: it decides home vs room from `useLocation().pathname` (`STATIC_PAGES`). Add new top-level pages to that set, or they'll be treated as room codes.

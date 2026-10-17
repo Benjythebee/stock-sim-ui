@@ -12,6 +12,7 @@ import { useAutoConnect } from '../context/useAutoConnect';
 import { useParams } from 'react-router';
 import { RoomOverlays } from '../components/Room/room.overlays';
 import { NamePrompt } from '../components/Room/room.name-prompt';
+import { Portfolio } from '../components/Trading/Portfolio';
 
 
 
@@ -39,7 +40,7 @@ export default function RoomPage() {
       {needsName ? <NamePrompt room={roomCode!} onSubmit={onName} /> : <RoomOverlays />}
 
       {/* Below lg the two columns dissolve (display: contents) so `order-*` can interleave them:
-          chart, order form, order book, then news and orders. */}
+          portfolio, chart, order form, order book, then news and orders. */}
       <div className="flex flex-col lg:flex-row gap-4 h-full">
         {/* Main Chart Container */}
         <div className="contents lg:flex flex-1 flex-col gap-4 min-w-0">
@@ -56,6 +57,9 @@ export default function RoomPage() {
 
         {/* Right Sidebar */}
         <div className="contents lg:flex w-full lg:w-80 flex-col gap-4">
+          {/* Cash, shares and P/L: on phones above the chart, so they're on screen as the game starts. */}
+          <Portfolio className="order-first lg:order-none" />
+
           {/* Trading Panel */}
           <div className="order-2 lg:order-none"><TradingCard /></div>
 

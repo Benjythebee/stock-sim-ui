@@ -2,22 +2,28 @@ import { useGameStore } from "../../context/game.context"
 import { useWebsocketContext } from "../../context/ws.context";
 import { useCallback } from "react";
 import { useShallow } from "zustand/shallow";
-import { decimal, money } from "../../utils/math";
 import { CastButton } from "../cast/button";
 import { useNavigate } from "react-router";
-import { cn } from "../../utils/cn";
 import { NavBrand } from "./nav.brand";
-import { Pnl } from "../ui/pnl";
 import { useGameActions } from "../../hooks/useGameActions";
 import { useRoomConnection } from "../../hooks/useRoomConnection";
-import { useLivePnl } from "../../hooks/useLivePnl";
+import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 import { PowerLibraryButton } from "../PowerLibrary/library.button";
+import { PlayerName } from "../Admin/player-name";
+import { PlayerList } from "../Admin/player-list";
 import { IS_CAST_DEVICE } from "../../utils/screen";
+import { cn } from "../../utils/cn";
+import { Check, Copy, LogOut, Pause, Play } from "lucide-react";
 
+/**
+ * The room's nav: which room and what state it's in on the left, labeled actions on the right.
+ * The portfolio (cash, shares, P/L) lives on the room page next to the order form, not here.
+ * The lobby, pause and game-over overlays cover this bar, so its buttons matter while the game runs.
+ */
 export const InGameNavigation = () => {
     const {status,disconnect} = useWebsocketContext();
     const {room,connected,isSpectate} = useRoomConnection();
-    const {username,paused,isAdmin,onlineUsers,bots} = useGameStore(useShallow((state) => ({ username: state.username, paused: state.paused, isAdmin: state.isAdmin, onlineUsers: state.onlineUsers, bots: state.gameSettings.bots })));
+    const {paused,started,ended,isAdmin} = useGameStore(useShallow((state) => ({ paused: state.paused, started: state.started, ended: state.ended, isAdmin: state.isAdmin })));
     const {togglePause} = useGameActions();
 
     const navigate = useNavigate();
@@ -30,57 +36,74 @@ export const InGameNavigation = () => {
         return null;
     }
 
-    const isPaused = connected ? paused : true;
-    const showPortfolio = !isSpectate && connected;
+    const showHostControls = isAdmin && connected && started && !ended;
+    // Labels show from md up; below that the buttons are icons with a tooltip.
+    const navButton = "btn btn-ghost btn-sm sm:btn-md gap-1.5 px-2 sm:px-3";
+    const label = "hidden md:inline";
 
-    return <>
-    <div className="navbar bg-base-100 shadow-sm gap-2 px-2 sm:px-4">
-        <NavBrand />
-        <div className="navbar-center flex-1 min-w-0 justify-center">
-            <RoomStatus room={room} isPaused={isPaused} participants={connected && onlineUsers > 0 ? onlineUsers + bots : 0} />
+    return (
+        <div className="navbar bg-base-100 shadow-sm gap-1 sm:gap-2 px-2 sm:px-4 min-h-14">
+            <NavBrand />
+            <div className="flex-1 min-w-0 flex items-center gap-1 sm:gap-2">
+                {room && <RoomCode room={room} />}
+                <GameStatus connected={connected} started={started} paused={paused} ended={ended} />
+                {connected && <div className="hidden sm:block"><PlayerList /></div>}
+            </div>
+            <div className="flex items-center shrink-0 gap-0.5 sm:gap-1">
+                {/* Nobody can click on a TV we are cast to. */}
+                {!IS_CAST_DEVICE && <PowerLibraryButton className={navButton} label="Powers" labelClassName={label} />}
+                {!IS_CAST_DEVICE && room && (
+                    <CastButton room={room} className={navButton}>
+                        <span className={label}>Cast</span>
+                    </CastButton>
+                )}
+                {showHostControls && (
+                    <button className={cn(navButton, "btn-soft btn-warning")} onClick={togglePause} title={paused ? "Resume the game" : "Pause the game for everyone"}>
+                        {paused ? <Play size={16} /> : <Pause size={16} />}
+                        <span className={label}>{paused ? "Resume" : "Pause"}</span>
+                    </button>
+                )}
+                {!isSpectate && connected && <div className="hidden lg:block"><PlayerName /></div>}
+                {!IS_CAST_DEVICE && (
+                    <button className={navButton} onClick={disconnectHandler} title="Leave this room" aria-label="Leave room">
+                        <LogOut size={16} />
+                        <span className={label}>Leave</span>
+                    </button>
+                )}
+            </div>
         </div>
-        <div className="navbar-end w-auto shrink-0 gap-1">
-            {/* Nobody can click on a TV we are cast to. */}
-            {!IS_CAST_DEVICE && <PowerLibraryButton />}
-            {!IS_CAST_DEVICE && <CastButton room={room!} />}
-            {showPortfolio && <PortfolioStats className="hidden lg:flex" />}
-            {showPortfolio && (
-                <details className="dropdown dropdown-end">
-                    <summary className="btn btn-sm sm:btn-md max-w-32 sm:max-w-48"><strong className="truncate">{username}</strong></summary>
-                    <ul className="menu dropdown-content bg-base-100 rounded-box z-50 w-52 p-2 shadow-sm">
-                        {isAdmin && <li><a onClick={togglePause}>{paused ? 'Unpause' : 'Pause'}</a></li>}
-                        <li><a onClick={disconnectHandler}>Disconnect</a></li>
-                    </ul>
-                </details>
-            )}
-        </div>
-    </div>
-    {/* Phones and tablets: the portfolio gets its own row under the nav. */}
-    {showPortfolio && <PortfolioStats className="lg:hidden grid grid-cols-3 bg-base-100 border-t border-base-200 px-2 py-1.5 text-sm text-center" />}
-    </>;
+    );
 }
 
-const RoomStatus = ({room, isPaused, participants}: {room: string | null, isPaused: boolean, participants: number}) => (
-    <div className="text-center leading-tight min-w-0">
-        {/* The room code gets its own line so it never truncates: it's what friends type to join. */}
-        {room && <div className="font-semibold truncate">Room {room}</div>}
-        <div className="text-xs sm:text-sm truncate">
-            {isPaused && <span className="badge badge-warning badge-xs sm:badge-sm mr-1 align-middle">Paused</span>}
-            {participants > 0 && <span className="opacity-70"><span className="hidden sm:inline">Market online with </span>{participants} participants</span>}
-        </div>
-    </div>
-);
+/** "Room ABCDE", click to copy the invite link: it's what friends need to join. */
+const RoomCode = ({room}: {room: string}) => {
+    const {copied, copy} = useCopyToClipboard();
+    return (
+        <button
+            className="btn btn-ghost btn-sm sm:btn-md shrink gap-1.5 px-2 min-w-0 font-semibold"
+            onClick={() => copy(`${window.location.origin}/${room}`)}
+            title="Copy the invite link"
+            aria-label={`Room ${room}. Copy the invite link`}
+        >
+            <span className="truncate"><span className="hidden sm:inline font-normal opacity-70">Room </span>{room}</span>
+            {copied ? <Check size={14} className="shrink-0 text-success" /> : <Copy size={14} className="shrink-0 opacity-60" />}
+        </button>
+    );
+};
 
-const PortfolioStats = ({className}: {className?: string}) => {
-    const {cash,shares} = useGameStore(useShallow((state) => ({ cash: state.cash, shares: state.shares })));
-    return <div className={cn("items-center gap-4 font-medium tabular-nums whitespace-nowrap", className)}>
-        <div>Cash: ${money(cash)}</div>
-        <div>Stock: {decimal(shares,0)}</div>
-        <ProfitAndLoss />
-    </div>
-}
-
-const ProfitAndLoss = () => {
-    const pnl = useLivePnl();
-    return <div>P/L: <Pnl value={pnl} /></div>;
-}
+const GameStatus = ({connected, started, paused, ended}: {connected: boolean, started: boolean, paused: boolean, ended: boolean}) => {
+    const [text, style] =
+        !connected ? ["Reconnecting", "badge-error"]
+        : ended ? ["Game over", "badge-neutral"]
+        : !started ? ["Lobby", "badge-info"]
+        : paused ? ["Paused", "badge-warning"]
+        : ["Live", "badge-success"];
+    const live = text === "Live";
+    return (
+        // On phones "Live" is just the pulsing dot, to leave room for the buttons.
+        <span className={cn("badge badge-soft gap-1.5 shrink-0", style, {"max-sm:px-1.5": live})} title={text}>
+            {live && <span className="size-2 rounded-full bg-success animate-pulse" aria-hidden />}
+            <span className={cn({"max-sm:sr-only": live})}>{text}</span>
+        </span>
+    );
+};

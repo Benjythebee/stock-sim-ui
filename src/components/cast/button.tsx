@@ -90,7 +90,7 @@ export const CastButton = ({room, className = "btn btn-ghost", children}: {room:
     
 
     return castScriptLoaded && <button className={className} onClick={() => castRoom(room!)} title="Cast Room to Device" >
-                <CastIcon className=" cursor-pointer" size={24} />
+                <CastIcon className="cursor-pointer" size={children ? 18 : 24} />
                 {children}
             </button>
 }
