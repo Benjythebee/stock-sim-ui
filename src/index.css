@@ -21,6 +21,14 @@
         100% { background-color: transparent; }
     }
 
+    /* A headline that just arrived (Trading/News.tsx). */
+    --animate-news-flash: news-flash 1s ease-out;
+
+    @keyframes news-flash {
+        0%, 30% { background-color: var(--color-warning); color: var(--color-warning-content); }
+        100% { background-color: transparent; }
+    }
+
     @keyframes gradient {
         0%, 100% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }

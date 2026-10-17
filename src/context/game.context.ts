@@ -212,7 +212,6 @@ export const handleGameMessage = (message: Message) => {
         break;
       case MessageType.NEWS:
         useGameStore.setState((s) => ({ news: [...s.news, message ] }));
-        useToast.getState().addToast({type:'info', title: message.title, description: message.description});
         break;
           
         case MessageType.ROOM_STATE:
