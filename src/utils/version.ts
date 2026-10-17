@@ -9,8 +9,9 @@ export const APP_REVISION = __APP_REVISION__;
  *
  *   1  powers, bots and news as of the v2 rewrite
  *   2  POWER_PRESENT: the "wheel" presentation
+ *   3  interest-free bank loans (LoanInfo.maxInterest 0) shown as such in the portfolio
  */
-export const SUPPORTED_MOD_API = 2;
+export const SUPPORTED_MOD_API = 3;
 
 /** GET /api/version.json on the game server. */
 export type ServerVersion = { version: string; revision: string; modApi: number };

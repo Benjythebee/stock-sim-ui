@@ -79,7 +79,9 @@ const BankLoan = () => {
     const owed = loan.principal + loan.interest;
     // Like the server: half the principal (rounded up to the cent) plus all the interest so far.
     const halfOwed = Math.ceil(Math.round(loan.principal * 100) / 2) / 100 + loan.interest;
-    const progress = loan.maxInterest > 0 ? Math.min(100, (loan.interest / loan.maxInterest) * 100) : 100;
+    // A loan can be interest-free (the Too Big to Fail power): nothing accrues, so the bar stays empty.
+    const interestFree = loan.maxInterest === 0 && loan.interest === 0;
+    const progress = loan.maxInterest > 0 ? Math.min(100, (loan.interest / loan.maxInterest) * 100) : interestFree ? 0 : 100;
     const short = 'Not enough available cash: sell shares or cancel orders first.';
     return (
         <div className="rounded-box bg-base-100 px-3 py-2 flex flex-col gap-1.5">
@@ -92,7 +94,7 @@ const BankLoan = () => {
                     <button
                         className="btn btn-sm btn-outline btn-primary"
                         disabled={!running || cash < halfOwed}
-                        title={running && cash < halfOwed ? short : `Pay back half the loan and the interest so far ($${money(halfOwed)}). Only the other half keeps accruing interest.`}
+                        title={running && cash < halfOwed ? short : interestFree ? `Pay back half the loan ($${money(halfOwed)}). It's interest-free.` : `Pay back half the loan and the interest so far ($${money(halfOwed)}). Only the other half keeps accruing interest.`}
                         onClick={() => repayLoan('half')}
                     >
                         Repay half
@@ -109,7 +111,7 @@ const BankLoan = () => {
             </div>
             <progress className="progress progress-warning h-1.5 w-full" value={progress} max={100} aria-label="Interest accrued" />
             <div className="text-xs text-base-content/60 tabular-nums">
-                ${money(loan.principal)} + ${money(loan.interest)} interest, ${money(loan.maxInterest)} if kept to the end
+                {interestFree ? `$${money(loan.principal)}, interest-free` : `$${money(loan.principal)} + $${money(loan.interest)} interest`}
             </div>
         </div>
     );
