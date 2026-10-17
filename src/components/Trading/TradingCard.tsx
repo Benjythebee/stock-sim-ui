@@ -87,16 +87,23 @@ export const TradingCard: React.FC = () => {
         )}
 
         <Field label="Amount" bold={false}>
-          {/* Whole shares only: the server floors quantities, so 0.5 would become 0. */}
-          <input
-            type="number"
-            placeholder="0"
-            min={1}
-            step={1}
-            className="input input-bordered w-full"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value.replace(/[.,].*$/, ""))}
-          />
+          <div className="join w-full">
+            {/* Whole shares only: the server floors quantities, so 0.5 would become 0. */}
+            <input
+              type="number"
+              placeholder="0"
+              min={1}
+              step={1}
+              className="input input-bordered join-item w-full"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value.replace(/[.,].*$/, ""))}
+            />
+            {[10, 100].map((preset) => (
+              <button key={preset} className="btn btn-outline join-item px-3" onClick={() => setAmount(String(preset))}>
+                {preset}
+              </button>
+            ))}
+          </div>
         </Field>
 
         <div className="grid grid-cols-2 gap-2 mt-4">
