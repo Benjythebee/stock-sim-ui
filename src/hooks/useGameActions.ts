@@ -51,6 +51,9 @@ export const useGameActions = () => {
         /** Use a power from the inventory. */
         consumePower: (id: string) => sendMessage({ type: MessageType.POWER_CONSUME, id }),
 
+        /** Tell the room whether our own streamer mode is on (not the room's default: see streamer.store). */
+        reportStreamerMode: (on: boolean) => sendMessage({ type: MessageType.STREAMER_MODE, on }),
+
         /** Change our display name, here and on the server, and remember it for the next join. */
         rename: (username: string) => {
             sendMessage({ type: MessageType.RENAME, username });

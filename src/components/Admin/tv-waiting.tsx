@@ -2,6 +2,7 @@ import { Crown } from "lucide-react";
 import { useShallow } from "zustand/shallow";
 import { useGameStore } from "../../context/game.context";
 import { useWebsocketContext } from "../../context/ws.context";
+import { useShownRoomCode } from "../../context/streamer.store";
 import { money } from "../../utils/math";
 import { OverlayShell } from "../ui/overlay-card";
 
@@ -15,6 +16,7 @@ const MAX_TAGS = 12;
  */
 export const TvWaiting = () => {
     const {room} = useWebsocketContext();
+    const shownRoom = useShownRoomCode(room ?? '');
     const {players, onlineUsers, settings, hasRoomState} = useGameStore(useShallow((state) => ({
         players: state.players, onlineUsers: state.onlineUsers, settings: state.gameSettings, hasRoomState: state.hasRoomState,
     })));
@@ -33,7 +35,7 @@ export const TvWaiting = () => {
                         <span className="opacity-70">Join at </span>
                         <span className="font-semibold">{window.location.host}</span>
                         <span className="opacity-70"> with code</span>
-                        <span className="block mt-1 font-mono text-5xl font-bold tracking-[0.2em] text-primary">{room}</span>
+                        <span className="block mt-1 font-mono text-5xl font-bold tracking-[0.2em] text-primary">{shownRoom}</span>
                     </p>
                 )}
 

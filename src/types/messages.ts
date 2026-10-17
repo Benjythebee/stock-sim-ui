@@ -29,6 +29,7 @@ export enum MessageType {
     PLAYERS = 22,
     LOAN_BORROW = 23,
     LOAN_REPAY = 24,
+    STREAMER_MODE = 25,
 
     ADMIN_SETTINGS = 30,
     RESET_GAME = 31,
@@ -71,6 +72,7 @@ export const MessageTypeNames: { [key in MessageType]: string } = {
     [MessageType.PLAYERS]: "PLAYERS",
     [MessageType.LOAN_BORROW]: "LOAN_BORROW",
     [MessageType.LOAN_REPAY]: "LOAN_REPAY",
+    [MessageType.STREAMER_MODE]: "STREAMER_MODE",
     // Admin Messages - 30
     [MessageType.ADMIN_SETTINGS]: "ADMIN_SETTINGS",
     [MessageType.RESET_GAME]: "RESET_GAME",
@@ -118,6 +120,8 @@ type PlayersMessage = {
     type: MessageType.PLAYERS;
     players: PlayerInfo[];
     you: number;
+    /** Someone in the room has streamer mode on, so it's on by default here too. Missing from older servers. */
+    streamer?: boolean;
 }
 
 type IsAdminMessage = {
@@ -338,6 +342,12 @@ type RenameMessage = {
     username: string;
 }
 
+/** Whether our own streamer mode is on (any phase). The server tells the room through PLAYERS.streamer. */
+type StreamerModeMessage = {
+    type: MessageType.STREAMER_MODE;
+    on: boolean;
+}
+
 type PowerInventoryMessage = {
     type: MessageType.POWER_INVENTORY;
     inventory: string[]
@@ -372,7 +382,7 @@ type PowerPresentMessage = {
 }
 
 export type Message = IDMessage|JoinMessage | LeaveMessage | IsShockMessage | ClientStateMessage|OrderBookUpdateMessage | NotificationMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | NewsMessage | IsAdminMessage | AdminSettingMessage | ResetGameMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage | ConclusionMessage|
-PowerOffersMessage | PowerSelectMessage | PowerConsumeMessage | PowerInventoryMessage | ContentManifestMessage | OrderUpdateMessage | OrderCancelMessage | RenameMessage | PlayersMessage | PowerPresentMessage | LoanBorrowMessage | LoanRepayMessage;
+PowerOffersMessage | PowerSelectMessage | PowerConsumeMessage | PowerInventoryMessage | ContentManifestMessage | OrderUpdateMessage | OrderCancelMessage | RenameMessage | PlayersMessage | PowerPresentMessage | LoanBorrowMessage | LoanRepayMessage | StreamerModeMessage;
 
 export type {
     IDMessage,
@@ -414,6 +424,7 @@ export type {
     LoanInfo,
     LoanBorrowMessage,
     LoanRepayMessage,
+    StreamerModeMessage,
     DebugPricesMessage,
     ConclusionMessage
 }

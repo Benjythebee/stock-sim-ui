@@ -13,6 +13,7 @@ import { useParams } from 'react-router';
 import { RoomOverlays } from '../components/Room/room.overlays';
 import { NamePrompt } from '../components/Room/room.name-prompt';
 import { Portfolio } from '../components/Trading/Portfolio';
+import { useReportStreamerMode } from '../hooks/useReportStreamerMode';
 
 
 
@@ -29,6 +30,8 @@ export default function RoomPage() {
     setUsername(storedUsername);
     connect(storedUsername, roomCode!);
   });
+
+  useReportStreamerMode();
 
   const onName = (name: string) => {
     localStorage.setItem('username', name);

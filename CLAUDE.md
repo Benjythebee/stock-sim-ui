@@ -19,6 +19,7 @@ pnpm run deploy       # tsc -b && cf deploy: builds with .env.production and shi
 There are no tests in this repo. To see a change working, run the server too (`bun run dev` in `../stock-sim-server`, port 3000); its `.claude/launch.json` has `server` and `ui` preview configs. Open two browser tabs on the same room to play against yourself.
 
 - Server URL: `VITE_SERVER_URL` (see `.env.example`). Default is the page's hostname on port 3000, so LAN friends hitting `http://<your-ip>:5173` reach your server. See `src/utils/server.ts`.
+- **Streamer mode** (toggle on the Join card and in the lobby's Invite panel, or `?streamer` in the URL for an OBS browser source) shows the room code as dots, and the game's name in its place in the nav and the tab title. Copy buttons still copy the real code. The address bar shows `/live` instead of the room's URL (`hooks/useMaskedRoomUrl.ts`: only the address bar changes, the router keeps the real path; a refresh or Back onto `/live` sends that tab back to its room, anyone else gets Home). It's **on by default for everyone in a room where someone has it on**: each player reports their own choice (`STREAMER_MODE`, `hooks/useReportStreamerMode.ts`) and `PLAYERS.streamer` brings the room's default; switching it off opts out until the room's streamer mode comes on again.
 - `?debug` in the URL logs every inbound message (remembered in localStorage; `?debug=0` turns it off).
 
 ## How a game plays (the server's rules, as the UI shows them)
@@ -51,6 +52,7 @@ src/
     stock.store.ts       usePriceStore: price, candles (prices + timeLabels), asks/bids, clock, timeLeft
     debug.store.ts       hidden fair value / guide series for the practice-mode chart lines
     order-form.store.ts  the order form's type + limit price draft (clicking the chart picks a limit price)
+    streamer.store.ts    streamer mode: our own choice (localStorage, or `?streamer` / `?streamer=0`) plus the room's default (`PLAYERS.streamer`). Read it with `useStreamerMode()`, show a code through `useShownRoomCode`
     view.context.ts/.provider.tsx   legacy, unused since react-router
   types/messages.ts      MessageType enum + message types (HAND-COPIED from the server)
   types/types.ts         PowerDescription (= server's PublicPower)
@@ -116,7 +118,8 @@ public/powers/<icon>.svg bundled power icons (game-icons.net, CC BY 3.0; credits
   - `CLOCK.value` is the game clock in epoch ms (+1000 per game second, frozen while paused). `timeLeft` is ms.
   - `CLIENT_STATE.tradingDisabled` (e.g. while DDoSed) disables the Buy/Sell buttons.
   - `RENAME` (21, client→server) `{ username }` changes a player's display name in any phase. The server cleans it (control characters, 32 chars) and broadcasts nothing. A reconnect also renames, since the resume sends `username` again.
-  - `PLAYERS` (22, server→client) `{ players: [{ name, connected, host }], you }` is the whole human player list, re-sent on every join, disconnect, removal and rename. `you` is our index (-1 for spectators). It has no ids on purpose (nor do `JOIN`/`LEAVE`, which only carry `roomId` and, for `JOIN`, `username`).
+  - `PLAYERS` (22, server→client) `{ players: [{ name, connected, host }], you, streamer }` is the whole human player list, re-sent on every join, disconnect, removal, rename and streamer mode change. `streamer`: a seated player has streamer mode on (missing from older servers). `you` is our index (-1 for spectators). It has no ids on purpose (nor do `JOIN`/`LEAVE`, which only carry `roomId` and, for `JOIN`, `username`).
+  - `STREAMER_MODE` (25, client→server) `{ on }` is our own streamer mode, sent on every connect and change (players only, not the room default we got from someone else, or it would never turn off).
   - `POWER_SELECT.index` is an offer index, or `-1` (`POWER_SKIP_INDEX`) to decline the briefcase.
   - `POWER_PRESENT` (84, private) asks for a power animation, e.g. `{ kind: "wheel", segments, result, durationMs }`. The server has already decided the outcome and reports it with a normal `NOTIFICATION` once the animation is over, so `usePresentations` drops kinds it doesn't know (`SUPPORTED_PRESENTATIONS`) and the toast still tells the player what happened. Animations play one at a time in `PresentationOverlay`, and Skip/Close never hides anything.
   - Errors and order rejections arrive as `NOTIFICATION` toasts (`ERROR` is only used for "Room does not exist"). The server sends no per-order ack or fill events.
@@ -153,7 +156,7 @@ public/powers/<icon>.svg bundled power icons (game-icons.net, CC BY 3.0; credits
 - **P/L** (the Portfolio panel) is the server's `pnl` from the last `PORTFOLIO_UPDATE`, marked to the live price: `pnl + (shares + reservedShares) × (price − pnlMark)`. The server only re-sends the portfolio when the account changes, and players start with 0 shares, so that is exact until the next update.
 - The UI no longer sends `SHOCK` (the host-only debug buttons were removed). The message type stays in `messages.ts` to mirror the server.
 - An empty room code on the Join card makes up a 5-character code (room ids must match `^[A-Za-z0-9_-]{1,64}$`; the server 404s `/ws/`).
-- `Layout` sits outside `<Routes>`, so `useParams()` is empty there: it decides home vs room from `useLocation().pathname` (`STATIC_PAGES`). Add new top-level pages to that set, or they'll be treated as room codes.
+- `Layout` sits outside `<Routes>`, so `useParams()` is empty there: it decides home vs room from `useLocation().pathname` (`STATIC_PAGES`). Add new top-level pages to that set (it includes `STREAMER_PATH`, `/live`), or they'll be treated as room codes.
 - Market orders send a dummy `price: 100`, which the server ignores. Store arrays are shared state: copy before sorting (`[...asks].sort(...)`).
 - The local `GameSettings` defaults (cash 5000, 1 bot) differ from the server's (10,000 / 5). They're overwritten by `ROOM_STATE` on join.
 - **Cast TVs are detected** by `IS_CAST_DEVICE` (`utils/screen.ts`): the receiver iframes `/:room/spectate?tv`, and Cast user agents contain `CrKey`. On a TV the nav hides the cast and power-library buttons, and the lobby shows `Admin/tv-waiting.tsx` (join code, up to 12 player tags then "and N more", a settings line) instead of the wide waiting card. Add `?tv` to a spectate URL to preview it in a browser.

@@ -13,6 +13,8 @@ import { PlayerName } from "../Admin/player-name";
 import { PlayerList } from "../Admin/player-list";
 import { IS_CAST_DEVICE } from "../../utils/screen";
 import { cn } from "../../utils/cn";
+import { useStreamerMode } from "../../context/streamer.store";
+import { SITE_NAME } from "../../utils/seo";
 import { Check, Copy, LogOut, Pause, Play } from "lucide-react";
 
 /**
@@ -75,17 +77,20 @@ export const InGameNavigation = () => {
     );
 }
 
-/** "Room ABCDE", click to copy the invite link: it's what friends need to join. */
+/** "Room ABCDE", click to copy the invite link: it's what friends need to join. Streamer mode shows the game's name instead. */
 const RoomCode = ({room}: {room: string}) => {
     const {copied, copy} = useCopyToClipboard();
+    const streamerMode = useStreamerMode();
     return (
         <button
             className="btn btn-ghost btn-sm sm:btn-md shrink gap-1.5 px-2 min-w-0 font-semibold"
             onClick={() => copy(`${window.location.origin}/${room}`)}
             title="Copy the invite link"
-            aria-label={`Room ${room}. Copy the invite link`}
+            aria-label={streamerMode ? 'Copy the invite link' : `Room ${room}. Copy the invite link`}
         >
-            <span className="truncate"><span className="hidden sm:inline font-normal opacity-70">Room </span>{room}</span>
+            <span className="truncate">
+                {streamerMode ? SITE_NAME : <><span className="hidden sm:inline font-normal opacity-70">Room </span>{room}</>}
+            </span>
             {copied ? <Check size={14} className="shrink-0 text-success" /> : <Copy size={14} className="shrink-0 opacity-60" />}
         </button>
     );

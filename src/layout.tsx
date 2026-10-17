@@ -9,9 +9,11 @@ import { QueryClient ,QueryClientProvider} from "@tanstack/react-query"
 import { useWebsocketContext } from "./context/ws.context"
 import { resetRoomStores } from "./context/game.context"
 import { applyPageMeta, pageMetaFor } from "./utils/seo"
+import { STREAMER_PATH, useStreamerMode } from "./context/streamer.store"
+import { useMaskedRoomUrl } from "./hooks/useMaskedRoomUrl"
 
 /** Top-level pages that are not a room code. Everything else ("/:roomId", "/:roomId/spectate") is a room. */
-const STATIC_PAGES = new Set(["/", "/about", "/how-to-play", "/powers", "/cast"]);
+const STATIC_PAGES = new Set(["/", "/about", "/how-to-play", "/powers", "/cast", STREAMER_PATH]);
 
 export const Layout = ({children}: {children: React.ReactNode}) => {
 
@@ -24,7 +26,10 @@ export const Layout = ({children}: {children: React.ReactNode}) => {
     const [queryClient,] = useState(() => new QueryClient())
 
     // Title, description, canonical and robots for this route (rooms are noindex). See utils/seo.ts.
-    useEffect(() => applyPageMeta(pageMetaFor(path)), [path]);
+    const streamerMode = useStreamerMode();
+    useEffect(() => applyPageMeta(pageMetaFor(path, streamerMode)), [path, streamerMode]);
+    // Streamer mode keeps the room code out of the address bar too.
+    useMaskedRoomUrl(inRoom);
 
     // Leaving a room page any way at all (Disconnect, browser Back, footer links) closes its socket and
     // forgets its state, so Home starts clean and the old room's toasts stop. A refresh is a new page load,

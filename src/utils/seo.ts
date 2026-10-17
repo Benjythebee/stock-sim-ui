@@ -4,9 +4,11 @@
  * gets the right title, description, canonical and robots for each page. Keep index.html, public/sitemap.xml
  * and HOME below in sync.
  */
+import { STREAMER_PATH } from '../context/streamer.store';
+
 export const SITE_URL = 'https://tendiesbrawl.com';
 
-const SITE_NAME = 'Tendies Brawl';
+export const SITE_NAME = 'Tendies Brawl';
 
 type PageMeta = {
   title: string;
@@ -44,15 +46,20 @@ const POWERS: PageMeta = {
   path: '/powers',
 };
 
-/** Path is Layout's normalized pathname (no trailing slash, "/" for home). */
-export function pageMetaFor(path: string): PageMeta {
+/**
+ * Path is Layout's normalized pathname (no trailing slash, "/" for home).
+ * `hideRoom` (streamer mode: the tab title can be on stream) leaves the room code out of a room's title.
+ */
+export function pageMetaFor(path: string, hideRoom = false): PageMeta {
   if (path === '/') return HOME;
   if (path === '/about') return ABOUT;
   if (path === '/how-to-play') return HOW_TO_PLAY;
   if (path === '/powers') return POWERS;
+  if (path === STREAMER_PATH) return { title: SITE_NAME, description: HOME.description, noindex: true };
   if (path === '/cast') return { title: `${SITE_NAME} – Cast`, description: HOME.description, noindex: true };
 
   // Everything else is a room code: ephemeral, so never indexed.
+  if (hideRoom) return { title: SITE_NAME, description: HOME.description, noindex: true };
   const [, room, sub] = path.split('/');
   const code = decodeURIComponent(room ?? '');
   return sub === 'spectate'

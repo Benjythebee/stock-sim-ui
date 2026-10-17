@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { Backdrop, OverlayCard } from "../ui/overlay-card";
 import { Field } from "../ui/field";
 import { MAX_NAME_LENGTH } from "../../utils/name";
+import { useShownRoomCode } from "../../context/streamer.store";
 
 /**
  * Asks for a player name before joining, for someone who opened an invite link (/:roomId) without
@@ -11,13 +12,14 @@ import { MAX_NAME_LENGTH } from "../../utils/name";
 export const NamePrompt = ({room, onSubmit}: {room: string, onSubmit: (name: string) => void}) => {
     const [name, setName] = useState('');
     const trimmed = name.trim();
+    const shownRoom = useShownRoomCode(room);
 
     return (
         <>
             <Backdrop />
             <OverlayCard
                 title="Join the game"
-                subtitle={<>Pick a name to join room <span className="font-mono font-semibold text-base-content">{room}</span>.</>}
+                subtitle={<>Pick a name to join room <span className="font-mono font-semibold text-base-content">{shownRoom}</span>.</>}
             >
                 <form
                     className="w-full flex flex-col gap-4"

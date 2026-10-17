@@ -4,6 +4,9 @@ import { useWebsocketContext } from "../../context/ws.context";
 import { useGameStore } from "../../context/game.context";
 import { Link, useNavigate } from "react-router";
 import { Field } from "../ui/field";
+import { useStreamerMode } from "../../context/streamer.store";
+import { StreamerToggle } from "../ui/streamer-toggle";
+import { cn } from "../../utils/cn";
 
 // No 0/O or 1/I so codes are easy to read out to friends. Must match the server's ^[A-Za-z0-9_-]{1,64}$.
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -15,6 +18,7 @@ export const Join = () => {
   const navigate = useNavigate();
   const {username,setUsername} = useGameStore(useShallow((state) => ({username: state.username, setUsername: state.setUsername})));
   const [roomCode, setRoomCode] = useState<string>("");
+  const streamerMode = useStreamerMode();
 
   // Leaving a room resets the store, so prefill the name we joined with last time.
   useEffect(() => {
@@ -76,7 +80,9 @@ export const Join = () => {
             <input
               type="text"
               placeholder="Enter room code"
-              className="input input-bordered input-secondary w-full uppercase"
+              // Streamer mode draws the typed code as dots (a password field would offer to save it).
+              className={cn("input input-bordered input-secondary w-full uppercase", {"[-webkit-text-security:disc]": streamerMode})}
+              autoComplete="off"
               value={roomCode}
               maxLength={64}
               onChange={(e) => setRoomCode(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ''))}
@@ -84,7 +90,9 @@ export const Join = () => {
             />
           </Field>
 
-          <div className="card-actions w-full mt-4">
+          <div className="self-start"><StreamerToggle /></div>
+
+          <div className="card-actions w-full mt-2">
             <button
               className="btn btn-primary w-full"
               onClick={handleJoin}

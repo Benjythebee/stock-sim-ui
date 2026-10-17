@@ -8,6 +8,7 @@ import { usePresentations } from '../components/Presentation/usePresentations';
 import type { PowerDescription } from '../types/types';
 import { debugLog } from '../utils/debug';
 import { powerIconSrc, preloadImages, serverAsset } from '../utils/powerIcon';
+import { useStreamerStore } from './streamer.store';
 
 export type GameSettings = {
     startingCash: number;
@@ -140,6 +141,7 @@ export const resetRoomStores = () => {
     resetDebugStore();
     resetOrderFormStore();
     usePresentations.getState().clear();
+    useStreamerStore.getState().setRoomStreamer(false);
 }
 
 
@@ -186,6 +188,7 @@ export const handleGameMessage = (message: Message) => {
         break;
       case MessageType.PLAYERS:
         useGameStore.setState({ players: message.players, you: message.you });
+        useStreamerStore.getState().setRoomStreamer(!!message.streamer);
         break;
         
       case MessageType.CLOCK:

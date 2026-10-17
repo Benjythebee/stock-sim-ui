@@ -3,11 +3,13 @@ import { useWebsocketContext } from "../../context/ws.context";
 import { CastButton } from "../cast/button";
 import { ExternalLink } from "../ui/external-link";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
+import { useShownRoomCode } from "../../context/streamer.store";
 
 /** How to put the game on a big screen: Chromecast, or the spectator page in any browser. Not a setting. */
 export const CastSettings = () => {
     const {room} = useWebsocketContext();
     const {copied, copy} = useCopyToClipboard();
+    const shown = useShownRoomCode(room ?? '');
 
     if (!room) return null;
     const spectateUrl = `${window.location.origin}/${room}/spectate`;
@@ -35,7 +37,7 @@ export const CastSettings = () => {
                     <input
                         className="input input-bordered input-sm join-item flex-1 min-w-0"
                         readOnly
-                        value={spectateUrl}
+                        value={`${window.location.origin}/${shown}/spectate`}
                         aria-label="Spectator link"
                         onFocus={(e) => e.target.select()}
                     />
