@@ -12,9 +12,10 @@ import { PowerButton } from "./PowerButton";
 import { SelectedCards } from "../PowerCards/selected.cards";
 import { createChartOverlay, type ChartOverlayData } from "./chart.overlay";
 import { cn } from "../../utils/cn";
-import { ZoomControls, type ChartStyle } from "./chart.controls";
+import { ChartHideToggle, ZoomControls, type ChartStyle } from "./chart.controls";
 import { useChartGestures } from "./useChartGestures";
 import { useGameActions } from "../../hooks/useGameActions";
+import { useIsDesktop } from "../../hooks/useMediaQuery";
 
 ChartJS.register(CategoryScale, LinearScale,TimeScale,TimeSeriesScale,CandlestickController,OhlcController, CandlestickElement, PointElement,LineController,LineElement,Tooltip,Legend);
 
@@ -29,6 +30,7 @@ const GRID_DASH = [2, 4];
 const UP_COLOR = 'rgba(80, 160, 115, 1)';
 const DOWN_COLOR = 'rgba(215, 85, 65, 1)';
 const CHART_STYLE_KEY = 'chartStyle';
+const CHART_HIDDEN_KEY = 'chartHidden';
 
 /** The last candle / line choice, remembered per browser. Storage can be unavailable (private mode). */
 const loadChartStyle = (): ChartStyle => {
@@ -41,6 +43,21 @@ const loadChartStyle = (): ChartStyle => {
 const saveChartStyle = (style: ChartStyle) => {
   try {
     localStorage.setItem(CHART_STYLE_KEY, style);
+  } catch { /* not remembered, still applied */ }
+};
+
+/** Whether the chart is folded away on phones, remembered per browser like the style. */
+const loadChartHidden = () => {
+  try {
+    return localStorage.getItem(CHART_HIDDEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+const saveChartHidden = (hidden: boolean) => {
+  try {
+    if (hidden) localStorage.setItem(CHART_HIDDEN_KEY, '1');
+    else localStorage.removeItem(CHART_HIDDEN_KEY);
   } catch { /* not remembered, still applied */ }
 };
 
@@ -89,6 +106,16 @@ export const TradingChart = ({className, onPickPrice}: {
   };
   const isLine = chartStyle === 'line';
 
+  // Below lg only: the header (price, powers) stays, the chart itself folds away. Desktop always shows it.
+  // Folded means unmounted, so a phone stops redrawing it 5x a second and it sizes itself afresh when shown.
+  const isDesktop = useIsDesktop();
+  const [hidden, setHidden] = useState(loadChartHidden);
+  const changeHidden = (value: boolean) => {
+    setHidden(value);
+    saveChartHidden(value);
+  };
+  const collapsed = hidden && !isDesktop;
+
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const windowSize = ZOOM_LEVELS[zoom];
   const zoomBy = (step: number) => setZoom((z) => Math.min(ZOOM_LEVELS.length - 1, Math.max(0, z + step)));
@@ -133,7 +160,7 @@ export const TradingChart = ({className, onPickPrice}: {
   useChartGestures(containerRef, {
     onWheel,
     onDrag: (dx) => panBy(-dx * msPerPx()),
-  });
+  }, !collapsed);
 
   // Rolling window: the latest candle (or the panned-to one) sits at the right edge, `windowSize` candles
   // back to the left (or back to the first candle, so a young game isn't mostly empty space).
@@ -193,21 +220,27 @@ export const TradingChart = ({className, onPickPrice}: {
   const plugins = useMemo(() => [createChartOverlay(() => overlay.current)], []);
 
   return (
-    <div className={cn("card bg-base-200 flex-1 min-h-[420px] sm:min-h-[500px]", className)}>
+    <div className={cn("card bg-base-200 flex-1", !collapsed && "min-h-[420px] sm:min-h-[500px]", className)}>
       <div className="card-body">
         {/* Ticker and price centered between the chart controls and the powers. On phones the ticker
             takes the first row and the controls and powers share the second. */}
         <div className="grid grid-cols-[auto_1fr] sm:grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3">
-          <ZoomControls
-            chartStyle={chartStyle}
-            onChartStyle={changeChartStyle}
-            windowSize={windowSize}
-            canZoomIn={zoom > 0}
-            canZoomOut={zoom < ZOOM_LEVELS.length - 1}
-            onZoom={zoomBy}
-            live={view.live}
-            onGoLive={() => setPanEnd(null)}
-          />
+          <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto">
+            {!isDesktop && <ChartHideToggle hidden={hidden} onChange={changeHidden} />}
+            {/* Nothing to zoom while the chart is folded away. */}
+            {!collapsed && (
+              <ZoomControls
+                chartStyle={chartStyle}
+                onChartStyle={changeChartStyle}
+                windowSize={windowSize}
+                canZoomIn={zoom > 0}
+                canZoomOut={zoom < ZOOM_LEVELS.length - 1}
+                onZoom={zoomBy}
+                live={view.live}
+                onGoLive={() => setPanEnd(null)}
+              />
+            )}
+          </div>
           {/* Fixed-width digits so the header doesn't shift on every tick. */}
           <h2 className="card-title justify-center gap-3 whitespace-nowrap col-span-2 sm:col-span-1 order-first sm:order-none">
             <span>{settings.ticketName}</span>
@@ -218,7 +251,7 @@ export const TradingChart = ({className, onPickPrice}: {
             <PowerButton />
           </div>
         </div>
-        <div
+        {!collapsed && <div
           id={"chart-container"}
           ref={containerRef}
           className="flex-1 flex items-center justify-center border-2 border-dashed border-base-300 rounded-lg cursor-grab data-dragging:cursor-grabbing touch-pan-y select-none"
@@ -307,7 +340,7 @@ export const TradingChart = ({className, onPickPrice}: {
               },
             }}
           />
-        </div>
+        </div>}
       </div>
     </div>
   );

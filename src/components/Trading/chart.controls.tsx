@@ -1,7 +1,19 @@
-import { ChartCandlestick, ChartLine, ChevronsRight, ZoomIn, ZoomOut } from "lucide-react";
+import { ChartCandlestick, ChartLine, ChevronsDown, ChevronsRight, ChevronsUp, ZoomIn, ZoomOut } from "lucide-react";
 import { cn } from "../../utils/cn";
 
 export type ChartStyle = 'candles' | 'line';
+
+/** Phones only: folds the chart away so the order form and book fit on screen. */
+export const ChartHideToggle = ({hidden, onChange}: {hidden: boolean; onChange: (hidden: boolean) => void}) => (
+  <button
+    className="btn btn-xs"
+    aria-expanded={!hidden}
+    aria-controls="chart-container"
+    onClick={() => onChange(!hidden)}
+  >
+    {hidden ? <><ChevronsDown size={14} /> Show chart</> : <><ChevronsUp size={14} /> Hide</>}
+  </button>
+);
 
 /** Candlesticks or a plain line of closing prices. */
 export const ChartStyleToggle = ({value, onChange}: {value: ChartStyle; onChange: (style: ChartStyle) => void}) => (
