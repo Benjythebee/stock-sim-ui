@@ -33,7 +33,7 @@ export const MarketSettings = () => {
 
         <div className="w-full mb-2">
             <SettingToggle
-                label="Disable random walk"
+                label="No background activity"
                 tooltipPosition="right"
                 checked={!!gameSettings.disableRandomWalk}
                 onChange={(disableRandomWalk) => setGameSettings({disableRandomWalk})}
