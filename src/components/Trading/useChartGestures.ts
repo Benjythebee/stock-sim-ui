@@ -4,17 +4,18 @@ import { useEffect, useEffectEvent, type RefObject } from "react";
  * Pointer and wheel input on the chart container: a horizontal drag calls `onDrag(dx)` with the pixels
  * moved since the last call, and every wheel event goes to `onWheel` (which decides whether to
  * preventDefault). A drag never ends in a click, or releasing over an order tag's × would cancel it.
+ * `mounted` re-attaches when the container comes and goes (the chart folded away on phones).
  */
 export function useChartGestures(containerRef: RefObject<HTMLElement | null>, handlers: {
   onDrag: (dx: number) => void;
   onWheel: (e: WheelEvent) => void;
-}) {
+}, mounted = true) {
   const onDrag = useEffectEvent(handlers.onDrag);
   const onWheel = useEffectEvent(handlers.onWheel);
 
   useEffect(() => {
     const el = containerRef.current;
-    if (!el) return;
+    if (!mounted || !el) return;
     let drag: { id: number; x: number; moved: boolean } | null = null;
     let swallowClick = false;
     const down = (e: PointerEvent) => {
@@ -60,5 +61,5 @@ export function useChartGestures(containerRef: RefObject<HTMLElement | null>, ha
     };
     // onWheel/onDrag are Effect Events: they must not be dependencies (this eslint-plugin version predates useEffectEvent).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mounted]);
 }

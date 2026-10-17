@@ -39,6 +39,11 @@ export const useGameActions = () => {
         cancelOrder: (id: number) => sendMessage({ type: MessageType.ORDER_CANCEL, id }),
         cancelAllOrders: () => sendMessage({ type: MessageType.ORDER_CANCEL, id: ORDER_CANCEL_ALL }),
 
+        /** Take a bank loan of settings.loanAmount. The server answers with a NOTIFICATION and a PORTFOLIO_UPDATE. */
+        borrow: () => sendMessage({ type: MessageType.LOAN_BORROW }),
+        /** Repay our loan, or half of what's left of it, plus the interest accrued so far. */
+        repayLoan: (portion: 'all' | 'half' = 'all') => sendMessage({ type: MessageType.LOAN_REPAY, portion }),
+
         /** Pick one of the briefcase's offers. */
         selectPower: (index: number) => sendMessage({ type: MessageType.POWER_SELECT, index }),
         /** Decline the briefcase. Tell the server too, or it re-sends the offers on reconnect. */

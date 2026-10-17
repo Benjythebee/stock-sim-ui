@@ -73,6 +73,10 @@ export const SettingsSummary = () => {
             <Group section="gameplay">
                 <Row label="Orders" value={settings.disableLimitOrders ? 'Market only' : 'Limit and market'} />
                 <Row label="News events" value={onOff(settings.enableRandomNews)} />
+                <Row label="Bank loans" value={onOff(settings.enableBorrowing ?? true)} />
+                {settings.enableBorrowing !== false && (
+                    <Row label="Loan" value={`$${money(settings.loanAmount ?? 0)} at up to ${round(settings.loanInterestPercent ?? 0, 2)}%`} />
+                )}
             </Group>
             <Group section="bots">
                 <Row label="Bots" value={String(settings.bots ?? 0)} />

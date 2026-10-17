@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { MessageType, MessageTypeNames, type ConclusionMessage, type Message, type NewsMessage, type OrderInfo, type PlayerInfo } from '../types/messages';
+import { MessageType, MessageTypeNames, type ConclusionMessage, type LoanInfo, type Message, type NewsMessage, type OrderInfo, type PlayerInfo } from '../types/messages';
 import { resetPriceStore, usePriceStore } from './stock.store';
 import { resetDebugStore, useDebugStore } from './debug.store';
 import { resetOrderFormStore } from './order-form.store';
@@ -24,6 +24,9 @@ export type GameSettings = {
     disableRandomWalk?: boolean; // no random noise in the price; it moves on news, powers and trades
     enablePowers?: boolean; // off = no briefcases at all
     disabledPowers?: string[]; // power ids briefcases never offer (a blocklist: new mod powers start on)
+    enableBorrowing?: boolean; // players can take a bank loan (one at a time)
+    loanAmount?: number; // dollars per loan
+    loanInterestPercent?: number; // % of the loan owed if it's kept to the end; repaying early pays a share of it
 }
 
 type GameStore = {
@@ -40,6 +43,8 @@ type GameStore = {
   shares: number;
   reservedCash: number;
   reservedShares: number;
+  /** Our outstanding bank loan (null: none). */
+  loan: LoanInfo | null;
   /** The server's P&L as of the last PORTFOLIO_UPDATE, and the mark price it was valued at. */
   pnl: number;
   pnlMark: number;
@@ -95,6 +100,7 @@ const initialGameStore: Partial<GameStore> = {
   shares: 0,
   reservedCash: 0,
   reservedShares: 0,
+  loan: null,
   pnl: 0,
   pnlMark: 0,
   onlineUsers: 0,
@@ -205,6 +211,7 @@ export const handleGameMessage = (message: Message) => {
           shares: message.value.shares || 0,
           reservedCash: message.value.reservedCash || 0,
           reservedShares: message.value.reservedShares || 0,
+          loan: message.value.loan ?? null,
           pnl: message.value.pnl || 0,
           pnlMark: usePriceStore.getState().price,
         });
@@ -235,7 +242,7 @@ export const handleGameMessage = (message: Message) => {
               useGameStore.setState({ 
                   gameSettings: message.settings || {},
                   cash: message.settings?.startingCash || 0,
-                  shares: 0, reservedCash: 0, reservedShares: 0, pnl: 0, pnlMark: message.price || 0,
+                  shares: 0, reservedCash: 0, reservedShares: 0, loan: null, pnl: 0, pnlMark: message.price || 0,
                   paused: message.paused || false,
                   started: message.started || false,
                   ended: message.ended || false,

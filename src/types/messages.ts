@@ -27,6 +27,8 @@ export enum MessageType {
     ORDER_CANCEL = 20,
     RENAME = 21,
     PLAYERS = 22,
+    LOAN_BORROW = 23,
+    LOAN_REPAY = 24,
 
     ADMIN_SETTINGS = 30,
     RESET_GAME = 31,
@@ -67,6 +69,8 @@ export const MessageTypeNames: { [key in MessageType]: string } = {
     [MessageType.ORDER_CANCEL]: "ORDER_CANCEL",
     [MessageType.RENAME]: "RENAME",
     [MessageType.PLAYERS]: "PLAYERS",
+    [MessageType.LOAN_BORROW]: "LOAN_BORROW",
+    [MessageType.LOAN_REPAY]: "LOAN_REPAY",
     // Admin Messages - 30
     [MessageType.ADMIN_SETTINGS]: "ADMIN_SETTINGS",
     [MessageType.RESET_GAME]: "RESET_GAME",
@@ -213,7 +217,34 @@ type PortfolioUpdateMessage = {
         /** Cash/shares locked in open orders (not included in cash/shares). */
         reservedCash?: number;
         reservedShares?: number;
+        /** Our outstanding bank loan, null when there is none. P&L is already net of it. */
+        loan?: LoanInfo | null;
     };
+}
+
+/** A bank loan, in dollars. Repaying it now costs `principal + interest`. */
+type LoanInfo = {
+    principal: number;
+    /** Interest accrued so far (it builds up linearly until the end of the game). */
+    interest: number;
+    /** Interest owed on what's left if it's kept to the end of the game, when the bank collects it. */
+    maxInterest: number;
+    /** Game clock (epoch ms) when it was taken. */
+    time: number;
+}
+
+/** Take a bank loan of `settings.loanAmount` (one at a time, while running). */
+type LoanBorrowMessage = {
+    type: MessageType.LOAN_BORROW;
+}
+
+/**
+ * Repay our loan ('all', the default) or half of what's left of it, plus the interest accrued so far,
+ * from available cash. After a half repayment only the rest accrues interest.
+ */
+type LoanRepayMessage = {
+    type: MessageType.LOAN_REPAY;
+    portion?: 'all' | 'half';
 }
 
 type StockMovementMessage = {
@@ -341,7 +372,7 @@ type PowerPresentMessage = {
 }
 
 export type Message = IDMessage|JoinMessage | LeaveMessage | IsShockMessage | ClientStateMessage|OrderBookUpdateMessage | NotificationMessage | RoomStateMessage | PortfolioUpdateMessage | TogglePauseMessage | NewsMessage | IsAdminMessage | AdminSettingMessage | ResetGameMessage | ClockMessage | PingMessage | PongMessage | ChatMessage | ErrorMessage | StockMessage | StockMovementMessage | DebugPricesMessage | ConclusionMessage|
-PowerOffersMessage | PowerSelectMessage | PowerConsumeMessage | PowerInventoryMessage | ContentManifestMessage | OrderUpdateMessage | OrderCancelMessage | RenameMessage | PlayersMessage | PowerPresentMessage;
+PowerOffersMessage | PowerSelectMessage | PowerConsumeMessage | PowerInventoryMessage | ContentManifestMessage | OrderUpdateMessage | OrderCancelMessage | RenameMessage | PlayersMessage | PowerPresentMessage | LoanBorrowMessage | LoanRepayMessage;
 
 export type {
     IDMessage,
@@ -380,6 +411,9 @@ export type {
     RenameMessage,
     PlayerInfo,
     PlayersMessage,
+    LoanInfo,
+    LoanBorrowMessage,
+    LoanRepayMessage,
     DebugPricesMessage,
     ConclusionMessage
 }

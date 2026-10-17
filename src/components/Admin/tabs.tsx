@@ -13,7 +13,7 @@ export type AdminSettingsSection = {
 
 export const ADMIN_SETTINGS_TABS: AdminSettingsSection[] = [
     { label: 'General', value: 'general', icon: Settings2, description: "What's traded, how much everyone starts with, and how long the game lasts." },
-    { label: 'Gameplay', value: 'gameplay', icon: Gamepad2, description: 'Which order types players get, and whether headlines shake the market.' },
+    { label: 'Gameplay', value: 'gameplay', icon: Gamepad2, description: 'Which order types players get, whether headlines shake the market, and what the bank lends.' },
     { label: 'Market', value: 'market', icon: ChartCandlestick, description: 'Where the stock opens and how wildly it moves.' },
     { label: 'Bots', value: 'bots', icon: Bot, description: 'AI traders that fill the room. More bots means more liquidity and more competition.' },
     { label: 'Powers', value: 'powers', icon: Zap, description: 'The items briefcases can offer.' },
