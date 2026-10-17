@@ -99,7 +99,7 @@ export const TradingCard: React.FC = () => {
               onChange={(e) => setAmount(e.target.value.replace(/[.,].*$/, ""))}
             />
             {[10, 100].map((preset) => (
-              <button key={preset} className="btn btn-outline join-item px-3" onClick={() => setAmount(String(preset))}>
+              <button key={preset} className="btn join-item px-3 bg-base-100 border-base-content/20" onClick={() => setAmount(String(preset))}>
                 {preset}
               </button>
             ))}
